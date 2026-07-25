@@ -26,7 +26,7 @@ services:
     volumes:
       - volcanai_postgres_data:/var/lib/postgresql/data
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:5434:5432"
     <<: *common
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
@@ -40,7 +40,7 @@ services:
     container_name: volcanai_django
     command: uvicorn config.asgi:application --host 0.0.0.0 --port 8000 --reload --reload-dir /app
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8002:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -78,7 +78,7 @@ services:
     container_name: volcanai_flower
     command: bash -c "celery -A volcanai flower --conf=config/settings/flower.py"
     ports:
-      - "127.0.0.1:5555:5555"
+      - "127.0.0.1:5557:5555"
     depends_on:
       redis:
         condition: service_healthy
@@ -93,7 +93,7 @@ services:
     image: redis:7-alpine
     container_name: volcanai_redis
     ports:
-      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:6382:6379"
     volumes:
       - volcanai_redis_data:/data
     <<: *common
