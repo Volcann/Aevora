@@ -18,6 +18,12 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_celery_beat",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "corsheaders",
+    "constance",
+    "storages",
 ]
 
 THIRD_PARTY_APPS = [
@@ -26,6 +32,7 @@ THIRD_PARTY_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
+    'silk',
     "constance",
     "constance.backends.database",
 ]
@@ -45,6 +52,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "silk.middleware.SilkyMiddleware",
 ]
 
 SWAGGER_SETTINGS = {
