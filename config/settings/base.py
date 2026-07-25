@@ -187,8 +187,8 @@ CONSTANCE_BACKEND = "constance.backends.redisd.RedisBackend"
 CONSTANCE_REDIS_URL = env("REDIS_URL")
 CONSTANCE_REDIS_PREFIX = "constance:volcanai:"
 CONSTANCE_REDIS_CONNECTION = {
-    "host": "redis",
-    "port": 6382,
+    "host": env("REDIS_HOST", default="redis"),
+    "port": env.int("REDIS_PORT", default=6382),
     "db": 0,
 }
 

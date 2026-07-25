@@ -15,7 +15,7 @@ DATABASES = {
     "default": dj_database_url.parse(
         env(
             "DATABASE_URL",
-            default="postgres://postgres:postgres@postgres:5432/postgres",
+            default="postgres://postgres:postgres@postgres:5434/postgres",
         ),
     ),
 }
@@ -26,9 +26,11 @@ EMAIL_BACKEND = env(
     default="django.core.mail.backends.console.EmailBackend",
 )
 
-INSTALLED_APPS = INSTALLED_APPS + ["silk"]
+if "silk" not in INSTALLED_APPS:
+    INSTALLED_APPS = INSTALLED_APPS + ["silk"]
 
-MIDDLEWARE = ["silk.middleware.SilkyMiddleware"] + MIDDLEWARE
+if "silk.middleware.SilkyMiddleware" not in MIDDLEWARE:
+    MIDDLEWARE = ["silk.middleware.SilkyMiddleware"] + MIDDLEWARE
 
 SILKY_INTERCEPT_PERCENT = 100
 SILKY_MAX_REQUEST_BODY_SIZE = -1
