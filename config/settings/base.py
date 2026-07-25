@@ -172,10 +172,7 @@ MAIN_DOMAIN = env("MAIN_DOMAIN", default="localhost")
 
 FIREBASE_SERVICE_ACCOUNT_FILE = BASE_DIR / env(
     "FIREBASE_SERVICE_ACCOUNT_FILE",
-    default="hr-tool-firebase-adminsdk.json",
+    default="volcanai-firebase-adminsdk.json",
 )
-
-AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
 
 from config.settings.constance import *
