@@ -1,6 +1,6 @@
 import dj_database_url
 
-from .base import *  # noqa: F401, F403
+from .base import *
 
 ALLOWED_HOSTS = ["*"]
 CORS_ALLOW_ALL_ORIGINS = True
@@ -26,9 +26,9 @@ EMAIL_BACKEND = env(
     default="django.core.mail.backends.console.EmailBackend",
 )
 
-INSTALLED_APPS += ["silk"]  # noqa: F405
+INSTALLED_APPS += ["silk"]
 
-MIDDLEWARE.insert(0, "silk.middleware.SilkyMiddleware")  # noqa: F405
+MIDDLEWARE.insert(0, "silk.middleware.SilkyMiddleware")
 
 SILKY_INTERCEPT_PERCENT = 100
 SILKY_MAX_REQUEST_BODY_SIZE = -1

@@ -122,7 +122,7 @@ ONBOARDING_FRONTEND_PATH = env(
 )
 
 # Simple JWT
-from datetime import timedelta  # noqa: E402
+from datetime import timedelta
 
 SIMPLE_JWT = {
     "ALGORITHM": env("JWT_ALGORITHM", default="HS256"),
@@ -178,4 +178,4 @@ FIREBASE_SERVICE_ACCOUNT_FILE = BASE_DIR / env(
 AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
 
-from config.settings.constance import *  # noqa: E402, F401, F403
+from config.settings.constance import *
