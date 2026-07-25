@@ -1,0 +1,79 @@
+target-version = "py313"
+line-length = 100
+
+extend-select = [
+    "E",     # Pycodestyle errors
+    "W",     # Pycodestyle warnings
+    "C90",   # McCabe complexity
+    "I",     # Import sorting
+    "N",     # Naming conventions
+    "D",     # Docstrings
+    "UP",    # Pyupgrade
+    "YTT",   # Flake8-2020
+    "ASYNC", # Async checks
+    "FBT",   # Boolean trap
+    "A",     # Builtins misuse
+    "COM",   # Commas
+    "C4",    # Comprehensions
+    "DTZ",   # Datetime timezone
+    "T10",   # Debugger statements
+    "DJ",    # Django checks
+    "EXE",   # Executable checks
+    "FA",    # Future annotations
+    "ISC",   # Implicit string concat
+    "ICN",   # Import conventions
+    "LOG",   # Logging best practices (without format rules)
+    "TID",   # Tidy imports
+    "TC",    # Type checking imports
+    "INT",   # Gettext checks
+    "ARG",   # Unused arguments
+    "PTH",   # pathlib usage
+    "TD",    # TODO comments
+    "FIX",   # FIXME comments
+    "PGH",   # Pygrep hooks
+    "FLY",   # f-string conversion
+    "AIR",   # Airflow rules
+    "PERF",  # Performance
+    "FURB",  # Refurb suggestions
+]
+ignore = [
+      "E501",    # Pycodestyle - line too long
+    "D1",      # Pydocstyle - missing docstring in public module, class, or function
+    "FBT003",  # Flake8-boolean-trap - boolean positional value in function call
+    "D203",    # Pydocstyle - one blank line required before class docstring
+    "D212",    # Pydocstyle - summary line should be immediately after the opening quotes
+    "D401",    # Pydocstyle - first line should be in imperative mood
+    "S311",    # Flake8-bandit - standard pseudo-random generators not crypto-secure
+    "PERF401", # Perflint - for loops that can be replaced by list comprehension
+    "RET504",  # Flake8-return - unnecessary variable assignment before return
+    "FA102",   # Flake8-future-annotations - missing __future__ import with PEP 604 unions
+    "TRY003",  # Tryceratops - long exception messages outside exception class
+    "EM101",   # Flake8-errmsg - string literals in exception constructors
+    "ARG002",
+    "DJ001",
+    "C901",
+]
+
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "manage.py",
+    "*/migrations/*"
+]
+
+[format]
+quote-style = "double"
+line-ending = "lf"
+
+[per-file-ignores]
+"config/settings/*.py" = [
+    "E402",
+    "F403",  # from module import *
+    "F405",  # name may be undefined due to import *
+]
+"test_*.py" = ["S101"]
+"__init__.py" = ["F401"]
