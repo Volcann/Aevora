@@ -1,0 +1,111 @@
+x-common: &common
+  stdin_open: true
+  tty: true
+  restart: unless-stopped
+  env_file:
+    - .env
+
+x-django-build: &django-build
+  build:
+    context: .
+    args:
+      DJANGO_ENV: ${DJANGO_ENV:-dev}
+  volumes:
+    - .:/app
+    - volcanai_static_volume:/app/staticfiles
+    - volcanai_media_volume:/app/media
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: volcanai_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - volcanai_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    <<: *common
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  django:
+    <<: [*django-build, *common]
+    container_name: volcanai_django
+    command: uvicorn config.asgi:application --host 0.0.0.0 --port 8000 --reload --reload-dir /app
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/')"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  celery:
+    <<: [*django-build, *common]
+    container_name: volcanai_celery
+    command: bash -c "celery -A volcanai worker -l info"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_beat:
+    <<: [*django-build, *common]
+    container_name: volcanai_celery_beat
+    command: bash -c "celery -A volcanai beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  flower:
+    <<: [*django-build, *common]
+    container_name: volcanai_flower
+    command: bash -c "celery -A volcanai flower --conf=config/settings/flower.py"
+    ports:
+      - "127.0.0.1:5555:5555"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5555/flower/healthcheck')"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: volcanai_redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - volcanai_redis_data:/data
+    <<: *common
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  volcanai_static_volume:
+  volcanai_media_volume:
+  volcanai_redis_data:
+  volcanai_postgres_data:
