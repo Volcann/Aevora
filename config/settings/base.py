@@ -11,9 +11,30 @@ environ.Env.read_env(BASE_DIR / ".env")
 DEBUG = env.bool("DEBUG", default=True)
 SECRET_KEY = env("SECRET_KEY")
 
-INSTALLED_APPS = [
+DJANGO_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+]
+
+THIRD_PARTY_APPS = [
+    "channels",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "corsheaders",
+    "constance",
+    "constance.backends.database",
+]
+
+LOCAL_APPS = [
     "volcanai.core",
 ]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -98,7 +119,6 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 
 # Authentication
-AUTH_USER_MODEL = "shared_app.User"
 AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
 
 # JWT
