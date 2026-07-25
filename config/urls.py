@@ -30,6 +30,7 @@ urlpatterns = [
     ),
     path("api/admin/", admin.site.urls),
     path("api/v1/", include("volcanai.core.api.v1.urls")),
+    path("api/v1/accounts/", include("volcanai.accounts.api.v1.urls")),
 ]
 
 if settings.DEBUG:
