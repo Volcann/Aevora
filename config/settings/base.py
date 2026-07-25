@@ -35,6 +35,8 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "volcanai.core",
+    "volcanai.accounts",
+    "volcanai.ai_chat",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
