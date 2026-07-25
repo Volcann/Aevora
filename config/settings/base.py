@@ -18,16 +18,11 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_celery_beat",
-    "rest_framework",
-    "rest_framework_simplejwt",
-    "corsheaders",
-    "constance",
-    "storages",
 ]
 
 THIRD_PARTY_APPS = [
     "channels",
+    "django_celery_beat",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
@@ -35,6 +30,7 @@ THIRD_PARTY_APPS = [
     "silk",
     "constance",
     "constance.backends.database",
+    "storages",
 ]
 
 LOCAL_APPS = [

@@ -26,9 +26,9 @@ EMAIL_BACKEND = env(
     default="django.core.mail.backends.console.EmailBackend",
 )
 
-INSTALLED_APPS += ["silk"]
+INSTALLED_APPS = INSTALLED_APPS + ["silk"]
 
-MIDDLEWARE.insert(0, "silk.middleware.SilkyMiddleware")
+MIDDLEWARE = ["silk.middleware.SilkyMiddleware"] + MIDDLEWARE
 
 SILKY_INTERCEPT_PERCENT = 100
 SILKY_MAX_REQUEST_BODY_SIZE = -1
