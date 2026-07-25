@@ -47,6 +47,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     libpq-dev \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder bin/uv /usr/local/bin/uv
@@ -54,15 +55,15 @@ COPY --from=builder bin/uvx /usr/local/bin/uvx
 
 COPY --from=builder /opt/venv /opt/venv
 
-RUN useradd -m django
+RUN useradd -m django \
+    && mkdir -p /app/staticfiles /app/media /app/logs \
+    && chown -R django:django /app/staticfiles /app/media /app/logs
 
 COPY --chown=django:django . .
-
-USER django
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/health/ || exit 1
-
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["uvicorn", "config.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
