@@ -23,9 +23,6 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "channels",
     "django_celery_beat",
-    "rest_framework",
-    "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "silk",
     "constance",
@@ -37,6 +34,7 @@ LOCAL_APPS = [
     "volcanai.core",
     "volcanai.accounts",
     "volcanai.ai_chat",
+    "volcanai.dashboard",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -53,15 +51,6 @@ MIDDLEWARE = [
     "silk.middleware.SilkyMiddleware",
 ]
 
-SWAGGER_SETTINGS = {
-    "SECURITY_DEFINITIONS": {
-        "Bearer": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header",
-        },
-    },
-}
 
 ROOT_URLCONF = "config.urls"
 
@@ -128,6 +117,10 @@ CELERY_TIMEZONE = "UTC"
 AUTH_USER_MODEL = "accounts.User"
 AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
 
+# Redirect unauthenticated requests
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
+
 # JWT
 JWT_SECRET_KEY = env("JWT_SECRET_KEY", default=SECRET_KEY)
 JWT_ALGORITHM = env("JWT_ALGORITHM", default="HS256")
@@ -148,42 +141,6 @@ ONBOARDING_FRONTEND_PATH = env(
     default="/signup/",
 )
 
-# Simple JWT
-from datetime import timedelta
-
-SIMPLE_JWT = {
-    "ALGORITHM": env("JWT_ALGORITHM", default="HS256"),
-    "SIGNING_KEY": env("JWT_SECRET_KEY", default=SECRET_KEY),
-    "ACCESS_TOKEN_LIFETIME": timedelta(
-        minutes=env.int("ACCESS_TOKEN_EXPIRY_MINUTES", default=30),
-    ),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "AUTH_HEADER_TYPES": ("Bearer",),
-    "USER_ID_FIELD": "id",
-    "USER_ID_CLAIM": "user_id",
-}
-
-# Rest framework Configuration
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ],
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
-    ],
-    "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.JSONRenderer",
-    ],
-    "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.AnonRateThrottle",
-        "rest_framework.throttling.UserRateThrottle",
-    ],
-    "DEFAULT_THROTTLE_RATES": {
-        "anon": "20/minute",
-        "user": "200/minute",
-    },
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-}
 
 # constance
 CONSTANCE_BACKEND = "constance.backends.redisd.RedisBackend"

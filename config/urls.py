@@ -2,35 +2,16 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
-from rest_framework import permissions
+from django.views.generic import RedirectView
 
-schema_view = get_schema_view(
-    openapi.Info(
-        title="Volcanai API",
-        default_version="v1",
-        description="Volcanai API documentation",
-        contact=openapi.Contact(email="dev@hr-tool.ai"),
-    ),
-    public=True,
-    permission_classes=[permissions.AllowAny],
-)
+from volcanai.core.views import health_check
 
 urlpatterns = [
-    path(
-        "api/swagger/",
-        schema_view.with_ui("swagger", cache_timeout=0),
-        name="schema-swagger-ui",
-    ),
-    path(
-        "api/redoc/",
-        schema_view.with_ui("redoc", cache_timeout=0),
-        name="schema-redoc",
-    ),
+    path("", RedirectView.as_view(pattern_name="accounts:login", permanent=False)),
+    path("accounts/", include("volcanai.accounts.api.v1.urls")),
+    path("dashboard/", include("volcanai.dashboard.urls")),
+    path("health/", health_check, name="health-check"),
     path("api/admin/", admin.site.urls),
-    path("api/v1/", include("volcanai.core.api.v1.urls")),
-    path("api/v1/accounts/", include("volcanai.accounts.api.v1.urls")),
 ]
 
 if settings.DEBUG:
