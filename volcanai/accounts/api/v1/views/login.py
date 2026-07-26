@@ -8,7 +8,7 @@ User = get_user_model()
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("ai_chat:chat")
+        return redirect("ai_chat")
 
     if request.method == "POST":
         form = LoginForm(request.POST)
