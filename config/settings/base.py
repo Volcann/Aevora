@@ -4,7 +4,6 @@ import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Environment
 env = environ.Env()
 environ.Env.read_env(BASE_DIR / ".env")
 
@@ -71,10 +70,8 @@ TEMPLATES = [
 
 ASGI_APPLICATION = "config.asgi.application"
 
-# Database (override in env-specific files)
 DATABASES = {}
 
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -84,13 +81,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Static & Media
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
@@ -104,7 +99,6 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_FILE_SIZE
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Celery Configuration
 CELERY_BROKER_URL = env("REDIS_URL")
 CELERY_RESULT_BACKEND = env("REDIS_URL")
 CELERY_ACCEPT_CONTENT = ["json"]
@@ -112,20 +106,16 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 
-# Authentication
 AUTH_USER_MODEL = "accounts.User"
 AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
 
-# Redirect unauthenticated requests
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/chat/"
 
-# JWT
 JWT_SECRET_KEY = env("JWT_SECRET_KEY", default=SECRET_KEY)
 JWT_ALGORITHM = env("JWT_ALGORITHM", default="HS256")
 ONBOARDING_TOKEN_EXPIRY_HOURS = env.int("ONBOARDING_TOKEN_EXPIRY_HOURS", default=168)
 
-# Frontend / onboarding link base
 APP_BASE_URL = env("APP_BASE_URL", default="http://localhost:3000")
 ADMIN_FRONTEND_URL = env(
     "ADMIN_FRONTEND_URL",
@@ -140,8 +130,6 @@ ONBOARDING_FRONTEND_PATH = env(
     default="/signup/",
 )
 
-
-# constance
 CONSTANCE_BACKEND = "constance.backends.redisd.RedisBackend"
 CONSTANCE_REDIS_URL = env("REDIS_URL")
 CONSTANCE_REDIS_PREFIX = "constance:volcanai:"
@@ -159,3 +147,4 @@ FIREBASE_SERVICE_ACCOUNT_FILE = BASE_DIR / env(
 )
 
 from config.settings.constance import *
+from config.settings.email_service import *

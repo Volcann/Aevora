@@ -1,11 +1,15 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.shortcuts import render
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
 from volcanai.accounts.api.v1.forms.forgot_password import ForgotPasswordForm
+from volcanai.accounts.services.email import EmailService
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -21,22 +25,20 @@ def forgot_password_view(request):
                 user = User.objects.get(email=email)
                 token = default_token_generator.make_token(user)
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
-                reset_url = request.build_absolute_uri(
-                    f"/accounts/reset-password/{uid}/{token}/",
-                )
-                send_mail(
-                    subject="Reset your Volcann password",
-                    message=(
-                        f"Hi {user.get_full_name() or user.username},\n\n"
-                        f"Click the link below to reset your password:\n{reset_url}\n\n"
-                        "If you did not request this, you can safely ignore this email."
-                    ),
-                    from_email=None,
-                    recipient_list=[email],
-                    fail_silently=True,
+                protocol = "https" if request.is_secure() else "http"
+                domain = request.get_host()
+
+                EmailService.send_password_reset_email(
+                    user=user,
+                    uid=uid,
+                    token=token,
+                    protocol=protocol,
+                    domain=domain,
                 )
             except User.DoesNotExist:
-                pass
+                pass  # Don't reveal whether the email exists
+            except Exception:
+                logger.exception("Failed to send password reset email to %s", email)
             sent = True
     else:
         form = ForgotPasswordForm()
