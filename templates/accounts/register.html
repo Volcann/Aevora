@@ -1,0 +1,284 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create your account — Volcann</title>
+  <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/142692213?v=4">
+  <style>
+    :root {
+      --primary-color: #2da44e;
+      --primary-hover: #2c974b;
+      --card-bg: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-color: #d1d5db;
+      --focus-ring: rgba(45, 164, 78, 0.3);
+      --link-color: #2563eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #f6f8fa 0%, #e2e8f0 100%);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    a { color: var(--link-color); text-decoration: none; transition: color 0.2s ease; }
+    a:hover { text-decoration: underline; color: #1d4ed8; }
+
+    .container {
+      width: 100%;
+      max-width: 360px;
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    @keyframes slideUpFade { to { opacity: 1; transform: translateY(0); } }
+
+    .avatar-wrapper { text-align: center; margin-bottom: 1.5rem; }
+    .avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      border: 3px solid var(--card-bg);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      object-fit: cover; transition: transform 0.3s ease;
+    }
+    .avatar:hover { transform: scale(1.05); }
+
+    h1 {
+      text-align: center; font-size: 1.5rem; font-weight: 600;
+      letter-spacing: -0.025em; margin-bottom: 1.5rem; color: var(--text-main);
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 12px; padding: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
+      margin-bottom: 20px;
+    }
+
+    .name-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label {
+      display: block; margin-bottom: 0.5rem;
+      font-weight: 500; font-size: 0.875rem; color: var(--text-main);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%; padding: 0.625rem 0.875rem; font-size: 0.875rem;
+      color: var(--text-main); background-color: #f9fafb;
+      border: 1px solid var(--border-color); border-radius: 8px;
+      transition: all 0.2s ease-in-out;
+    }
+    input[type="text"]:hover,
+    input[type="email"]:hover,
+    input[type="password"]:hover { border-color: #9ca3af; }
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      outline: none; background-color: var(--card-bg);
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 4px var(--focus-ring);
+    }
+
+    .strength-bar-track {
+      height: 4px; border-radius: 2px;
+      background-color: #e5e7eb; margin-top: 0.5rem; overflow: hidden;
+    }
+    .strength-bar-fill {
+      height: 100%; border-radius: 2px; width: 0%;
+      transition: width 0.3s ease, background-color 0.3s ease;
+    }
+    .strength-label {
+      font-size: 0.7rem; color: var(--text-muted);
+      margin-top: 0.25rem; min-height: 1em;
+    }
+
+    .btn-primary {
+      width: 100%; background-color: var(--primary-color);
+      color: #ffffff; border: none; border-radius: 8px;
+      padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s ease; margin-top: 0.5rem;
+    }
+    .btn-primary:hover {
+      background-color: var(--primary-hover); transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(45,164,78,0.2), 0 2px 4px -1px rgba(45,164,78,0.1);
+    }
+    .btn-primary:active { transform: translateY(0); box-shadow: none; }
+
+    .error-messages {
+      background-color: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1.25rem;
+      font-size: 0.875rem; color: #dc2626;
+    }
+    .field-error {
+      font-size: 0.75rem; color: #dc2626;
+      margin-top: 0.35rem;
+    }
+
+    .signin-box {
+      border: 1px solid var(--border-color); border-radius: 12px;
+      padding: 1rem; text-align: center;
+      font-size: 0.875rem; color: var(--text-muted);
+    }
+    .signin-box a { font-weight: 600; }
+
+    .terms {
+      font-size: 0.75rem; color: var(--text-muted);
+      text-align: center; margin-top: 1rem; line-height: 1.5;
+    }
+
+    @media (max-width: 400px) {
+      .card { padding: 20px 16px; }
+      .name-row { grid-template-columns: 1fr; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="avatar-wrapper">
+      <img class="avatar" src="https://avatars.githubusercontent.com/u/142692213?v=4" alt="Volcann">
+    </div>
+
+    <h1>Create your account</h1>
+
+    <div class="card">
+      <form action="{% url 'accounts:register' %}" method="POST" id="registerForm" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="error-messages">
+            {% for error in form.non_field_errors %}
+              <div>{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="name-row">
+          <div>
+            <label for="id_first_name">First name</label>
+            <input type="text" name="first_name" id="id_first_name"
+              autocomplete="given-name" placeholder="Ada"
+              value="{{ form.first_name.value|default:'' }}">
+            {% if form.first_name.errors %}
+              <div class="field-error">{{ form.first_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <label for="id_last_name">Last name</label>
+            <input type="text" name="last_name" id="id_last_name"
+              autocomplete="family-name" placeholder="Lovelace"
+              value="{{ form.last_name.value|default:'' }}">
+            {% if form.last_name.errors %}
+              <div class="field-error">{{ form.last_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="id_username">Username</label>
+          <input type="text" name="username" id="id_username"
+            autocomplete="username" placeholder="ada_lovelace"
+            value="{{ form.username.value|default:'' }}" required>
+          {% if form.username.errors %}
+            <div class="field-error">{{ form.username.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_email">Email address</label>
+          <input type="email" name="email" id="id_email"
+            autocomplete="email" placeholder="hello@example.com"
+            value="{{ form.email.value|default:'' }}" required>
+          {% if form.email.errors %}
+            <div class="field-error">{{ form.email.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_reg_password">Password</label>
+          <input type="password" name="password" id="id_reg_password"
+            autocomplete="new-password" placeholder="••••••••" required>
+          <div class="strength-bar-track">
+            <div class="strength-bar-fill" id="strengthBar"></div>
+          </div>
+          <div class="strength-label" id="strengthLabel"></div>
+          {% if form.password.errors %}
+            <div class="field-error">{{ form.password.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="id_confirm_password">Confirm password</label>
+          <input type="password" name="confirm_password" id="id_confirm_password"
+            autocomplete="new-password" placeholder="••••••••" required>
+          {% if form.confirm_password.errors %}
+            <div class="field-error">{{ form.confirm_password.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn-primary">Create account</button>
+
+        <p class="terms">
+          By creating an account you agree to the
+          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        </p>
+      </form>
+    </div>
+
+    <div class="signin-box">
+      Already have an account? <a href="{% url 'accounts:login' %}">Sign in</a>
+    </div>
+
+  </div>
+
+  <script>
+    const pwInput = document.getElementById('id_reg_password');
+    const bar = document.getElementById('strengthBar');
+    const label = document.getElementById('strengthLabel');
+
+    const levels = [
+      { min: 0,  max: 1,  color: '#ef4444', text: 'Too short',  width: '20%' },
+      { min: 1,  max: 2,  color: '#f97316', text: 'Weak',       width: '40%' },
+      { min: 2,  max: 3,  color: '#eab308', text: 'Fair',       width: '60%' },
+      { min: 3,  max: 4,  color: '#22c55e', text: 'Good',       width: '80%' },
+      { min: 4,  max: 99, color: '#16a34a', text: 'Strong',     width: '100%' },
+    ];
+
+    function score(pw) {
+      let s = 0;
+      if (pw.length >= 8)  s++;
+      if (/[A-Z]/.test(pw)) s++;
+      if (/[0-9]/.test(pw)) s++;
+      if (/[^A-Za-z0-9]/.test(pw)) s++;
+      return s;
+    }
+
+    pwInput.addEventListener('input', () => {
+      const pw = pwInput.value;
+      if (!pw) { bar.style.width = '0%'; label.textContent = ''; return; }
+      const s = score(pw);
+      const lvl = levels.find(l => s >= l.min && s < l.max) || levels[levels.length - 1];
+      bar.style.width = lvl.width;
+      bar.style.backgroundColor = lvl.color;
+      label.textContent = lvl.text;
+      label.style.color = lvl.color;
+    });
+  </script>
+</body>
+</html>

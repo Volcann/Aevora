@@ -1,0 +1,394 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Volcann{% endblock %}</title>
+
+  <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/142692213?v=4">
+
+  <style>
+    :root {
+      --primary-color: #2da44e;
+      --primary-hover: #2c974b;
+      --nav-bg: #0d1117;
+      --nav-border: #21262d;
+      --nav-text: #e6edf3;
+      --nav-muted: #8b949e;
+      --card-bg: #161b22;
+      --card-border: #30363d;
+      --text-main: #e6edf3;
+      --text-muted: #8b949e;
+      --link-color: #58a6ff;
+      --danger: #f85149;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #000000;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a { color: var(--link-color); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .nav {
+      background-color: var(--nav-bg);
+      border-bottom: 1px solid var(--nav-border);
+      padding: 0 1.25rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      text-decoration: none;
+    }
+
+    .nav-brand img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--nav-border);
+    }
+
+    .nav-brand-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--nav-text);
+      letter-spacing: -0.01em;
+    }
+
+    .nav-right {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .profile-trigger {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color), #1a7f37);
+      border: 2px solid var(--nav-border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+      transition: border-color 0.2s ease, transform 0.15s ease;
+      user-select: none;
+    }
+
+    .profile-trigger:hover {
+      border-color: var(--primary-color);
+      transform: scale(1.05);
+    }
+
+    .profile-trigger.active {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(45, 164, 78, 0.25);
+    }
+
+    .profile-popover {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 260px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-8px) scale(0.97);
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .profile-popover.open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .popover-header {
+      padding: 1rem 1rem 0.75rem;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .popover-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color), #1a7f37);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .popover-user-info {
+      overflow: hidden;
+    }
+
+    .popover-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .popover-email {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .popover-body {
+      padding: 0.625rem 0;
+    }
+
+    .popover-meta {
+      padding: 0.25rem 1rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .popover-meta span:last-child {
+      color: var(--text-main);
+      font-size: 0.75rem;
+    }
+
+    .popover-divider {
+      height: 1px;
+      background-color: var(--card-border);
+      margin: 0.5rem 0;
+    }
+
+    .popover-action {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      text-decoration: none;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .popover-action:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      text-decoration: none;
+    }
+
+    .popover-action.danger {
+      color: var(--danger);
+    }
+
+    .popover-action.danger:hover {
+      background-color: rgba(248, 81, 73, 0.08);
+      color: var(--danger);
+    }
+
+    .popover-action svg {
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    .messages-container {
+      position: fixed;
+      top: 68px;
+      right: 1.25rem;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 340px;
+    }
+
+    .message {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      animation: messageFadeIn 0.3s ease forwards;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    @keyframes messageFadeIn {
+      from { opacity: 0; transform: translateX(10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .message.success {
+      background-color: #1a3a1f;
+      border: 1px solid #2da44e;
+      color: #7ee787;
+    }
+
+    .message.error {
+      background-color: #3d1a1a;
+      border: 1px solid #f85149;
+      color: #ffa198;
+    }
+
+    .message.info {
+      background-color: #1a2a3d;
+      border: 1px solid #58a6ff;
+      color: #79c0ff;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body>
+
+  {% if user.is_authenticated %}
+  <nav class="nav">
+    <a class="nav-brand" href="{% url 'dashboard:index' %}">
+      <img src="https://avatars.githubusercontent.com/u/142692213?v=4" alt="Volcann">
+      <span class="nav-brand-name">Volcann</span>
+    </a>
+
+    <div class="nav-right">
+      <div class="profile-trigger" id="profileTrigger" title="{{ user.get_full_name|default:user.username }}">
+        {{ user.first_name|first|upper|default:user.username|first|upper }}
+      </div>
+
+      <div class="profile-popover" id="profilePopover">
+        <div class="popover-header">
+          <div class="popover-avatar">
+            {{ user.first_name|first|upper|default:user.username|first|upper }}
+          </div>
+          <div class="popover-user-info">
+            <div class="popover-name">
+              {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}
+            </div>
+            <div class="popover-email">{{ user.email }}</div>
+          </div>
+        </div>
+
+        <div class="popover-body">
+          <div class="popover-meta">
+            <span>Username</span>
+            <span>{{ user.username }}</span>
+          </div>
+          <div class="popover-meta">
+            <span>Joined</span>
+            <span>{{ user.date_joined|date:"M j, Y" }}</span>
+          </div>
+          {% if user.last_login %}
+          <div class="popover-meta">
+            <span>Last login</span>
+            <span>{{ user.last_login|timesince }} ago</span>
+          </div>
+          {% endif %}
+          <div class="popover-divider"></div>
+
+          <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="popover-action danger">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <path fill-rule="evenodd" d="M2 2.75C2 1.784 2.784 1 3.75 1h4.5a.75.75 0 0 1 0 1.5h-4.5a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h4.5a.75.75 0 0 1 0 1.5h-4.5A1.75 1.75 0 0 1 2 13.25Zm9.78 1.22a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06L13.44 8.5H6.75a.75.75 0 0 1 0-1.5h6.69l-1.72-1.72a.75.75 0 0 1 0-1.06Z"/>
+              </svg>
+              Sign out
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </nav>
+  {% endif %}
+
+  {% if messages %}
+  <div class="messages-container">
+    {% for message in messages %}
+    <div class="message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    const trigger = document.getElementById('profileTrigger');
+    const popover = document.getElementById('profilePopover');
+
+    if (trigger && popover) {
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = popover.classList.contains('open');
+        popover.classList.toggle('open', !isOpen);
+        trigger.classList.toggle('active', !isOpen);
+      });
+
+      document.addEventListener('click', () => {
+        popover.classList.remove('open');
+        trigger.classList.remove('active');
+      });
+
+      popover.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    setTimeout(() => {
+      document.querySelectorAll('.message').forEach(el => {
+        el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(10px)';
+        setTimeout(() => el.remove(), 400);
+      });
+    }, 4000);
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

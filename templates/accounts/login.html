@@ -1,0 +1,294 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in to Volcann</title>
+  <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/142692213?v=4">
+  <style>
+    :root {
+      --primary-color: #2da44e;
+      --primary-hover: #2c974b;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-color: #d1d5db;
+      --focus-ring: rgba(45, 164, 78, 0.3);
+      --link-color: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #f6f8fa 0%, #e2e8f0 100%);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    a {
+      color: var(--link-color);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      color: #1d4ed8;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 360px;
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    @keyframes slideUpFade {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .avatar-wrapper {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 3px solid var(--card-bg);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .avatar:hover {
+      transform: scale(1.05);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      margin-bottom: 1.5rem;
+      color: var(--text-main);
+    }
+
+    .login-card {
+      background-color: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: var(--text-main);
+    }
+
+    .password-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .password-header a {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      font-size: 0.875rem;
+      color: var(--text-main);
+      background-color: #f9fafb;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      transition: all 0.2s ease-in-out;
+    }
+
+    input[type="text"]:hover,
+    input[type="password"]:hover {
+      border-color: #9ca3af;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      background-color: var(--card-bg);
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 4px var(--focus-ring);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background-color: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(45, 164, 78, 0.2), 0 2px 4px -1px rgba(45, 164, 78, 0.1);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .error-messages {
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.875rem;
+      color: #dc2626;
+    }
+
+    .error-messages ul {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    .error-messages li {
+      margin-bottom: 0.25rem;
+    }
+
+    .error-messages li:last-child {
+      margin-bottom: 0;
+    }
+
+    .create-account-box {
+      border: 1px solid var(--border-color);
+      background-color: transparent;
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .create-account-box a {
+      font-weight: 600;
+    }
+
+    @media (max-width: 400px) {
+      .login-card {
+        padding: 20px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+
+    <div class="avatar-wrapper">
+      <img class="avatar" src="https://avatars.githubusercontent.com/u/142692213?v=4" alt="Volcann">
+    </div>
+
+    <h1>Sign in to Volcann</h1>
+
+    <div class="login-card">
+      <form action="{% url 'accounts:login' %}" method="POST">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="error-messages">
+            <ul>
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label for="id_username">Username or email address</label>
+          <input
+            type="text"
+            name="username"
+            id="id_username"
+            autocomplete="username"
+            placeholder="hello@example.com"
+            value="{{ form.username.value|default:'' }}"
+            required
+          >
+          {% if form.username.errors %}
+            <div class="error-messages" style="margin-top: 0.5rem; margin-bottom: 0;">
+              {{ form.username.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <div class="password-header">
+            <label for="id_password">Password</label>
+            <a href="{% url 'accounts:forgot_password' %}">Forgot password?</a>
+          </div>
+          <input
+            type="password"
+            name="password"
+            id="id_password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            required
+          >
+          {% if form.password.errors %}
+            <div class="error-messages" style="margin-top: 0.5rem; margin-bottom: 0;">
+              {{ form.password.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn-primary">Sign in</button>
+      </form>
+    </div>
+
+    <div class="create-account-box">
+      New to Volcann? <a href="{% url 'accounts:register' %}">Create an account</a>
+    </div>
+
+  </div>
+
+</body>
+</html>
