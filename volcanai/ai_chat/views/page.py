@@ -1,6 +1,5 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 
 from volcanai.ai_chat.choices import MessageRole
 from volcanai.ai_chat.models.chat_session import ChatSession

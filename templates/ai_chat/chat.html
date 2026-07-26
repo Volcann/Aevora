@@ -69,6 +69,7 @@
       --toggle-thumb-bg: #e6edf3;
       --msg-user-bg:     #238636;
       --msg-user-text:   #ffffff;
+      --msg-ai-bg:       rgba(22, 27, 34, 0.9);
       --tag-bg:          rgba(56, 139, 253, 0.15);
       --tag-text:        #58a6ff;
     }
@@ -490,7 +491,7 @@
 
     <aside class="sidebar">
       <div class="sidebar-header">
-        <a href="{% url 'chat_new' %}" class="btn-new-chat">
+        <a href="{% url 'ai_chat' %}" class="btn-new-chat">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 5v14M5 12h14"/>
           </svg>

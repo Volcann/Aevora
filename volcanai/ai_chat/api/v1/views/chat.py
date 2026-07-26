@@ -72,7 +72,7 @@ def _gemini_stream(session, prompt):
             Message.objects.filter(
                 session=session,
                 role__in=[MessageRole.HUMAN, MessageRole.AI_GENERATED],
-            ).order_by("created_at")
+            ).order_by("created_at"),
         )
 
         history = [
@@ -129,8 +129,8 @@ def _gemini_stream(session, prompt):
                             function_response=genai.protos.FunctionResponse(
                                 name=fc.name,
                                 response={"result": result},
-                            )
-                        )
+                            ),
+                        ),
                     )
                 except Exception as exc:
                     yield _sse({"type": "tool_error", "tool": fc.name})
@@ -139,8 +139,8 @@ def _gemini_stream(session, prompt):
                             function_response=genai.protos.FunctionResponse(
                                 name=fc.name,
                                 response={"error": str(exc)},
-                            )
-                        )
+                            ),
+                        ),
                     )
 
             user_input = tool_parts
