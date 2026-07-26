@@ -141,6 +141,8 @@ CONSTANCE_REDIS_CONNECTION = {
 
 MAIN_DOMAIN = env("MAIN_DOMAIN", default="localhost")
 
+GEMINI_API_KEY = env("GEMINI_API_KEY")
+
 FIREBASE_SERVICE_ACCOUNT_FILE = BASE_DIR / env(
     "FIREBASE_SERVICE_ACCOUNT_FILE",
     default="volcanai-firebase-adminsdk.json",
