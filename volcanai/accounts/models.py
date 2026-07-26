@@ -1,8 +1,10 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from volcanai.core.models import UUIDTimeStampedModel
 
-class User(AbstractUser):
+
+class User(AbstractUser, UUIDTimeStampedModel):
     email = models.EmailField(unique=True)
 
     class Meta:

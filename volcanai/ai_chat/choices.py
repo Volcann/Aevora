@@ -10,5 +10,6 @@ class MessageRole(models.TextChoices):
 class ToolCallStatus(models.TextChoices):
     QUEUED = "queued", "Queued"
     RUNNING = "running", "Running"
-    DONE = "done", "Done"
+    COMPLETED = "completed", "Completed"
     FAILED = "failed", "Failed"
+    CANCELLED = "cancelled", "Cancelled"
