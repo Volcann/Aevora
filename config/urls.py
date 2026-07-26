@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from volcanai.core.views import health_check
+from volcanai.core.api.v1.views import health_check
 
 urlpatterns = [
     path("", RedirectView.as_view(pattern_name="accounts:login", permanent=False)),
