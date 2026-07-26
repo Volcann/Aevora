@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class AiChatConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'volcanai.ai_chat'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "volcanai.ai_chat"
