@@ -34,7 +34,6 @@ LOCAL_APPS = [
     "volcanai.core",
     "volcanai.accounts",
     "volcanai.ai_chat",
-    "volcanai.dashboard",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -119,7 +118,7 @@ AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
 
 # Redirect unauthenticated requests
 LOGIN_URL = "/accounts/login/"
-LOGIN_REDIRECT_URL = "/dashboard/"
+LOGIN_REDIRECT_URL = "/chat/"
 
 # JWT
 JWT_SECRET_KEY = env("JWT_SECRET_KEY", default=SECRET_KEY)

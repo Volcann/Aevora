@@ -9,7 +9,7 @@ from volcanai.core.api.v1.views import health_check
 urlpatterns = [
     path("", RedirectView.as_view(pattern_name="accounts:login", permanent=False)),
     path("accounts/", include("volcanai.accounts.api.v1.urls")),
-    path("dashboard/", include("volcanai.dashboard.urls")),
+    path("chat/", include("volcanai.ai_chat.api.v1.urls")),
     path("health/", health_check, name="health-check"),
     path("api/admin/", admin.site.urls),
 ]
