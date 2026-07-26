@@ -36,7 +36,7 @@ def forgot_password_view(request):
                     domain=domain,
                 )
             except User.DoesNotExist:
-                pass  # Don't reveal whether the email exists
+                pass
             except Exception:
                 logger.exception("Failed to send password reset email to %s", email)
             sent = True
