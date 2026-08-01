@@ -165,7 +165,7 @@ def _gemini_stream(session, prompt):
 @login_required
 def ai_chat(request):
     session = ChatSession.objects.create(user=request.user)
-    return redirect("chat_session", session_id=session.id)
+    return redirect("ai_chat:chat_session", session_id=session.id)
 
 
 @login_required

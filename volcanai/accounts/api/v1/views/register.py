@@ -14,7 +14,7 @@ User = get_user_model()
 
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect("ai_chat")
+        return redirect("ai_chat:ai_chat")
 
     if request.method == "POST":
         form = RegisterForm(request.POST)
@@ -35,7 +35,7 @@ def register_view(request):
                 logger.exception("Failed to send welcome email to %s", user.email)
 
             messages.success(request, f"Welcome to Volcann, {user.first_name or user.username}! 🎉")
-            return redirect("ai_chat")
+            return redirect("ai_chat:ai_chat")
     else:
         form = RegisterForm()
 

@@ -13,19 +13,33 @@
       if (t) document.documentElement.setAttribute('data-theme', t);
       else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
         document.documentElement.setAttribute('data-theme', 'dark');
+      var saved = localStorage.getItem('volcann-accent');
+      if (saved) {
+        try {
+          var c = JSON.parse(saved);
+          var r = document.documentElement;
+          if (c.h !== undefined) r.style.setProperty('--accent-h', c.h);
+          if (c.s !== undefined) r.style.setProperty('--accent-s', c.s + '%');
+          if (c.l !== undefined) r.style.setProperty('--accent-l', c.l + '%');
+        } catch(e) {}
+      }
     })();
   </script>
 
   <style>
+    /* ─── HSL accent system ─────────────────────────────── */
     :root {
-      --gh-green:        #2da44e;
-      --gh-green-dark:   #2c974b;
-      --gh-green-bright: #3fb950;
-      --gh-green-glow:   rgba(45, 164, 78, 0.32);
-      --gh-purple:       #bc8cff;
+      --accent-h: 138;
+      --accent-s: 55%;
+      --accent-l: 42%;
+
+      --gh-green:        hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+      --gh-green-dark:   hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) - 6%));
+      --gh-green-bright: hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) + 8%));
+      --gh-green-glow:   hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.32);
 
       --bg:              #f6f8fa;
-      --surface:         rgba(255, 255, 255, 0.88);
+      --surface:         rgba(255,255,255,0.88);
       --surface-solid:   #ffffff;
       --surface-hover:   #f3f4f6;
       --border:          #d0d7de;
@@ -35,43 +49,47 @@
       --link:            #0969da;
       --err-bg:          #fff8f8;
       --err-text:        #cf222e;
-      --orb1:            rgba(45, 164, 78, 0.09);
-      --orb2:            rgba(9, 105, 218, 0.06);
-      --grid:            rgba(0, 0, 0, 0.038);
+      --orb1:            hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.09);
+      --orb2:            rgba(9,105,218,0.06);
+      --grid:            rgba(0,0,0,0.038);
       --card-shadow:     0 8px 32px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
       --toggle-track:    #e5e7eb;
       --toggle-thumb-bg: #ffffff;
       --sidebar-width:   260px;
-      --msg-user-bg:     #2da44e;
+      --msg-user-bg:     hsl(var(--accent-h), var(--accent-s), var(--accent-l));
       --msg-user-text:   #ffffff;
-      --msg-ai-bg:       rgba(255, 255, 255, 0.9);
-      --tag-bg:          rgba(45, 164, 78, 0.12);
-      --tag-text:        #2da44e;
+      --msg-ai-bg:       rgba(255,255,255,0.9);
+      --tag-bg:          hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.12);
+      --tag-text:        hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+      --sb-thumb:        hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.35);
+      --sb-thumb-hover:  hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.65);
     }
 
     [data-theme="dark"] {
       --bg:              #0d1117;
-      --surface:         rgba(22, 27, 34, 0.82);
+      --surface:         rgba(22,27,34,0.82);
       --surface-solid:   #161b22;
       --surface-hover:   #21262d;
       --border:          #30363d;
       --text:            #e6edf3;
       --text-muted:      #8b949e;
-      --input-bg:        rgba(13, 17, 23, 0.85);
+      --input-bg:        rgba(13,17,23,0.85);
       --link:            #58a6ff;
-      --err-bg:          rgba(248, 81, 73, 0.07);
+      --err-bg:          rgba(248,81,73,0.07);
       --err-text:        #ff7b72;
-      --orb1:            rgba(45, 164, 78, 0.13);
-      --orb2:            rgba(88, 166, 255, 0.09);
-      --grid:            rgba(45, 164, 78, 0.032);
+      --orb1:            hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.13);
+      --orb2:            rgba(88,166,255,0.09);
+      --grid:            hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.032);
       --card-shadow:     0 8px 40px rgba(0,0,0,0.45), 0 1px 4px rgba(0,0,0,0.25);
       --toggle-track:    #21262d;
       --toggle-thumb-bg: #e6edf3;
-      --msg-user-bg:     #238636;
+      --msg-user-bg:     hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) - 8%));
       --msg-user-text:   #ffffff;
-      --msg-ai-bg:       rgba(22, 27, 34, 0.9);
-      --tag-bg:          rgba(56, 139, 253, 0.15);
-      --tag-text:        #58a6ff;
+      --msg-ai-bg:       rgba(22,27,34,0.9);
+      --tag-bg:          hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.18);
+      --tag-text:        hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) + 18%));
+      --sb-thumb:        hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.28);
+      --sb-thumb-hover:  hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.55);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -89,6 +107,7 @@
       transition: background-color 0.35s ease, color 0.35s ease;
     }
 
+    /* ─── Background orbs ──────────────────────────────────── */
     .orb {
       position: fixed; border-radius: 50%; pointer-events: none;
       filter: blur(80px); z-index: 0;
@@ -105,12 +124,41 @@
 
     .app-layout { display:flex; width:100vw; height:100vh; position:relative; z-index:1; }
 
+    /* ─── Scrollbars — show only on hover, accent-tinted ──── */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+    }
+    *:hover {
+      scrollbar-color: var(--sb-thumb) transparent;
+    }
+    *::-webkit-scrollbar       { width: 4px; height: 4px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 99px;
+      transition: background 0.3s ease;
+    }
+    .chat-messages:hover::-webkit-scrollbar-thumb,
+    .history-container:hover::-webkit-scrollbar-thumb {
+      background: var(--sb-thumb);
+    }
+    .chat-messages::-webkit-scrollbar-thumb:hover,
+    .history-container::-webkit-scrollbar-thumb:hover {
+      background: var(--sb-thumb-hover) !important;
+    }
+    /* Scrollbar always visible while actively scrolling */
+    .is-scrolling::-webkit-scrollbar-thumb {
+      background: var(--sb-thumb) !important;
+    }
+
+    /* ─── Sidebar ───────────────────────────────────────────── */
     .sidebar {
       width: var(--sidebar-width); height: 100%;
       background: var(--surface); backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px); border-right: 1px solid var(--border);
       display: flex; flex-direction: column;
-      transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: margin-left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       flex-shrink: 0; z-index: 20;
     }
     .app-layout.sidebar-folded .sidebar { margin-left: calc(-1 * var(--sidebar-width)); }
@@ -120,46 +168,215 @@
       justify-content: space-between; gap: 0.5rem; height: 56px;
       border-bottom: 1px solid var(--border);
     }
+
+    /* ─── New Chat button with ripple ───────────────────────── */
     .btn-new-chat {
       flex: 1; height: 36px; display: flex; align-items: center;
       justify-content: center; gap: 0.5rem; padding: 0 0.85rem;
       font-size: 0.83rem; font-weight: 600; color: #ffffff;
-      background: linear-gradient(160deg, #2da44e 0%, #2a8f43 100%);
+      background: linear-gradient(160deg, var(--gh-green) 0%, var(--gh-green-dark) 100%);
       border: none; border-radius: 8px; cursor: pointer;
-      transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(45,164,78,0.2);
-      text-decoration: none;
+      transition: all 0.2s ease; box-shadow: 0 2px 8px var(--gh-green-glow);
+      text-decoration: none; position: relative; overflow: hidden;
     }
+    .btn-new-chat::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(160deg, var(--gh-green-bright) 0%, var(--gh-green) 100%);
+      opacity: 0; transition: opacity 0.25s ease;
+    }
+    .btn-new-chat:hover::after { opacity: 1; }
     .btn-new-chat:hover {
-      background: linear-gradient(160deg, #3fb950 0%, #2da44e 100%);
-      transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,164,78,0.3);
+      transform: translateY(-1px); box-shadow: 0 4px 14px var(--gh-green-glow);
     }
+    .btn-new-chat:active { transform: translateY(0); }
+    .btn-new-chat span, .btn-new-chat svg { position: relative; z-index: 1; }
+
     .sidebar-toggle-icon {
       background: transparent; border: 1px solid var(--border);
       color: var(--text-muted); border-radius: 8px;
       width: 36px; height: 36px; display: flex; align-items: center;
-      justify-content: center; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0;
+      justify-content: center; cursor: pointer;
+      transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+      flex-shrink: 0;
     }
-    .sidebar-toggle-icon:hover { color: var(--text); background: var(--surface-hover); }
+    .sidebar-toggle-icon:hover {
+      color: var(--text); background: var(--surface-hover);
+      transform: scale(1.05);
+    }
 
-    .history-container { flex: 1; overflow-y: auto; padding: 0.5rem 0.75rem; }
+    /* ─── History scroll-reveal timeline ────────────────────── */
+    .history-container {
+      flex: 1; overflow-y: auto; padding: 0.5rem 0.75rem;
+      position: relative; overscroll-behavior: contain;
+    }
     .history-title {
       font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em;
       color: var(--text-muted); margin: 0.75rem 0.5rem 0.4rem; font-weight: 600;
     }
+
+    .history-list { position: relative; padding-left: 0; }
+
+    .history-line {
+      position: absolute; left: 20px; top: 0;
+      width: 2px; height: 0%;
+      background: linear-gradient(
+        180deg, var(--gh-green) 0%, var(--gh-green-bright) 40%,
+        hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.25) 100%
+      );
+      border-radius: 2px;
+      transition: height 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none; z-index: 1;
+    }
+    .history-line::after {
+      content: '';
+      position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--gh-green);
+      box-shadow: 0 0 10px 3px var(--gh-green-glow), 0 0 4px 1px var(--gh-green);
+      animation: dotPulse 2s ease-in-out infinite;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    .history-line.active::after { opacity: 1; }
+    @keyframes dotPulse {
+      0%,100% { transform:translateX(-50%) scale(1); box-shadow:0 0 10px 3px var(--gh-green-glow); }
+      50%      { transform:translateX(-50%) scale(1.4); box-shadow:0 0 18px 6px var(--gh-green-glow); }
+    }
+
+    /* ─── History item with hover delete icon ───────────────── */
     .history-item {
       display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.6rem 0.75rem; border-radius: 8px; font-size: 0.83rem;
+      padding: 0.6rem 0.75rem 0.6rem 2.25rem;
+      border-radius: 8px; font-size: 0.83rem;
       color: var(--text); text-decoration: none; cursor: pointer; margin-bottom: 2px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      transition: background 0.15s ease;
+      position: relative; z-index: 2;
+      /* scroll-reveal */
+      opacity: 0; transform: translateX(-10px);
+      transition:
+        background 0.15s ease,
+        transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1),
+        opacity 0.3s ease,
+        box-shadow 0.2s ease;
     }
-    .history-item:hover { background: var(--surface-hover); }
+    .history-item.revealed { opacity: 1; transform: translateX(0); }
+    .history-item:hover {
+      background: var(--surface-hover);
+      transform: translateX(3px);
+      box-shadow: inset 3px 0 0 0 hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.35);
+    }
     .history-item.active {
-      background: var(--surface-hover); border-left: 3px solid var(--gh-green);
-      font-weight: 600; padding-left: calc(0.75rem - 3px);
+      background: var(--surface-hover);
+      border-left: 3px solid var(--gh-green);
+      font-weight: 600;
+      padding-left: calc(2.25rem - 3px);
+      box-shadow: inset 3px 0 0 0 var(--gh-green-glow);
     }
-    .history-item svg { flex-shrink: 0; color: var(--text-muted); }
+    /* dot marker */
+    .history-item::before {
+      content: '';
+      position: absolute; left: 16.5px; top: 50%; transform: translateY(-50%);
+      width: 7px; height: 7px; border-radius: 50%;
+      border: 1.5px solid var(--gh-green);
+      background: var(--surface-solid);
+      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      z-index: 3;
+    }
+    .history-item.active::before,
+    .history-item:hover::before {
+      background: var(--gh-green);
+      box-shadow: 0 0 8px 2px var(--gh-green-glow);
+      transform: translateY(-50%) scale(1.2);
+    }
+    .history-item svg { display: none; }
 
+    /* Item title text */
+    .history-item-label {
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      min-width: 0;
+    }
+
+    /* ─── Delete button ──────────────────────────────────────── */
+    .history-delete-btn {
+      flex-shrink: 0;
+      width: 24px; height: 24px;
+      background: none; border: none;
+      color: var(--text-muted); border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0; pointer-events: none;
+      transform: scale(0.7) rotate(-10deg);
+      transition:
+        opacity 0.18s ease,
+        transform 0.2s cubic-bezier(0.34, 1.5, 0.64, 1),
+        color 0.15s ease,
+        background 0.15s ease;
+      margin-right: -2px;
+    }
+    .history-item:hover .history-delete-btn {
+      opacity: 1; pointer-events: all;
+      transform: scale(1) rotate(0deg);
+    }
+    .history-delete-btn:hover {
+      color: var(--err-text) !important;
+      background: rgba(207,34,46,0.1);
+    }
+    .history-delete-btn:active { transform: scale(0.88) !important; }
+
+    /* Deleting exit animation */
+    .history-item.deleting {
+      pointer-events: none !important;
+      overflow: hidden;
+      opacity: 0 !important;
+      transform: translateX(-20px) !important;
+      max-height: 50px;
+      margin-bottom: 2px;
+      padding-top: 0.6rem;
+      padding-bottom: 0.6rem;
+      transition:
+        opacity 0.25s ease,
+        transform 0.25s ease,
+        max-height 0.3s 0.18s ease,
+        padding 0.3s 0.18s ease,
+        margin 0.3s 0.18s ease !important;
+    }
+    .history-item.deleting.collapsed {
+      max-height: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      margin-bottom: 0 !important;
+    }
+
+    /* ─── Confirmation toast overlay on item ────────────────── */
+    .delete-confirm {
+      position: absolute; inset: 0; border-radius: 8px;
+      background: rgba(207,34,46,0.1);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 0.75rem; gap: 0.5rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.15s ease;
+      z-index: 10;
+    }
+    .delete-confirm.visible { opacity: 1; pointer-events: all; }
+    .delete-confirm-text {
+      font-size: 0.75rem; font-weight: 600; color: var(--err-text); white-space: nowrap;
+    }
+    .delete-confirm-actions { display: flex; gap: 5px; }
+    .btn-del-yes, .btn-del-no {
+      font-size: 0.7rem; font-weight: 700; border-radius: 5px;
+      padding: 2px 8px; cursor: pointer; border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .btn-del-yes {
+      background: var(--err-text); color: #fff; border-color: var(--err-text);
+    }
+    .btn-del-yes:hover { filter: brightness(1.1); }
+    .btn-del-no {
+      background: var(--surface-solid); color: var(--text); border-color: var(--border);
+    }
+    .btn-del-no:hover { background: var(--surface-hover); }
+
+    /* ─── Sidebar footer ────────────────────────────────────── */
     .sidebar-footer {
       padding: 0.85rem 1rem; border-top: 1px solid var(--border);
       display: flex; align-items: center; gap: 0.75rem; height: 60px;
@@ -169,6 +386,7 @@
     .user-name  { font-size:0.8125rem; font-weight:600; }
     .user-plan  { font-size:0.7rem; color:var(--text-muted); }
 
+    /* ─── Main chat ─────────────────────────────────────────── */
     .chat-main { flex:1; display:flex; flex-direction:column; height:100%; position:relative; overflow:hidden; min-width:0; }
 
     .chat-navbar {
@@ -178,15 +396,17 @@
       padding: 0 1rem; z-index: 5; flex-shrink: 0;
     }
     .navbar-left { display:flex; align-items:center; gap:0.75rem; }
+
     .fold-trigger {
       display:flex; align-items:center; justify-content:center;
       background:none; border:1px solid var(--border); color:var(--text);
       cursor:pointer; width:34px; height:34px; border-radius:8px;
-      transition: background 0.2s ease, border-color 0.2s ease;
+      transition: background 0.2s ease, transform 0.2s cubic-bezier(0.34,1.3,0.64,1);
     }
-    .fold-trigger:hover { background: var(--surface-hover); }
+    .fold-trigger:hover { background: var(--surface-hover); transform: scale(1.08); }
     .brand-title { font-size:0.9375rem; font-weight:600; letter-spacing:-0.01em; }
 
+    /* ─── Theme toggle ──────────────────────────────────────── */
     .theme-toggle {
       width:50px; height:26px; border-radius:13px;
       border:1px solid var(--border); background:var(--toggle-track);
@@ -197,7 +417,7 @@
       width:18px; height:18px; border-radius:50%;
       background:var(--toggle-thumb-bg); display:flex; align-items:center; justify-content:center;
       box-shadow:0 1px 3px rgba(0,0,0,0.18);
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
     }
     [data-theme="dark"] .toggle-thumb { transform: translateX(24px); }
     .toggle-thumb svg { width:11px; height:11px; }
@@ -206,32 +426,58 @@
     [data-theme="dark"] .icon-sun  { display:none; }
     [data-theme="dark"] .icon-moon { display:block; }
 
+    /* ─── Chat messages ─────────────────────────────────────── */
     .chat-messages {
       flex:1; overflow-y:auto; padding:1.5rem 1rem;
       display:flex; flex-direction:column; gap:1.25rem;
       max-width:800px; width:100%; margin:0 auto;
+      overscroll-behavior: contain;
     }
+
     .message {
       display:flex; gap:0.75rem; max-width:85%;
-      align-items:flex-start; animation: fadeIn 0.25s ease forwards;
+      align-items:flex-start;
+      animation: msgSlideIn 0.3s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
     }
-    @keyframes fadeIn {
-      from { opacity:0; transform:translateY(6px); }
-      to   { opacity:1; transform:translateY(0);   }
+    @keyframes msgSlideIn {
+      from { opacity:0; transform:translateY(10px) scale(0.98); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
     }
-    .message.user { align-self:flex-end; flex-direction:row-reverse; }
-    .message-avatar { width:32px; height:32px; border-radius:50%; flex-shrink:0; object-fit:cover; margin-top:2px; }
+    .message.user {
+      align-self:flex-end; flex-direction:row-reverse;
+      animation: msgSlideInRight 0.3s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
+    }
+    @keyframes msgSlideInRight {
+      from { opacity:0; transform:translateY(10px) translateX(8px) scale(0.98); }
+      to   { opacity:1; transform:translateY(0) translateX(0) scale(1); }
+    }
+
+    .message-avatar {
+      width:32px; height:32px; border-radius:50%; flex-shrink:0; object-fit:cover; margin-top:2px;
+      transition: transform 0.2s ease;
+    }
+    .message:hover .message-avatar { transform: scale(1.08); }
 
     .message-content {
       padding:0.75rem 1rem; border-radius:12px; font-size:0.9rem;
-      line-height:1.6; box-shadow:0 2px 8px rgba(0,0,0,0.03); word-break:break-word;
+      line-height:1.6; word-break:break-word;
+      transition: box-shadow 0.2s ease;
     }
     .message.user .message-content {
       background:var(--msg-user-bg); color:var(--msg-user-text); border-top-right-radius:2px;
+      box-shadow: 0 2px 10px var(--gh-green-glow);
+    }
+    .message.user:hover .message-content {
+      box-shadow: 0 4px 18px var(--gh-green-glow);
     }
     .message.ai .message-content {
       background:var(--msg-ai-bg); border:1px solid var(--border);
       border-top-left-radius:2px; color:var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .message.ai:hover .message-content {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      border-color: var(--gh-green-glow);
     }
     .message-content p             { margin-bottom:0.5rem; }
     .message-content p:last-child  { margin-bottom:0; }
@@ -258,227 +504,298 @@
     .message-content strong { font-weight:700; }
     .message-content a { color:var(--link); text-decoration:underline; }
 
+    /* ─── Streaming cursor ──────────────────────────────────── */
     .stream-cursor {
-      display: inline-block;
-      width: 2px;
-      height: 1.05em;
-      background: var(--gh-green);
-      border-radius: 1px;
-      margin-left: 2px;
-      vertical-align: text-bottom;
-      animation: cursorBlink 0.75s step-end infinite;
+      display: inline-block; width: 2px; height: 1.05em;
+      background: var(--gh-green); border-radius: 1px;
+      margin-left: 2px; vertical-align: text-bottom;
+      animation: cursorBlink 0.7s step-end infinite;
     }
     @keyframes cursorBlink {
       0%, 100% { opacity: 1; }
       50%       { opacity: 0; }
     }
 
+    /* ─── Thinking block ────────────────────────────────────── */
     .ai-thinking {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 2px 0;
-      overflow: hidden;
-      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                  opacity    0.3s ease,
-                  padding    0.3s ease;
-      max-height: 80px;
-      opacity: 1;
+      display: flex; align-items: center; gap: 14px; padding: 2px 0; overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, padding 0.3s ease;
+      max-height: 80px; opacity: 1;
     }
-    .ai-thinking.collapsing {
-      max-height: 0 !important;
-      opacity: 0;
-      padding-top: 0;
-      padding-bottom: 0;
-    }
-
-    .wave-bars {
-      display: flex;
-      align-items: flex-end;
-      gap: 3px;
-      height: 24px;
-      flex-shrink: 0;
-    }
-    .wave-bar {
-      width: 3.5px;
-      border-radius: 3px;
-      background: var(--gh-green);
-      animation: wavePulse 1s ease-in-out infinite;
-    }
-    .wave-bar:nth-child(1) { animation-delay: 0s;    animation-duration: 0.95s; }
-    .wave-bar:nth-child(2) { animation-delay: 0.13s; animation-duration: 1.05s; }
-    .wave-bar:nth-child(3) { animation-delay: 0.26s; animation-duration: 0.90s; }
-    .wave-bar:nth-child(4) { animation-delay: 0.39s; animation-duration: 1.10s; }
-    .wave-bar:nth-child(5) { animation-delay: 0.52s; animation-duration: 0.85s; }
-    .wave-bar:nth-child(6) { animation-delay: 0.39s; animation-duration: 1.00s; }
-    .wave-bar:nth-child(7) { animation-delay: 0.26s; animation-duration: 0.95s; }
+    .ai-thinking.collapsing { max-height: 0 !important; opacity: 0; padding-top:0; padding-bottom:0; }
+    .wave-bars { display:flex; align-items:flex-end; gap:3px; height:24px; flex-shrink:0; }
+    .wave-bar { width:3.5px; border-radius:3px; background:var(--gh-green); animation:wavePulse 1s ease-in-out infinite; }
+    .wave-bar:nth-child(1) { animation-delay:0s;    animation-duration:0.95s; }
+    .wave-bar:nth-child(2) { animation-delay:0.13s; animation-duration:1.05s; }
+    .wave-bar:nth-child(3) { animation-delay:0.26s; animation-duration:0.90s; }
+    .wave-bar:nth-child(4) { animation-delay:0.39s; animation-duration:1.10s; }
+    .wave-bar:nth-child(5) { animation-delay:0.52s; animation-duration:0.85s; }
+    .wave-bar:nth-child(6) { animation-delay:0.39s; animation-duration:1.00s; }
+    .wave-bar:nth-child(7) { animation-delay:0.26s; animation-duration:0.95s; }
     @keyframes wavePulse {
-      0%, 100% { height: 3px;  opacity: 0.3; width: 3.5px; }
-      50%       { height: 22px; opacity: 1.0; width: 4.5px; }
+      0%, 100% { height:3px;  opacity:0.3; width:3.5px; }
+      50%       { height:22px; opacity:1.0; width:4.5px; }
     }
-
-    .thinking-text-col {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .thinking-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-    }
-    .thinking-phrase {
-      font-weight: 600;
-      color: var(--text);
-      transition: opacity 0.3s ease;
-    }
-    .thinking-dots span {
-      display: inline-block;
-      animation: dotBlink 1.4s ease-in-out infinite;
-      opacity: 0;
-    }
-    .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes dotBlink {
-      0%, 80%, 100% { opacity: 0; }
-      40%            { opacity: 1; }
-    }
-
-    .thinking-bar-wrap {
-      width: 140px;
-      height: 3px;
-      background: var(--border);
-      border-radius: 99px;
-      overflow: hidden;
-      transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
+    .thinking-text-col { display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .thinking-label { font-size:0.8rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; }
+    .thinking-phrase { font-weight:600; color:var(--text); transition:opacity 0.3s ease; }
+    .thinking-dots span { display:inline-block; animation:dotBlink 1.4s ease-in-out infinite; opacity:0; }
+    .thinking-dots span:nth-child(2) { animation-delay:0.2s; }
+    .thinking-dots span:nth-child(3) { animation-delay:0.4s; }
+    @keyframes dotBlink { 0%,80%,100%{opacity:0;} 40%{opacity:1;} }
+    .thinking-bar-wrap { width:140px; height:3px; background:var(--border); border-radius:99px; overflow:hidden; transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
     .thinking-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--gh-green-dark), var(--gh-green-bright), var(--gh-green-dark));
-      background-size: 200% 100%;
-      border-radius: 99px;
-      animation: barFlow 2.2s ease-in-out infinite,
-                 barShimmer 1.8s linear infinite;
+      height:100%;
+      background:linear-gradient(90deg, var(--gh-green-dark), var(--gh-green-bright), var(--gh-green-dark));
+      background-size:200% 100%; border-radius:99px;
+      animation:barFlow 2.2s ease-in-out infinite, barShimmer 1.8s linear infinite;
     }
-    @keyframes barFlow {
-      0%   { width: 5%;  margin-left: 0;   }
-      50%  { width: 55%; margin-left: 22%; }
-      100% { width: 5%;  margin-left: 95%; }
-    }
-    @keyframes barShimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    @keyframes barFlow { 0%{width:5%;margin-left:0} 50%{width:55%;margin-left:22%} 100%{width:5%;margin-left:95%} }
+    @keyframes barShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
+    /* ─── Tool indicators ───────────────────────────────────── */
     .tool-indicator {
-      display: inline-flex; align-items: center; gap: 0.4rem;
-      padding: 0.28rem 0.6rem; border-radius: 6px;
-      font-size: 0.775rem; font-weight: 600;
-      margin: 0.3rem 0; background: var(--tag-bg); color: var(--tag-text);
+      display:inline-flex; align-items:center; gap:0.4rem;
+      padding:0.28rem 0.6rem; border-radius:6px;
+      font-size:0.775rem; font-weight:600;
+      margin:0.3rem 0; background:var(--tag-bg); color:var(--tag-text);
     }
     .tool-indicator.running {
-      background: linear-gradient(90deg, var(--tag-bg) 0%, rgba(45,164,78,0.22) 50%, var(--tag-bg) 100%);
-      background-size: 250% 100%;
-      animation: chipShimmer 1.5s ease-in-out infinite;
+      background:linear-gradient(90deg,var(--tag-bg) 0%,hsla(var(--accent-h),var(--accent-s),var(--accent-l),0.22) 50%,var(--tag-bg) 100%);
+      background-size:250% 100%;
+      animation:chipShimmer 1.5s ease-in-out infinite;
     }
-    @keyframes chipShimmer {
-      0%   { background-position:  200% 0; }
-      100% { background-position: -200% 0; }
-    }
-    .tool-indicator.done  { opacity: 0.62; }
-    .tool-indicator.error { background: rgba(207,34,46,0.1); color: var(--err-text); }
-    .tool-indicator.busy  { opacity: 0.75; }
-    .tool-indicator code  { font-family: 'SF Mono', monospace; font-size: 0.78rem; }
-
+    @keyframes chipShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .tool-indicator.done  { opacity:0.62; }
+    .tool-indicator.error { background:rgba(207,34,46,0.1); color:var(--err-text); }
+    .tool-indicator.busy  { opacity:0.75; }
+    .tool-indicator code  { font-family:'SF Mono',monospace; font-size:0.78rem; }
     .tool-mention {
-      display: inline-flex; align-items: center; gap: 0.2rem;
-      padding: 0.1rem 0.45rem; background: var(--tag-bg); color: var(--tag-text);
-      border-radius: 5px; font-weight: 600; font-size: 0.82rem; line-height: 1.3;
+      display:inline-flex; align-items:center; gap:0.2rem;
+      padding:0.1rem 0.45rem; background:var(--tag-bg); color:var(--tag-text);
+      border-radius:5px; font-weight:600; font-size:0.82rem; line-height:1.3;
     }
 
+    /* ─── Input area ────────────────────────────────────────── */
     .chat-input-wrapper {
-      padding: 1rem; max-width: 800px; width: 100%;
-      margin: 0 auto; position: relative; flex-shrink: 0;
+      padding:1rem; max-width:800px; width:100%;
+      margin:0 auto; position:relative; flex-shrink:0;
     }
     .tools-popover {
-      position: absolute; bottom: calc(100% + 10px); left: 1rem;
-      width: 260px; background: var(--surface-solid);
-      border: 1px solid var(--border); border-radius: 10px;
-      box-shadow: var(--card-shadow); display: none; flex-direction: column;
-      overflow: hidden; z-index: 100;
-      animation: popUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position:absolute; bottom:calc(100% + 10px); left:1rem;
+      width:260px; background:var(--surface-solid);
+      border:1px solid var(--border); border-radius:10px;
+      box-shadow:var(--card-shadow); display:none; flex-direction:column;
+      overflow:hidden; z-index:100;
+      animation:popUp 0.18s cubic-bezier(0.16,1,0.3,1) forwards;
     }
-    .tools-popover.active { display: flex; }
-    @keyframes popUp {
-      from { opacity:0; transform:translateY(6px); }
-      to   { opacity:1; transform:translateY(0); }
-    }
+    .tools-popover.active { display:flex; }
+    @keyframes popUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
     .popover-header {
-      font-size: 0.68rem; text-transform: uppercase; font-weight: 600;
-      letter-spacing: 0.04em; color: var(--text-muted); padding: 0.5rem 0.75rem;
-      background: var(--surface-hover); border-bottom: 1px solid var(--border);
+      font-size:0.68rem; text-transform:uppercase; font-weight:600;
+      letter-spacing:0.04em; color:var(--text-muted); padding:0.5rem 0.75rem;
+      background:var(--surface-hover); border-bottom:1px solid var(--border);
     }
     .tool-option {
-      padding: 0.6rem 0.75rem; display: flex; align-items: center;
-      gap: 0.5rem; font-size: 0.83rem; color: var(--text);
-      cursor: pointer; transition: background 0.15s ease;
+      padding:0.6rem 0.75rem; display:flex; align-items:center;
+      gap:0.5rem; font-size:0.83rem; color:var(--text);
+      cursor:pointer; transition:background 0.15s ease, transform 0.15s ease;
     }
-    .tool-option:hover { background: var(--surface-hover); }
-    .tool-option span  { font-weight: 600; color: var(--gh-green); }
-    .no-tools-msg { padding: 0.75rem; font-size: 0.82rem; color: var(--text-muted); }
+    .tool-option:hover { background:var(--surface-hover); transform:translateX(2px); }
+    .tool-option span  { font-weight:600; color:var(--gh-green); }
+    .no-tools-msg { padding:0.75rem; font-size:0.82rem; color:var(--text-muted); }
 
+    /* Input box with animated border glow */
     .input-box {
-      display: flex; align-items: flex-end;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; padding: 0.5rem 0.75rem; gap: 0.5rem;
-      backdrop-filter: blur(12px); box-shadow: var(--card-shadow);
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      display:flex; align-items:flex-end;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:12px; padding:0.5rem 0.75rem; gap:0.5rem;
+      backdrop-filter:blur(12px); box-shadow:var(--card-shadow);
+      transition:border-color 0.2s ease, box-shadow 0.25s ease;
+      position:relative; overflow:hidden;
+    }
+    .input-box::before {
+      content:'';
+      position:absolute; inset:-1px; border-radius:12px;
+      background:linear-gradient(90deg,
+        transparent, hsla(var(--accent-h),var(--accent-s),var(--accent-l),0.4), transparent
+      );
+      opacity:0; pointer-events:none;
+      transition:opacity 0.3s ease;
+      background-size:200% 100%;
+      animation:inputShine 2s linear infinite paused;
     }
     .input-box:focus-within {
-      border-color: var(--gh-green);
-      box-shadow: 0 0 0 3px var(--gh-green-glow);
+      border-color:var(--gh-green);
+      box-shadow:0 0 0 3px var(--gh-green-glow), var(--card-shadow);
     }
+    .input-box:focus-within::before {
+      opacity:1;
+      animation-play-state:running;
+    }
+    @keyframes inputShine { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
     .tool-btn {
-      background: var(--surface-hover); border: 1px solid var(--border);
-      color: var(--text-muted); width: 32px; height: 32px; border-radius: 8px;
-      font-weight: 700; font-size: 0.85rem; display: flex; align-items: center;
-      justify-content: center; cursor: pointer; transition: all 0.2s ease;
-      flex-shrink: 0; margin-bottom: 1px;
+      background:var(--surface-hover); border:1px solid var(--border);
+      color:var(--text-muted); width:32px; height:32px; border-radius:8px;
+      font-weight:700; font-size:0.85rem; display:flex; align-items:center;
+      justify-content:center; cursor:pointer;
+      transition:color 0.2s ease, border-color 0.2s ease, transform 0.2s cubic-bezier(0.34,1.4,0.64,1);
+      flex-shrink:0; margin-bottom:1px; position:relative; z-index:1;
     }
-    .tool-btn:hover { color: var(--gh-green); border-color: var(--gh-green); }
+    .tool-btn:hover { color:var(--gh-green); border-color:var(--gh-green); transform:scale(1.1); }
+
     .chat-textarea {
-      flex: 1; background: transparent; border: none; outline: none;
-      color: var(--text); font-family: inherit; font-size: 0.9rem;
-      resize: none; max-height: 120px; min-height: 24px;
-      line-height: 24px; padding: 4px 0;
+      flex:1; background:transparent; border:none; outline:none;
+      color:var(--text); font-family:inherit; font-size:0.9rem;
+      resize:none; max-height:120px; min-height:24px;
+      line-height:24px; padding:4px 0; position:relative; z-index:1;
     }
+
+    /* Send button with ripple */
     .btn-send {
-      background: var(--gh-green); color: #ffffff; border: none;
-      width: 32px; height: 32px; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: background 0.2s ease, transform 0.1s ease;
-      flex-shrink: 0; margin-bottom: 1px;
+      background:var(--gh-green); color:#fff; border:none;
+      width:32px; height:32px; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; position:relative; overflow:hidden;
+      transition:background 0.2s ease, transform 0.15s cubic-bezier(0.34,1.4,0.64,1),
+                 box-shadow 0.2s ease;
+      flex-shrink:0; margin-bottom:1px; z-index:1;
     }
-    .btn-send:hover  { background: var(--gh-green-bright); }
-    .btn-send:active { transform: scale(0.95); }
-    .btn-send:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn-send:hover {
+      background:var(--gh-green-bright);
+      transform:scale(1.08);
+      box-shadow:0 4px 12px var(--gh-green-glow);
+    }
+    .btn-send:active { transform:scale(0.94); }
+    .btn-send:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
 
-    ::-webkit-scrollbar       { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    /* Ripple effect */
+    .ripple {
+      position:absolute; border-radius:50%;
+      background:rgba(255,255,255,0.35);
+      transform:scale(0); pointer-events:none;
+      animation:rippleAnim 0.5s linear forwards;
+    }
+    @keyframes rippleAnim {
+      to { transform:scale(4); opacity:0; }
+    }
 
-    @media (max-width: 640px) {
+    /* ─── Color Palette Panel ───────────────────────────────── */
+    .color-panel {
+      position:fixed; bottom:24px; right:24px;
+      z-index:1000; display:flex; flex-direction:column;
+      align-items:flex-end; gap:10px;
+    }
+    .color-panel-trigger {
+      width:44px; height:44px; border-radius:50%;
+      background:var(--gh-green); border:none; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 16px var(--gh-green-glow), 0 2px 6px rgba(0,0,0,0.15);
+      transition:
+        transform 0.3s cubic-bezier(0.34,1.56,0.64,1),
+        box-shadow 0.2s ease, background 0.2s ease;
+      position:relative; overflow:hidden;
+    }
+    .color-panel-trigger::before {
+      content:''; position:absolute; inset:0;
+      background:conic-gradient(
+        hsl(0,70%,55%), hsl(60,70%,50%), hsl(120,60%,42%),
+        hsl(180,60%,45%), hsl(240,60%,55%), hsl(300,60%,52%), hsl(360,70%,55%)
+      );
+      border-radius:50%; opacity:0; transition:opacity 0.3s ease;
+    }
+    .color-panel-trigger:hover::before { opacity:1; }
+    .color-panel-trigger:hover {
+      transform:scale(1.1) rotate(30deg);
+      box-shadow:0 6px 24px var(--gh-green-glow), 0 3px 8px rgba(0,0,0,0.2);
+    }
+    .color-panel-trigger svg { position:relative; z-index:1; }
+    .color-panel-trigger.open { transform:scale(1.05) rotate(45deg); }
+
+    .color-sliders-card {
+      background:var(--surface-solid); border:1px solid var(--border);
+      border-radius:14px; padding:16px 18px; box-shadow:var(--card-shadow);
+      width:220px; display:flex; flex-direction:column; gap:14px;
+      backdrop-filter:blur(20px);
+      opacity:0; transform:translateY(12px) scale(0.95); pointer-events:none;
+      transition:opacity 0.25s cubic-bezier(0.16,1,0.3,1), transform 0.3s cubic-bezier(0.16,1,0.3,1);
+      transform-origin:bottom right;
+    }
+    .color-sliders-card.open { opacity:1; transform:translateY(0) scale(1); pointer-events:all; }
+    .slider-card-header { display:flex; align-items:center; justify-content:space-between; }
+    .slider-card-title { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
+    .color-swatch {
+      width:22px; height:22px; border-radius:50%;
+      background:var(--gh-green); border:2px solid var(--border);
+      box-shadow:0 0 0 0 var(--gh-green-glow);
+      transition:box-shadow 0.3s ease, background 0.15s ease; flex-shrink:0;
+    }
+    .color-swatch.pulse { animation:swatchPulse 0.4s ease; }
+    @keyframes swatchPulse {
+      0%  {box-shadow:0 0 0 0 var(--gh-green-glow);}
+      50% {box-shadow:0 0 0 8px var(--gh-green-glow);}
+      100%{box-shadow:0 0 0 0 transparent;}
+    }
+    .slider-row { display:flex; flex-direction:column; gap:5px; }
+    .slider-labels { display:flex; align-items:center; justify-content:space-between; }
+    .slider-label { font-size:0.73rem; font-weight:600; color:var(--text); }
+    .slider-val { font-size:0.68rem; color:var(--text-muted); font-variant-numeric:tabular-nums; min-width:26px; text-align:right; }
+
+    input[type=range] {
+      -webkit-appearance:none; appearance:none;
+      width:100%; height:5px; border-radius:99px; outline:none; cursor:pointer; border:none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none; appearance:none;
+      width:16px; height:16px; border-radius:50%;
+      background:var(--surface-solid); border:2.5px solid var(--gh-green);
+      box-shadow:0 1px 4px rgba(0,0,0,0.18);
+      transition:box-shadow 0.2s ease, transform 0.15s ease; cursor:grab;
+    }
+    input[type=range]::-webkit-slider-thumb:active {
+      cursor:grabbing; transform:scale(1.15);
+      box-shadow:0 2px 8px rgba(0,0,0,0.2), 0 0 0 4px var(--gh-green-glow);
+    }
+    input[type=range]::-moz-range-thumb {
+      width:16px; height:16px; border-radius:50%;
+      background:var(--surface-solid); border:2.5px solid var(--gh-green); cursor:grab;
+    }
+    #sliderHue { background:linear-gradient(90deg,hsl(0,70%,55%),hsl(30,70%,53%),hsl(60,70%,50%),hsl(90,60%,46%),hsl(120,60%,42%),hsl(150,60%,44%),hsl(180,60%,45%),hsl(210,60%,50%),hsl(240,60%,55%),hsl(270,60%,53%),hsl(300,60%,52%),hsl(330,65%,52%),hsl(360,70%,55%)); }
+    #sliderSat { background:linear-gradient(90deg,#888 0%,hsl(var(--accent-h),100%,50%) 100%); }
+    #sliderLit { background:linear-gradient(90deg,#111 0%,hsl(var(--accent-h),60%,50%) 50%,#fff 100%); }
+
+    .preset-row { display:flex; gap:7px; flex-wrap:wrap; }
+    .preset-dot {
+      width:20px; height:20px; border-radius:50%; cursor:pointer;
+      border:2px solid transparent;
+      transition:transform 0.2s cubic-bezier(0.34,1.5,0.64,1), border-color 0.15s ease, box-shadow 0.2s ease;
+      flex-shrink:0;
+    }
+    .preset-dot:hover { transform:scale(1.3); box-shadow:0 0 0 3px hsla(0,0%,50%,0.2); }
+    .preset-dot.selected { border-color:var(--text); transform:scale(1.15); }
+
+    .btn-reset-color {
+      width:100%; padding:6px 0; font-size:0.73rem; font-weight:600;
+      border:1px solid var(--border); border-radius:7px;
+      background:var(--surface-hover); color:var(--text-muted); cursor:pointer;
+      transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .btn-reset-color:hover { background:var(--tag-bg); color:var(--gh-green); border-color:var(--gh-green); }
+
+    /* ─── Responsive ────────────────────────────────────────── */
+    @media (max-width:640px) {
       .sidebar { position:absolute; top:0; left:0; bottom:0; box-shadow:var(--card-shadow); }
-      .app-layout.sidebar-folded .sidebar { margin-left: calc(-1 * var(--sidebar-width)); }
+      .app-layout.sidebar-folded .sidebar { margin-left:calc(-1 * var(--sidebar-width)); }
+      .color-panel { bottom:16px; right:16px; }
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .wave-bar, .thinking-bar, .thinking-dots span, .stream-cursor { animation: none; }
-      .wave-bar { height: 12px; opacity: 0.7; }
-      .ai-thinking { transition: none; }
+    @media (prefers-reduced-motion:reduce) {
+      .wave-bar,.thinking-bar,.thinking-dots span,.stream-cursor,
+      .history-line::after,.preset-dot { animation:none; }
+      .wave-bar { height:12px; opacity:0.7; }
+      .ai-thinking,.history-item { transition:none; }
+      .history-item { opacity:1; transform:none; }
     }
   </style>
 </head>
@@ -489,13 +806,14 @@
 
   <div class="app-layout" id="appLayout">
 
+    <!-- ── Sidebar ──────────────────────────────────────── -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <a href="{% url 'ai_chat' %}" class="btn-new-chat">
+        <a href="{% url 'ai_chat:ai_chat' %}" class="btn-new-chat">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 5v14M5 12h14"/>
           </svg>
-          New Chat
+          <span>New Chat</span>
         </a>
         <button class="sidebar-toggle-icon" id="foldSidebarBtn" title="Collapse Sidebar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -504,18 +822,47 @@
         </button>
       </div>
 
-      <div class="history-container">
+      <div class="history-container" id="historyContainer">
         {% if session_list %}
           <div class="history-title">Recent Chats</div>
-          {% for item in session_list %}
-          <a href="{% url 'chat_session' session_id=item.session.id %}"
-             class="history-item {% if item.session.id == session.id %}active{% endif %}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            {{ item.title }}
-          </a>
-          {% endfor %}
+          <div class="history-list" id="historyList">
+            <div class="history-line" id="historyLine"></div>
+
+            {% for item in session_list %}
+            <a href="{% url 'ai_chat:chat_session' session_id=item.session.id %}"
+               class="history-item {% if item.session.id == session.id %}active{% endif %}"
+               data-index="{{ forloop.counter0 }}"
+               data-session-id="{{ item.session.id }}"
+               data-is-current="{% if item.session.id == session.id %}1{% else %}0{% endif %}">
+
+              <span class="history-item-label">{{ item.title }}</span>
+
+              <!-- Delete button — NOTE: add 'ai_chat:delete_session' URL in your urls.py -->
+              <button class="history-delete-btn"
+                      data-session-id="{{ item.session.id }}"
+                      data-is-current="{% if item.session.id == session.id %}1{% else %}0{% endif %}"
+                      title="Delete chat"
+                      aria-label="Delete this chat">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14H6L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4h6v2"/>
+                </svg>
+              </button>
+
+              <!-- Inline confirm overlay -->
+              <div class="delete-confirm" data-session-id="{{ item.session.id }}">
+                <span class="delete-confirm-text">Delete?</span>
+                <div class="delete-confirm-actions">
+                  <button class="btn-del-yes" data-session-id="{{ item.session.id }}"
+                          data-is-current="{% if item.session.id == session.id %}1{% else %}0{% endif %}">Yes</button>
+                  <button class="btn-del-no">No</button>
+                </div>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
         {% else %}
           <p style="padding:1rem 0.75rem;font-size:0.82rem;color:var(--text-muted)">No chats yet — start one!</p>
         {% endif %}
@@ -530,6 +877,7 @@
       </div>
     </aside>
 
+    <!-- ── Main Chat ─────────────────────────────────────── -->
     <main class="chat-main">
       <header class="chat-navbar">
         <div class="navbar-left">
@@ -605,52 +953,328 @@
     </main>
   </div>
 
+  <!-- ── Color Palette Panel ────────────────────────── -->
+  <div class="color-panel" id="colorPanel">
+    <div class="color-sliders-card" id="colorCard">
+      <div class="slider-card-header">
+        <span class="slider-card-title">Accent Color</span>
+        <div class="color-swatch" id="colorSwatch"></div>
+      </div>
+      <div class="slider-row">
+        <div class="slider-labels">
+          <span class="slider-label">Hue</span>
+          <span class="slider-val" id="valHue">138°</span>
+        </div>
+        <input type="range" id="sliderHue" min="0" max="360" value="138" step="1">
+      </div>
+      <div class="slider-row">
+        <div class="slider-labels">
+          <span class="slider-label">Saturation</span>
+          <span class="slider-val" id="valSat">55%</span>
+        </div>
+        <input type="range" id="sliderSat" min="10" max="100" value="55" step="1">
+      </div>
+      <div class="slider-row">
+        <div class="slider-labels">
+          <span class="slider-label">Lightness</span>
+          <span class="slider-val" id="valLit">42%</span>
+        </div>
+        <input type="range" id="sliderLit" min="20" max="70" value="42" step="1">
+      </div>
+      <div>
+        <div class="slider-labels" style="margin-bottom:6px">
+          <span class="slider-label" style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Presets</span>
+        </div>
+        <div class="preset-row" id="presetRow"></div>
+      </div>
+      <button class="btn-reset-color" id="btnResetColor">Reset to Default</button>
+    </div>
+    <button class="color-panel-trigger" id="colorPanelTrigger" title="Customize accent color"
+            aria-label="Open color customizer" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+      </svg>
+    </button>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js" crossorigin="anonymous"></script>
 
   <script>
     const SESSION_ID = "{{ session.id }}";
-    const STREAM_URL = "{% url 'chat_stream' session_id=session.id %}";
+    const STREAM_URL = "{% url 'ai_chat:chat_stream' session_id=session.id %}";
     const CSRF_TOKEN = "{{ csrf_token }}";
     const AI_AVATAR  = "https://avatars.githubusercontent.com/u/142692213?v=4";
-
     const WORD_SPEED = 28;
 
+    // ── NOTE FOR DEVELOPERS ───────────────────────────────────────
+    // Add a delete endpoint in your urls.py, e.g.:
+    //   path('chat/<str:session_id>/delete/', views.delete_session, name='delete_session')
+    // The view should accept POST + CSRF, delete the session, return JSON {ok:true}
+    // Update DELETE_URL_TEMPLATE below to match your URL pattern:
+    const DELETE_URL_TEMPLATE = (id) => `/chat/${id}/delete/`;
+    // ─────────────────────────────────────────────────────────────
+
     const THINKING_PHRASES = [
-      "Reading your message",
-      "Thinking it through",
-      "Gathering the details",
-      "Connecting the dots",
-      "Summing things up",
-      "Double-checking the answer",
-      "Researching that for you",
-      "Working through the steps",
-      "Almost there",
-      "Pulling it together",
-      "Just a moment",
-      "Weighing the options",
+      "Reading your message","Thinking it through","Gathering the details",
+      "Connecting the dots","Summing things up","Double-checking the answer",
+      "Researching that for you","Working through the steps","Almost there",
+      "Pulling it together","Just a moment","Weighing the options",
     ];
+    const BAR_WIDTHS = [120,160,100,200,140,180,110,220];
 
-    const BAR_WIDTHS = [120, 160, 100, 200, 140, 180, 110, 220];
+    /* ── Ripple helper ──────────────────────────────────────── */
+    function addRipple(btn, e) {
+      const r = btn.getBoundingClientRect();
+      const size = Math.max(r.width, r.height);
+      const x = (e.clientX - r.left) - size / 2;
+      const y = (e.clientY - r.top) - size / 2;
+      const rip = document.createElement('span');
+      rip.className = 'ripple';
+      rip.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+      btn.appendChild(rip);
+      rip.addEventListener('animationend', () => rip.remove());
+    }
 
-    marked.setOptions({ breaks: true, gfm: true });
-
-    document.querySelectorAll('.js-render-md').forEach(el => {
-      el.innerHTML = marked.parse(el.textContent.trim() || '');
+    /* ── Scrollbar active class while scrolling ─────────────── */
+    let scrollTimer;
+    function onScroll(el) {
+      el.classList.add('is-scrolling');
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => el.classList.remove('is-scrolling'), 800);
+    }
+    document.querySelectorAll('.chat-messages, .history-container').forEach(el => {
+      el.addEventListener('scroll', () => onScroll(el), { passive: true });
     });
 
+    /* ── Color presets ──────────────────────────────────────── */
+    const PRESETS = [
+      { h:138, s:55, l:42, label:'Forest'  },
+      { h:211, s:80, l:42, label:'Ocean'   },
+      { h:260, s:65, l:52, label:'Violet'  },
+      { h:  0, s:72, l:48, label:'Crimson' },
+      { h: 28, s:80, l:48, label:'Amber'   },
+      { h:180, s:60, l:38, label:'Teal'    },
+      { h:330, s:65, l:48, label:'Rose'    },
+    ];
+
     const root = document.documentElement;
+
+    function getAccentValues() {
+      return {
+        h: parseInt(getComputedStyle(root).getPropertyValue('--accent-h')) || 138,
+        s: parseInt(getComputedStyle(root).getPropertyValue('--accent-s')) || 55,
+        l: parseInt(getComputedStyle(root).getPropertyValue('--accent-l')) || 42,
+      };
+    }
+
+    function applyAccent(h, s, l) {
+      root.style.setProperty('--accent-h', h);
+      root.style.setProperty('--accent-s', s + '%');
+      root.style.setProperty('--accent-l', l + '%');
+      localStorage.setItem('volcann-accent', JSON.stringify({ h, s, l }));
+      document.getElementById('sliderSat').style.background =
+        `linear-gradient(90deg,hsl(${h},10%,50%) 0%,hsl(${h},100%,${l}%) 100%)`;
+      document.getElementById('sliderLit').style.background =
+        `linear-gradient(90deg,#111 0%,hsl(${h},${s}%,50%) 50%,#fff 100%)`;
+      const swatch = document.getElementById('colorSwatch');
+      swatch.classList.remove('pulse');
+      void swatch.offsetWidth;
+      swatch.classList.add('pulse');
+      document.getElementById('sliderHue').value = h;
+      document.getElementById('sliderSat').value = s;
+      document.getElementById('sliderLit').value = l;
+      document.getElementById('valHue').textContent = h + '°';
+      document.getElementById('valSat').textContent = s + '%';
+      document.getElementById('valLit').textContent = l + '%';
+      document.querySelectorAll('.preset-dot').forEach(d => {
+        d.classList.toggle('selected', +d.dataset.h===h && +d.dataset.s===s && +d.dataset.l===l);
+      });
+    }
+
+    const presetRow = document.getElementById('presetRow');
+    PRESETS.forEach(p => {
+      const dot = document.createElement('button');
+      dot.className = 'preset-dot';
+      dot.title = p.label;
+      dot.dataset.h = p.h; dot.dataset.s = p.s; dot.dataset.l = p.l;
+      dot.style.background = `hsl(${p.h},${p.s}%,${p.l}%)`;
+      dot.addEventListener('click', () => applyAccent(p.h, p.s, p.l));
+      presetRow.appendChild(dot);
+    });
+
+    function readSliders() {
+      const h = +document.getElementById('sliderHue').value;
+      const s = +document.getElementById('sliderSat').value;
+      const l = +document.getElementById('sliderLit').value;
+      document.getElementById('valHue').textContent = h + '°';
+      document.getElementById('valSat').textContent = s + '%';
+      document.getElementById('valLit').textContent = l + '%';
+      applyAccent(h, s, l);
+    }
+    ['sliderHue','sliderSat','sliderLit'].forEach(id =>
+      document.getElementById(id).addEventListener('input', readSliders)
+    );
+    document.getElementById('btnResetColor').addEventListener('click', () => applyAccent(138, 55, 42));
+
+    const panelTrigger = document.getElementById('colorPanelTrigger');
+    const colorCard    = document.getElementById('colorCard');
+    panelTrigger.addEventListener('click', () => {
+      const open = colorCard.classList.toggle('open');
+      panelTrigger.classList.toggle('open', open);
+      panelTrigger.setAttribute('aria-expanded', open);
+    });
+    document.addEventListener('click', e => {
+      if (!document.getElementById('colorPanel').contains(e.target)) {
+        colorCard.classList.remove('open');
+        panelTrigger.classList.remove('open');
+        panelTrigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+    (function initSliders() {
+      const v = getAccentValues();
+      applyAccent(v.h, v.s, v.l);
+    })();
+
+    /* ── Timeline line + scroll-reveal ─────────────────────── */
+    const historyContainer = document.getElementById('historyContainer');
+    const historyLine      = document.getElementById('historyLine');
+
+    function getHistoryItems() {
+      return document.querySelectorAll('.history-item');
+    }
+
+    function updateHistoryLine() {
+      if (!historyLine) return;
+      const listEl = document.getElementById('historyList');
+      if (!listEl) return;
+      const containerRect = historyContainer.getBoundingClientRect();
+
+      const scrollProgress = historyContainer.scrollTop;
+      const maxScroll = historyContainer.scrollHeight - historyContainer.clientHeight;
+      const fraction = maxScroll > 0 ? Math.min(scrollProgress / maxScroll, 1) : 1;
+      const lineHeight = Math.max(8, fraction * listEl.offsetHeight);
+      historyLine.style.height = lineHeight + 'px';
+      if (lineHeight > 10) historyLine.classList.add('active');
+      else historyLine.classList.remove('active');
+
+      getHistoryItems().forEach(item => {
+        const itemRect = item.getBoundingClientRect();
+        if (itemRect.top < containerRect.bottom + 40) {
+          const delay = parseInt(item.dataset.index || 0) * 55;
+          setTimeout(() => item.classList.add('revealed'), delay);
+        }
+      });
+    }
+
+    if (historyContainer) {
+      historyContainer.addEventListener('scroll', updateHistoryLine, { passive: true });
+      setTimeout(() => {
+        updateHistoryLine();
+        setTimeout(() => {
+          const activeItem = document.querySelector('.history-item.active');
+          const listEl = document.getElementById('historyList');
+          if (activeItem && historyLine && listEl) {
+            const listRect  = listEl.getBoundingClientRect();
+            const activeRect = activeItem.getBoundingClientRect();
+            const pct = Math.min(100, ((activeRect.bottom - listRect.top) / listEl.offsetHeight) * 100);
+            historyLine.style.height = pct + '%';
+            historyLine.classList.add('active');
+          } else if (historyLine) {
+            historyLine.style.height = '60%';
+            historyLine.classList.add('active');
+          }
+        }, 300);
+      }, 120);
+    }
+
+    /* ── Delete chat ────────────────────────────────────────── */
+    function initDeleteButtons() {
+      document.querySelectorAll('.history-delete-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          const sessionId = btn.dataset.sessionId;
+          const item = btn.closest('.history-item');
+          const confirm = item.querySelector('.delete-confirm');
+          if (confirm) confirm.classList.add('visible');
+        });
+      });
+
+      document.querySelectorAll('.btn-del-no').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          const confirm = btn.closest('.delete-confirm');
+          if (confirm) confirm.classList.remove('visible');
+        });
+      });
+
+      document.querySelectorAll('.btn-del-yes').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          e.preventDefault();
+          e.stopPropagation();
+          const sessionId   = btn.dataset.sessionId;
+          const isCurrent   = btn.dataset.isCurrent === '1';
+          const item        = btn.closest('.history-item');
+          const newChatUrl  = "{% url 'ai_chat:ai_chat' %}";
+
+          // Start exit animation
+          item.classList.add('deleting');
+
+          try {
+            const res = await fetch(DELETE_URL_TEMPLATE(sessionId), {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': CSRF_TOKEN,
+                'Content-Type': 'application/json',
+              },
+            });
+
+            // Collapse height after fade
+            setTimeout(() => {
+              item.classList.add('collapsed');
+              setTimeout(() => {
+                item.remove();
+                updateHistoryLine();
+                // If we deleted the current chat, go to new chat
+                if (isCurrent) window.location.href = newChatUrl;
+              }, 350);
+            }, 200);
+
+          } catch (err) {
+            // Revert on network failure
+            item.classList.remove('deleting');
+            const confirm = item.querySelector('.delete-confirm');
+            if (confirm) confirm.classList.remove('visible');
+          }
+        });
+      });
+    }
+
+    initDeleteButtons();
+
+    /* ── Theme toggle ───────────────────────────────────────── */
     document.getElementById('themeToggle').addEventListener('click', () => {
       const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       root.setAttribute('data-theme', next);
       localStorage.setItem('volcann-theme', next);
     });
 
+    /* ── Sidebar fold ───────────────────────────────────────── */
     const appLayout = document.getElementById('appLayout');
     document.getElementById('foldSidebarBtn')
       .addEventListener('click', () => appLayout.classList.add('sidebar-folded'));
     document.getElementById('toggleSidebarBtn')
       .addEventListener('click', () => appLayout.classList.toggle('sidebar-folded'));
 
+    /* ── Markdown render for existing messages ──────────────── */
+    marked.setOptions({ breaks: true, gfm: true });
+    document.querySelectorAll('.js-render-md').forEach(el => {
+      el.innerHTML = marked.parse(el.textContent.trim() || '');
+    });
+
+    /* ── Tool popover ───────────────────────────────────────── */
     const chatInput    = document.getElementById('chatInput');
     const toolsPopover = document.getElementById('toolsPopover');
     const toolMenuBtn  = document.getElementById('toolMenuTrigger');
@@ -671,7 +1295,7 @@
       opt.addEventListener('click', () => {
         const tag = opt.dataset.tool;
         const cur = chatInput.value;
-        chatInput.value = (cur.endsWith('@') ? cur.slice(0, -1) : cur) + tag + ' ';
+        chatInput.value = (cur.endsWith('@') ? cur.slice(0,-1) : cur) + tag + ' ';
         togglePopover(false);
         chatInput.focus();
       });
@@ -680,6 +1304,12 @@
       if (!toolsPopover.contains(e.target) && e.target !== toolMenuBtn) togglePopover(false);
     });
 
+    /* ── Ripples on interactive buttons ────────────────────── */
+    [sendBtn, document.querySelector('.btn-new-chat')].forEach(btn => {
+      if (btn) btn.addEventListener('click', e => addRipple(btn, e));
+    });
+
+    /* ── Scroll helper ──────────────────────────────────────── */
     const scrollToBottom = () => { chatFeed.scrollTop = chatFeed.scrollHeight; };
 
     function escHtml(s) {
@@ -694,23 +1324,17 @@
         error:   `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>`,
         busy:    `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`,
       };
-      const LABELS = { running: 'Running…', done: 'Done', error: 'Failed', busy: 'Queued' };
-      const cls = state === 'done' ? 'done' : state === 'error' ? 'error' : state === 'busy' ? 'busy' : 'running';
-      return `<div class="tool-indicator ${cls}">${ICONS[state] || ICONS.running}
-        <code>@${escHtml(toolName)}</code> — ${LABELS[state] || state}</div>`;
+      const LABELS = { running:'Running…', done:'Done', error:'Failed', busy:'Queued' };
+      const cls = state==='done' ? 'done' : state==='error' ? 'error' : state==='busy' ? 'busy' : 'running';
+      return `<div class="tool-indicator ${cls}">${ICONS[state]||ICONS.running}
+        <code>@${escHtml(toolName)}</code> — ${LABELS[state]||state}</div>`;
     }
 
     function buildThinkingHTML() {
       return `
         <div class="ai-thinking" id="thinkingBlock">
           <div class="wave-bars">
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
+            ${Array.from({length:7},()=>`<div class="wave-bar"></div>`).join('')}
           </div>
           <div class="thinking-text-col">
             <span class="thinking-label">
@@ -747,20 +1371,10 @@
       scrollToBottom();
 
       const contentEl = aiDiv.querySelector('.message-content');
-
-      let textEl    = null;
-      let cursorEl  = null;
-      let rawText   = '';
+      let textEl = null, cursorEl = null, rawText = '';
       const toolEls = {};
-
-      let wordQueue  = [];
-      let wordTimer  = null;
-      let sseDone    = false;
-
-      let phraseIdx    = 0;
-      let barWidthIdx  = 0;
-      let phraseTimer  = null;
-      let barSizeTimer = null;
+      let wordQueue = [], wordTimer = null, sseDone = false;
+      let phraseIdx = 0, barWidthIdx = 0, phraseTimer = null, barSizeTimer = null;
 
       function startThinkingAnimators() {
         phraseTimer = setInterval(() => {
@@ -773,7 +1387,6 @@
             phraseEl.style.opacity = '1';
           }, 300);
         }, 2600);
-
         barSizeTimer = setInterval(() => {
           const barWrap = document.getElementById('thinkingBarWrap');
           if (!barWrap) { clearInterval(barSizeTimer); return; }
@@ -800,29 +1413,21 @@
       function collapseThinking(callback) {
         const block = document.getElementById('thinkingBlock');
         if (!block) { callback(); return; }
-
         block.classList.add('collapsing');
-
         block.addEventListener('transitionend', function handler() {
           block.removeEventListener('transitionend', handler);
-          block.remove();
-          callback();
+          block.remove(); callback();
         }, { once: true });
-
         setTimeout(() => { block.remove(); callback(); }, 500);
       }
 
       function ensureTextEl() {
         if (!textEl) {
           stopThinkingAnimators();
-
           collapseThinking(() => {});
-
           contentEl.innerHTML = '';
-
           textEl = document.createElement('div');
           contentEl.appendChild(textEl);
-
           cursorEl = document.createElement('span');
           cursorEl.className = 'stream-cursor';
           contentEl.appendChild(cursorEl);
@@ -845,16 +1450,12 @@
           if (sseDone) finalizeText();
           return;
         }
-
         const token = wordQueue.shift();
         rawText += token;
-
         const tEl = ensureTextEl();
         tEl.innerHTML = marked.parse(rawText);
-
         Object.values(toolEls).forEach(t => contentEl.appendChild(t));
         if (cursorEl) contentEl.appendChild(cursorEl);
-
         scrollToBottom();
         wordTimer = setTimeout(processQueue, WORD_SPEED);
       }
@@ -874,8 +1475,7 @@
 
         if (!res.ok) {
           stopThinkingAnimators();
-          contentEl.innerHTML =
-            `<span style="color:var(--err-text)">Server error ${res.status}: ${res.statusText}</span>`;
+          contentEl.innerHTML = `<span style="color:var(--err-text)">Server error ${res.status}: ${res.statusText}</span>`;
           return;
         }
 
@@ -894,60 +1494,28 @@
             if (!part.startsWith('data: ')) continue;
             let ev;
             try { ev = JSON.parse(part.slice(6)); } catch { continue; }
-
             switch (ev.type) {
-              case 'chunk':
-                ensureTextEl();
-                enqueueText(ev.text);
-                break;
-
-              case 'tool_start':
-                ensureTextEl();
-                getToolEl(ev.tool).innerHTML = toolIndicatorHTML(ev.tool, 'running');
-                scrollToBottom();
-                break;
-
-              case 'tool_busy':
-                ensureTextEl();
-                getToolEl(ev.tool).innerHTML = toolIndicatorHTML(ev.tool, 'busy');
-                break;
-
-              case 'tool_done': {
-                const el = toolEls[ev.tool];
-                if (el) el.innerHTML = toolIndicatorHTML(ev.tool, 'done');
-                break;
-              }
-
-              case 'tool_error':
-                ensureTextEl();
-                getToolEl(ev.tool).innerHTML = toolIndicatorHTML(ev.tool, 'error');
-                break;
-
-              case 'done':
-                sseDone = true;
-                if (!wordTimer) finalizeText();
-                break;
+              case 'chunk':      ensureTextEl(); enqueueText(ev.text); break;
+              case 'tool_start': ensureTextEl(); getToolEl(ev.tool).innerHTML = toolIndicatorHTML(ev.tool,'running'); scrollToBottom(); break;
+              case 'tool_busy':  ensureTextEl(); getToolEl(ev.tool).innerHTML = toolIndicatorHTML(ev.tool,'busy'); break;
+              case 'tool_done': { const el = toolEls[ev.tool]; if (el) el.innerHTML = toolIndicatorHTML(ev.tool,'done'); break; }
+              case 'tool_error': ensureTextEl(); getToolEl(ev.tool).innerHTML = toolIndicatorHTML(ev.tool,'error'); break;
+              case 'done':       sseDone = true; if (!wordTimer) finalizeText(); break;
             }
           }
         }
 
-        if (!sseDone) {
-          sseDone = true;
-          if (!wordTimer) finalizeText();
-        }
-
+        if (!sseDone) { sseDone = true; if (!wordTimer) finalizeText(); }
         if (!textEl) {
           stopThinkingAnimators();
-          contentEl.innerHTML =
-            '<span style="color:var(--text-muted);font-size:0.85rem">No response.</span>';
+          contentEl.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">No response.</span>';
         }
 
       } catch (err) {
         stopThinkingAnimators();
-        contentEl.innerHTML =
-          `<span style="color:var(--err-text)">Connection lost: ${escHtml(err.message)}</span>`;
+        contentEl.innerHTML = `<span style="color:var(--err-text)">Connection lost: ${escHtml(err.message)}</span>`;
       } finally {
-        isStreaming      = false;
+        isStreaming = false;
         sendBtn.disabled = false;
         scrollToBottom();
       }
