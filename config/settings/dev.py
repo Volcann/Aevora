@@ -20,12 +20,6 @@ DATABASES = {
     ),
 }
 
-# Console backend unless EMAIL_BACKEND is set in .env
-EMAIL_BACKEND = env(
-    "EMAIL_BACKEND",
-    default="django.core.mail.backends.console.EmailBackend",
-)
-
 if "silk" not in INSTALLED_APPS:
     INSTALLED_APPS = INSTALLED_APPS + ["silk"]
 

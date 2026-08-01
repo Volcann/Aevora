@@ -1,6 +1,18 @@
 target-version = "py313"
 line-length = 100
 
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "manage.py",
+    "*/migrations/*"
+]
+
+[lint]
 extend-select = [
     "E",     # Pycodestyle errors
     "W",     # Pycodestyle warnings
@@ -37,7 +49,7 @@ extend-select = [
     "FURB",  # Refurb suggestions
 ]
 ignore = [
-      "E501",    # Pycodestyle - line too long
+    "E501",    # Pycodestyle - line too long
     "D1",      # Pydocstyle - missing docstring in public module, class, or function
     "FBT003",  # Flake8-boolean-trap - boolean positional value in function call
     "D203",    # Pydocstyle - one blank line required before class docstring
@@ -54,22 +66,7 @@ ignore = [
     "C901",
 ]
 
-exclude = [
-    ".git",
-    "__pycache__",
-    ".venv",
-    "venv",
-    "build",
-    "dist",
-    "manage.py",
-    "*/migrations/*"
-]
-
-[format]
-quote-style = "double"
-line-ending = "lf"
-
-[per-file-ignores]
+[lint.per-file-ignores]
 "config/settings/*.py" = [
     "E402",
     "F403",  # from module import *
@@ -77,3 +74,7 @@ line-ending = "lf"
 ]
 "test_*.py" = ["S101"]
 "__init__.py" = ["F401"]
+
+[format]
+quote-style = "double"
+line-ending = "lf"

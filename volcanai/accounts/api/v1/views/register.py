@@ -1,15 +1,20 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.shortcuts import redirect, render
 
 from volcanai.accounts.api.v1.forms.register import RegisterForm
+from volcanai.accounts.services.email import EmailService
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
 
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect("dashboard:index")
+        return redirect("ai_chat:ai_chat")
 
     if request.method == "POST":
         form = RegisterForm(request.POST)
@@ -23,8 +28,14 @@ def register_view(request):
                 last_name=data.get("last_name", ""),
             )
             login(request, user)
+
+            try:
+                EmailService.send_welcome_email(user=user)
+            except Exception:
+                logger.exception("Failed to send welcome email to %s", user.email)
+
             messages.success(request, f"Welcome to Volcann, {user.first_name or user.username}! 🎉")
-            return redirect("dashboard:index")
+            return redirect("ai_chat:ai_chat")
     else:
         form = RegisterForm()
 
