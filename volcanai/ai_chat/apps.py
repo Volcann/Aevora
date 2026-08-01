@@ -28,6 +28,7 @@ class AiChatConfig(AppConfig):
 
     def _boot_mcp_servers(self):
         from volcanai.ai_chat.models.server_config import ServerConfig
+
         try:
             configs = list(ServerConfig.objects.filter(is_active=True))
         except (DatabaseError, OperationalError, ProgrammingError) as e:
@@ -40,5 +41,5 @@ class AiChatConfig(AppConfig):
                 tools = proc.list_tools()
                 tool_registry.register(config.name, tools)
                 logger.info("MCP '%s' started — %d tools loaded", config.name, len(tools))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error("Failed to start MCP server '%s': %s", config.name, e)

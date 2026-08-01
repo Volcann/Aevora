@@ -70,11 +70,14 @@ class MCPProcess:
         self._write(payload)
 
     def _initialize(self):
-        response = self._request("initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "volcani", "version": "1.0.0"},
-        })
+        response = self._request(
+            "initialize",
+            {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "volcani", "version": "1.0.0"},
+            },
+        )
         if "error" in response:
             raise RuntimeError(f"Init failed for '{self.name}': {response['error']}")
         self._notify("notifications/initialized")
@@ -102,7 +105,7 @@ class MCPProcess:
         try:
             self._process.terminate()
             self._process.wait(timeout=5)
-        except Exception:
+        except Exception:  # noqa: BLE001
             self._process.kill()
 
 

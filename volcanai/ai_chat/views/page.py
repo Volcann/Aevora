@@ -20,10 +20,7 @@ def chat_session_view(request, session_id):
     session = get_object_or_404(ChatSession, id=session_id, user=request.user)
 
     # Sidebar: last 20 sessions with a human-readable title
-    recent = (
-        ChatSession.objects.filter(user=request.user)
-        .order_by("-updated_at")[:20]
-    )
+    recent = ChatSession.objects.filter(user=request.user).order_by("-updated_at")[:20]
     session_list = []
     for s in recent:
         first = (
@@ -32,20 +29,14 @@ def chat_session_view(request, session_id):
             .values_list("content", flat=True)
             .first()
         )
-        title = (
-            (first[:48] + "…") if first and len(first) > 48
-            else (first or "New Chat")
-        )
+        title = (first[:48] + "…") if first and len(first) > 48 else (first or "New Chat")
         session_list.append({"session": s, "title": title})
 
     # Message history for the current session
-    messages = (
-        Message.objects.filter(
-            session=session,
-            role__in=[MessageRole.HUMAN, MessageRole.AI_GENERATED],
-        )
-        .order_by("created_at")
-    )
+    messages = Message.objects.filter(
+        session=session,
+        role__in=[MessageRole.HUMAN, MessageRole.AI_GENERATED],
+    ).order_by("created_at")
 
     available_tools = tool_registry.get_gemini_declarations()
 

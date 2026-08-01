@@ -18,7 +18,7 @@ def _sse(data):
 
 
 def _json_schema_to_gemini(schema):
-    TYPE_MAP = {
+    type_map = {
         "string": genai.protos.Type.STRING,
         "number": genai.protos.Type.NUMBER,
         "integer": genai.protos.Type.INTEGER,
@@ -26,7 +26,7 @@ def _json_schema_to_gemini(schema):
         "array": genai.protos.Type.ARRAY,
         "object": genai.protos.Type.OBJECT,
     }
-    t = TYPE_MAP.get(schema.get("type", "object"), genai.protos.Type.OBJECT)
+    t = type_map.get(schema.get("type", "object"), genai.protos.Type.OBJECT)
     kw = {"type_": t}
     if desc := schema.get("description"):
         kw["description"] = desc
@@ -132,7 +132,7 @@ def _gemini_stream(session, prompt):
                             ),
                         ),
                     )
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001
                     yield _sse({"type": "tool_error", "tool": fc.name})
                     tool_parts.append(
                         genai.protos.Part(
@@ -156,7 +156,7 @@ def _gemini_stream(session, prompt):
             session.title = prompt[:48] + ("…" if len(prompt) > 48 else "")
             session.save(update_fields=["title", "updated_at"])
 
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         yield _sse({"type": "chunk", "text": f"\n\n⚠ Error: {exc}"})
 
     yield _sse({"type": "done"})
