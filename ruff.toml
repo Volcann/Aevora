@@ -64,6 +64,7 @@ ignore = [
     "ARG002",
     "DJ001",
     "C901",
+    "COM812",  # Trailing comma missing (conflicts with ruff formatter)
 ]
 
 [lint.per-file-ignores]
