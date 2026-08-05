@@ -1,6 +1,7 @@
 from django.urls import path
 
-from volcanai.ai_chat.api.v1.views.chat import ai_chat, chat_session_view, chat_stream
+from volcanai.ai_chat.api.v1.views.chat import chat_stream
+from volcanai.ai_chat.api.v1.views.chat_session import ai_chat, chat_session_view
 
 app_name = "ai_chat"
 

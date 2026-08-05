@@ -12,6 +12,7 @@ up:
 
 up.d:
 	@$(dc) up -d
+	@$(MAKE) reboot_tools
 	@echo "$(success)"
 
 down:
@@ -21,6 +22,9 @@ down:
 # ------------------------
 # Django one-off commands
 # ------------------------
+reboot_tools:
+	@$(dc) exec django python manage.py reboot_tools
+
 dcshell:
 	@$(dc) exec django /bin/bash
 
