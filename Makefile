@@ -20,6 +20,18 @@ down:
 	@echo "$(success)"
 
 # ------------------------
+# MCP Gateway (runs on host)
+# ------------------------
+tools:
+	@echo "Starting MCP Gateway on host..."
+	@cd /home/folium/Documents/utils && uv run --package mcp-gateway gateway
+
+tools.d:
+	@echo "Starting MCP Gateway on host (background)..."
+	@cd /home/folium/Documents/utils && nohup uv run --package mcp-gateway gateway > /tmp/mcp-gateway.log 2>&1 &
+	@echo "Gateway PID: $$! — logs at /tmp/mcp-gateway.log"
+
+# ------------------------
 # Django one-off commands
 # ------------------------
 reboot_tools:

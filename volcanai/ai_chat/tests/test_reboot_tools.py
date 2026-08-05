@@ -40,7 +40,13 @@ class RebootToolsTestCase(TestCase):
         )
 
         with patch("volcanai.ai_chat.services.mcp_manager.MCPClient.list_tools") as mock_list_tools:
-            mock_list_tools.return_value = []
+            mock_list_tools.return_value = [
+                {
+                    "name": "t1",
+                    "description": "desc",
+                    "inputSchema": {"type": "object"},
+                }
+            ]
 
             tools1, router1 = get_all_tools_for_gemini()
             self.assertEqual(mock_list_tools.call_count, 1)
@@ -49,3 +55,34 @@ class RebootToolsTestCase(TestCase):
             self.assertEqual(mock_list_tools.call_count, 1)
             self.assertEqual(tools1, tools2)
             self.assertEqual(router1, router2)
+
+    def test_get_available_tools_list_caching(self):
+        ServerConfig.objects.create(
+            name="test_server",
+            url="http://localhost:8080/sse",
+            is_active=True,
+        )
+
+        with patch("volcanai.ai_chat.services.mcp_manager.MCPClient.list_tools") as mock_list_tools:
+            mock_list_tools.return_value = [
+                {
+                    "name": "sample_tool",
+                    "description": "Sample description",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {"arg": {"type": "string"}},
+                        "required": ["arg"],
+                    },
+                }
+            ]
+
+            from volcanai.ai_chat.utils import get_available_tools_list
+
+            tools1 = get_available_tools_list()
+            self.assertEqual(mock_list_tools.call_count, 1)
+            self.assertEqual(len(tools1), 1)
+            self.assertEqual(tools1[0]["name"], "sample_tool")
+
+            tools2 = get_available_tools_list()
+            self.assertEqual(mock_list_tools.call_count, 1)
+            self.assertEqual(tools1, tools2)

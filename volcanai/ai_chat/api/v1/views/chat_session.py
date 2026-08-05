@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from volcanai.ai_chat.choices import MessageRole
 from volcanai.ai_chat.models import ChatSession, Message
+from volcanai.ai_chat.utils import get_available_tools_list
 
 
 @login_required
@@ -32,7 +33,7 @@ def chat_session_view(request, session_id):
         role__in=[MessageRole.HUMAN, MessageRole.AI_GENERATED],
     ).order_by("created_at")
 
-    available_tools = None
+    available_tools = get_available_tools_list()
 
     return render(
         request,
