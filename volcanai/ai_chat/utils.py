@@ -34,7 +34,7 @@ def _gemini_stream(session, prompt):
 
         gemini_tools, tool_router = get_all_tools_for_gemini()
         model = genai.GenerativeModel(
-            model_name=getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"),
+            model_name=getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash"),
             tools=gemini_tools or None,
         )
         chat = model.start_chat(history=history)
@@ -115,12 +115,60 @@ def _gemini_stream(session, prompt):
     yield _sse({"type": "done"})
 
 
-def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict]:
-    cached = cache.get("mcp_tools_cache")
-    if cached is not None:
+def _ensure_default_server_config():
+    servers = ServerConfig.objects.filter(is_active=True)
+    if not servers.exists():
+        ServerConfig.objects.update_or_create(
+            name="local_mcp",
+            defaults={
+                "url": "http://host.docker.internal:8001",
+                "description": "MCP Gateway (streamable-http)",
+                "is_active": True,
+            },
+        )
+        servers = ServerConfig.objects.filter(is_active=True)
+    return servers
+
+
+def get_available_tools_list(cache_seconds: int = 300) -> list[dict]:
+    cached = cache.get("mcp_tools_ui_cache")
+    if cached:
         return cached
 
-    servers = ServerConfig.objects.filter(is_active=True)
+    servers = _ensure_default_server_config()
+    ui_tools = []
+
+    for server in servers:
+        try:
+            client = MCPClient(server)
+            tools = client.list_tools()
+
+            for tool in tools:
+                input_schema = tool.get("inputSchema", {})
+                ui_tools.append(
+                    {
+                        "name": tool["name"],
+                        "description": tool.get("description", ""),
+                        "parameters": {
+                            "properties": input_schema.get("properties", {}),
+                            "required": input_schema.get("required", []),
+                        },
+                    }
+                )
+        except Exception as exc:  # noqa: BLE001
+            print(f"[MCP] Could not reach server '{server.name}': {exc}")
+
+    if ui_tools:
+        cache.set("mcp_tools_ui_cache", ui_tools, cache_seconds)
+    return ui_tools
+
+
+def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict]:
+    cached = cache.get("mcp_tools_cache")
+    if cached and cached[0]:
+        return cached
+
+    servers = _ensure_default_server_config()
 
     gemini_tools = []
     tool_router = {}
@@ -147,7 +195,8 @@ def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict]:
         except Exception as exc:  # noqa: BLE001
             print(f"[MCP] Could not reach server '{server.name}': {exc}")
 
-    cache.set("mcp_tools_cache", (gemini_tools, tool_router), cache_seconds)
+    if gemini_tools:
+        cache.set("mcp_tools_cache", (gemini_tools, tool_router), cache_seconds)
     return gemini_tools, tool_router
 
 
