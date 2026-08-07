@@ -20,22 +20,21 @@ def _gemini_stream(session, prompt):
         prior = list(
             Message.objects.filter(
                 session=session,
-                role__in=[MessageRole.HUMAN, MessageRole.AI_GENERATED],
             ).order_by("created_at"),
         )
 
         history = [
             {
-                "role": "user" if m.role == MessageRole.HUMAN else "model",
-                "parts": [m.content],
+                "role": "user" if message.role == MessageRole.HUMAN else "ai_generated",
+                "parts": [message.content],
             }
-            for m in prior
+            for message in prior
         ]
 
         gemini_tools, tool_router = get_all_tools_for_gemini()
         model = genai.GenerativeModel(
             model_name=getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash"),
-            tools=gemini_tools or None,
+            tools=gemini_tools,
         )
         chat = model.start_chat(history=history)
 
