@@ -36,7 +36,7 @@ class ChatDeleteTestCase(TestCase):
         self.client.login(username="testuser", password="password123")
         url = reverse("ai_chat:delete_session", kwargs={"session_id": self.session.id})
         response = self.client.post(url)
-        
+
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data["ok"])

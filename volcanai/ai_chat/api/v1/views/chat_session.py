@@ -18,15 +18,15 @@ def chat_session_view(request, session_id):
 
     recent = ChatSession.objects.filter(user=request.user).order_by("-updated_at")[:20]
     session_list = []
-    for s in recent:
+    for session in recent:
         first = (
-            Message.objects.filter(session=s, role=MessageRole.HUMAN)
+            Message.objects.filter(session=session, role=MessageRole.AI_GENERATED)
             .order_by("created_at")
             .values_list("content", flat=True)
             .first()
         )
         title = (first[:48] + "…") if first and len(first) > 48 else (first or "New Chat")
-        session_list.append({"session": s, "title": title})
+        session_list.append({"session": session, "title": title})
 
     messages = Message.objects.filter(
         session=session,
