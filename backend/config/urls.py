@@ -23,9 +23,9 @@ urlpatterns = [
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     path("api/docs/", schema_view.with_ui("swagger", cache_timeout=0), name="api-docs"),
-    path("api/v1/", include("volcanai.core.api.v1.urls")),
-    path("api/v1/accounts/", include("volcanai.accounts.api.v1.urls")),
-    path("api/v1/chat/", include("volcanai.ai_chat.api.v1.urls")),
+    path("api/v1/", include("aevora.core.api.v1.urls")),
+    path("api/v1/accounts/", include("aevora.accounts.api.v1.urls")),
+    path("api/v1/chat/", include("aevora.ai_chat.api.v1.urls")),
     path("api/admin/", admin.site.urls),
 ]
 

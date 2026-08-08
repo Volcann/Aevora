@@ -1,0 +1,117 @@
+import json
+
+import google.generativeai as genai
+from django.conf import settings
+
+from aevora.ai_chat.choices import MessageRole
+from aevora.ai_chat.models import Message
+from aevora.ai_chat.services.mcp_manager import MCPClient
+from aevora.ai_chat.utils.selection import select_tools_for_prompt
+
+
+def _sse(data):
+    return f"data: {json.dumps(data)}\n\n"
+
+
+def _gemini_stream(session, prompt):
+    try:
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+
+        prior = list(
+            Message.objects.filter(
+                session=session,
+                role=MessageRole.MODEL,
+            ).order_by("created_at")
+        )[-5:]
+
+        history = [
+            {
+                "role": ("user" if message.role == MessageRole.USER else MessageRole.MODEL),
+                "parts": [message.content],
+            }
+            for message in prior
+        ]
+        while history and history[0]["role"] != "user":
+            history.pop(0)
+
+        gemini_tools, tool_router = select_tools_for_prompt(prompt)
+        model = genai.GenerativeModel(
+            model_name=getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite"),
+            tools=gemini_tools,
+        )
+        chat = model.start_chat(history=history)
+
+        full_text = []
+        user_input = prompt
+
+        while True:
+            response = chat.send_message(user_input, stream=True)
+
+            for chunk in response:
+                try:
+                    if chunk.text:
+                        full_text.append(chunk.text)
+                        yield _sse({"type": "chunk", "text": chunk.text})
+                except ValueError:
+                    pass
+
+            function_calls = []
+            try:
+                for part in response.candidates[0].content.parts:
+                    fc = getattr(part, "function_call", None)
+                    if fc and fc.name:
+                        function_calls.append(fc)
+            except (IndexError, AttributeError):
+                pass
+
+            if not function_calls:
+                break
+
+            tool_parts = []
+            for fc in function_calls:
+                yield _sse({"type": "tool_start", "tool": fc.name})
+                try:
+                    server = tool_router.get(fc.name)
+                    if server:
+                        client = MCPClient(server)
+                        args = dict(fc.args) if fc.args else {}
+                        result = client.call_tool(fc.name, args)
+                    else:
+                        result = None
+                    yield _sse({"type": "tool_done", "tool": fc.name})
+                    tool_parts.append(
+                        genai.protos.Part(
+                            function_response=genai.protos.FunctionResponse(
+                                name=fc.name,
+                                response={"result": result},
+                            ),
+                        ),
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    yield _sse({"type": "tool_error", "tool": fc.name})
+                    tool_parts.append(
+                        genai.protos.Part(
+                            function_response=genai.protos.FunctionResponse(
+                                name=fc.name,
+                                response={"error": str(exc)},
+                            ),
+                        ),
+                    )
+
+            user_input = tool_parts
+
+        Message.objects.create(session=session, role=MessageRole.USER, content=prompt)
+        Message.objects.create(
+            session=session,
+            role=MessageRole.MODEL,
+            content="".join(full_text),
+        )
+
+        if not session.title:
+            session.title = prompt[:48] + ("…" if len(prompt) > 48 else "")
+            session.save(update_fields=["title", "updated_at"])
+
+    except Exception as exc:  # noqa: BLE001
+        yield _sse({"type": "chunk", "text": f"\n\n⚠ Error: {exc}"})
+
+    yield _sse({"type": "done"})

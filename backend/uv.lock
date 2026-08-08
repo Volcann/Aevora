@@ -2795,7 +2795,7 @@ wheels = [
 ]
 
 [[package]]
-name = "volcani"
+name = "aevora"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

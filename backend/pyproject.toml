@@ -1,5 +1,5 @@
 [project]
-name = "volcani"
+name = "aevora"
 version = "0.1.0"
 description = "Django MCP Hub - Gemini AI + local MCP tools"
 readme = "README.md"

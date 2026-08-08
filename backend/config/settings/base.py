@@ -34,10 +34,10 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "volcanai.core",
-    "volcanai.accounts",
-    "volcanai.ai_chat",
-    "volcanai.notification",
+    "aevora.core",
+    "aevora.accounts",
+    "aevora.ai_chat",
+    "aevora.notification",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -135,7 +135,7 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ),
-    "DEFAULT_PAGINATION_CLASS": "volcanai.core.pagination.StandardResultsSetPagination",
+    "DEFAULT_PAGINATION_CLASS": "aevora.core.pagination.StandardResultsSetPagination",
     "PAGE_SIZE": 20,
 }
 
@@ -180,7 +180,7 @@ ONBOARDING_FRONTEND_PATH = env(
 
 CONSTANCE_BACKEND = "constance.backends.redisd.RedisBackend"
 CONSTANCE_REDIS_URL = env("REDIS_URL")
-CONSTANCE_REDIS_PREFIX = "constance:volcanai:"
+CONSTANCE_REDIS_PREFIX = "constance:aevora:"
 CONSTANCE_REDIS_CONNECTION = {
     "host": env("REDIS_HOST", default="redis"),
     "port": env.int("REDIS_PORT", default=6382),
@@ -193,7 +193,7 @@ GEMINI_API_KEY = env("GEMINI_API_KEY")
 
 FIREBASE_SERVICE_ACCOUNT_FILE = BASE_DIR / env(
     "FIREBASE_SERVICE_ACCOUNT_FILE",
-    default="volcanai-firebase-adminsdk.json",
+    default="aevora-firebase-adminsdk.json",
 )
 
 from config.settings.constance import *

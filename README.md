@@ -1,9 +1,9 @@
-# Volcani
+# Aevora
 
 **Enterprise MCP Agent Hub - Gemini AI + centralized Model Context Protocol tools.**
 _Connect your tools once. Everyone in the company can use them from the browser._
 
-[Quick Start](#quick-start) · [The Problem](#the-problem) · [What Volcani Does](#what-volcani-does) · [Key Features](#key-features) · [Architecture](#architecture) · [Security & Governance](#security--governance) · [Makefile Reference](#makefile-reference)
+[Quick Start](#quick-start) · [The Problem](#the-problem) · [What Aevora Does](#what-aevora-does) · [Key Features](#key-features) · [Architecture](#architecture) · [Security & Governance](#security--governance) · [Makefile Reference](#makefile-reference)
 
 ---
 
@@ -52,7 +52,7 @@ You may want one employee to be able to **view** customer information while anot
 
 ## The Developer Time Problem
 
-This is one of the biggest reasons Volcani exists.
+This is one of the biggest reasons Aevora exists.
 
 Without a centralized hub:
 
@@ -69,7 +69,7 @@ Developer
    └── Repeat...
 ```
 
-With Volcani:
+With Aevora:
 
 ```text
 Developer
@@ -77,7 +77,7 @@ Developer
    └── Configure MCP server once
               │
               ▼
-         Volcani Hub
+         Aevora Hub
               │
        ┌──────┼──────┐
        ▼      ▼      ▼
@@ -94,13 +94,13 @@ That means developers spend less time supporting local setups and more time buil
 
 ---
 
-## What Volcani Does
+## What Aevora Does
 
-Volcani provides a centralized **MCP Agent Hub** inside your organization's infrastructure.
+Aevora provides a centralized **MCP Agent Hub** inside your organization's infrastructure.
 
-Instead of installing and configuring MCP tools on every employee machine, the MCP servers are connected to Volcani once.
+Instead of installing and configuring MCP tools on every employee machine, the MCP servers are connected to Aevora once.
 
-Volcani then:
+Aevora then:
 
 1. Discovers the available MCP tools.
 2. Registers and caches them.
@@ -119,7 +119,7 @@ They just open the browser and start using the tools.
 
 For example, imagine a company with 100 employees.
 
-The developer connects the GitHub, PostgreSQL, Jira, and CRM MCP servers to Volcani once.
+The developer connects the GitHub, PostgreSQL, Jira, and CRM MCP servers to Aevora once.
 
 After that:
 
@@ -129,7 +129,7 @@ Employee 2  ──┤
 Employee 3  ──┤
 Employee 4  ──┤
 Employee 5  ──┤
-...           ├──> Volcani ──> MCP Servers
+...           ├──> Aevora ──> MCP Servers
 Employee 100 ─┘
 ```
 
@@ -149,7 +149,7 @@ No repeating the same setup every time a tool changes.
 
 Connect an MCP server once instead of configuring it separately for every employee.
 
-This is the biggest developer-time saving in Volcani.
+This is the biggest developer-time saving in Aevora.
 
 A change to an MCP server can be handled centrally instead of requiring developers to update dozens or hundreds of machines.
 
@@ -188,11 +188,11 @@ Instead of spending hours fixing:
 
 the developer manages one centralized system.
 
-That makes Volcani more than an MCP interface - it reduces the amount of repetitive infrastructure work your engineering team has to maintain.
+That makes Aevora more than an MCP interface - it reduces the amount of repetitive infrastructure work your engineering team has to maintain.
 
 ### Centralized Access to Internal Tools
 
-Volcani can run inside your Docker network, private infrastructure, or VPC.
+Aevora can run inside your Docker network, private infrastructure, or VPC.
 
 That means MCP servers can communicate with internal systems without exposing those systems directly to employee laptops.
 
@@ -220,7 +220,7 @@ This makes it easier to control who can perform sensitive operations.
 
 ### Context-Aware Tool Selection
 
-Volcani doesn't need to send every available MCP tool to Gemini for every request.
+Aevora doesn't need to send every available MCP tool to Gemini for every request.
 
 It can select the tools that are most relevant to the user's question.
 
@@ -260,7 +260,7 @@ This provides a central place to inspect:
 
 The tools don't depend on an employee keeping their laptop running.
 
-Volcani runs the MCP connections and AI workflow on the server side.
+Aevora runs the MCP connections and AI workflow on the server side.
 
 This makes it suitable for background jobs, scheduled tasks, and long-running operations.
 
@@ -284,7 +284,7 @@ Here are the open PRs...
 
 ### Local Voice Processing
 
-Volcani can use a local Kokoro-ONNX based voice engine for text-to-speech without sending generated audio data to an external speech service.
+Aevora can use a local Kokoro-ONNX based voice engine for text-to-speech without sending generated audio data to an external speech service.
 
 ---
 
@@ -293,8 +293,8 @@ Volcani can use a local Kokoro-ONNX based voice engine for text-to-speech withou
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/volcani.git
-cd volcani/backend
+git clone https://github.com/Volcann/Aevora.git
+cd aevora/backend
 ```
 
 ### 2. Configure Environment
@@ -309,7 +309,7 @@ Add your required secrets such as:
 GEMINI_API_KEY=your-key-here
 ```
 
-### 3. Start Volcani
+### 3. Start Aevora
 
 ```bash
 make up.d
@@ -337,14 +337,14 @@ The important difference is that **users don't need to configure MCP themselves.
 $ make up.d
 
 ================================================================
-VOLCANI - Enterprise MCP Agent Hub
+AEVORA - Enterprise MCP Agent Hub
 ================================================================
 
 [+] Running 4/4
- ✔ Network volcanai_default         Created
- ✔ Container volcanai-postgres-1    Started
- ✔ Container volcanai-redis-1       Started
- ✔ Container volcanai-django-1      Started
+ ✔ Network aevora_default           Created
+ ✔ Container aevora-postgres-1      Started
+ ✔ Container aevora-redis-1         Started
+ ✔ Container aevora-django-1        Started
 
 ================================================================
 Registering MCP Gateway...
@@ -381,13 +381,13 @@ Check the overdue invoices for Acme Corp
 and tell the account manager.
 ```
 
-Volcani can handle the workflow centrally:
+Aevora can handle the workflow centrally:
 
 ```text
 Browser
    │
    ▼
-Volcani
+Aevora
    │
    ├── Select relevant MCP tools
    │
@@ -431,7 +431,7 @@ That complexity stays on the backend.
 
 ## Architecture
 
-Volcani keeps the employee experience simple while moving MCP infrastructure to the backend.
+Aevora keeps the employee experience simple while moving MCP infrastructure to the backend.
 
 ```text
                     Employees
@@ -444,7 +444,7 @@ Volcani keeps the employee experience simple while moving MCP infrastructure to 
                         │
                         ▼
               ┌───────────────────┐
-              │   Volcani Hub     │
+              │    Aevora Hub     │
               │                   │
               │ Django            │
               │ Gemini            │
@@ -504,7 +504,7 @@ Database credentials, MCP credentials, and AI provider keys can stay on the back
 
 ### Private Network Access
 
-Volcani can communicate with internal services from inside the private network.
+Aevora can communicate with internal services from inside the private network.
 
 Instead of this:
 
@@ -520,7 +520,7 @@ you can have:
 Employee Browser
       │
       ▼
-   Volcani
+   Aevora
       │
       ▼
  Private Database
@@ -540,11 +540,11 @@ Tool activity is recorded centrally, making it easier to understand what happene
 
 ## The Developer-Time Advantage
 
-The real value of Volcani isn't just that it provides a web UI.
+The real value of Aevora isn't just that it provides a web UI.
 
 It's that it changes **where MCP configuration lives**.
 
-### Without Volcani
+### Without Aevora
 
 ```text
 100 Employees
@@ -555,7 +555,7 @@ It's that it changes **where MCP configuration lives**.
       └── potentially hundreds of support problems
 ```
 
-### With Volcani
+### With Aevora
 
 ```text
 100 Employees
@@ -570,7 +570,7 @@ A developer can make a change once and have it available to everyone.
 
 That means fewer repetitive support requests, fewer broken local configurations, and less engineering time spent maintaining developer tooling on non-developer machines.
 
-> **Volcani lets your developers build the integration once instead of maintaining the same integration 100 times.**
+> **Aevora lets your developers build the integration once instead of maintaining the same integration 100 times.**
 
 ---
 
@@ -595,7 +595,7 @@ make psql          # Open a PostgreSQL shell
 
 ## The Idea in One Sentence
 
-> **Volcani turns MCP from something every developer has to configure locally into a centralized service that the whole company can use from a browser - saving developers from configuring and troubleshooting the same setup over and over again.**
+> **Aevora turns MCP from something every developer has to configure locally into a centralized service that the whole company can use from a browser - saving developers from configuring and troubleshooting the same setup over and over again.**
 
 ---
 

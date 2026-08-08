@@ -1,4 +1,4 @@
-name: volcanai
+name: aevora
 
 x-common: &common
   stdin_open: true
@@ -14,13 +14,13 @@ x-django-build: &django-build
       DJANGO_ENV: ${DJANGO_ENV:-dev}
   volumes:
     - .:/app
-    - volcanai_static_volume:/app/staticfiles
-    - volcanai_media_volume:/app/media
+    - aevora_static_volume:/app/staticfiles
+    - aevora_media_volume:/app/media
 
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: volcanai_postgres
+    container_name: aevora_postgres
     command: postgres -p 5434
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -28,7 +28,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       PGPORT: 5434
     volumes:
-      - volcanai_postgres_data:/var/lib/postgresql/data
+      - aevora_postgres_data:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5434:5434"
     <<: *common
@@ -41,7 +41,7 @@ services:
 
   django:
     <<: [*django-build, *common]
-    container_name: volcanai_django
+    container_name: aevora_django
     command: uvicorn config.asgi:application --host 0.0.0.0 --port 8002 --reload --reload-dir /app
     ports:
       - "127.0.0.1:8002:8002"
@@ -59,8 +59,8 @@ services:
 
   celery:
     <<: [*django-build, *common]
-    container_name: volcanai_celery
-    command: bash -c "celery -A volcanai worker -l info"
+    container_name: aevora_celery
+    command: bash -c "celery -A aevora worker -l info"
     depends_on:
       postgres:
         condition: service_healthy
@@ -69,8 +69,8 @@ services:
 
   celery_beat:
     <<: [*django-build, *common]
-    container_name: volcanai_celery_beat
-    command: bash -c "celery -A volcanai beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    container_name: aevora_celery_beat
+    command: bash -c "celery -A aevora beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,8 +79,8 @@ services:
 
   flower:
     <<: [*django-build, *common]
-    container_name: volcanai_flower
-    command: bash -c "celery -A volcanai flower --conf=config/settings/flower.py"
+    container_name: aevora_flower
+    command: bash -c "celery -A aevora flower --conf=config/settings/flower.py"
     ports:
       - "127.0.0.1:5557:5555"
     depends_on:
@@ -95,12 +95,12 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: volcanai_redis
+    container_name: aevora_redis
     command: redis-server --port 6382
     ports:
       - "127.0.0.1:6382:6382"
     volumes:
-      - volcanai_redis_data:/data
+      - aevora_redis_data:/data
     <<: *common
     healthcheck:
       test: ["CMD", "redis-cli", "-p", "6382", "ping"]
@@ -110,11 +110,11 @@ services:
       start_period: 30s
 
 volumes:
-  volcanai_static_volume:
-    name: volcanai_static_volume
-  volcanai_media_volume:
-    name: volcanai_media_volume
-  volcanai_redis_data:
-    name: volcanai_redis_data
-  volcanai_postgres_data:
-    name: volcanai_postgres_data
+  aevora_static_volume:
+    name: aevora_static_volume
+  aevora_media_volume:
+    name: aevora_media_volume
+  aevora_redis_data:
+    name: aevora_redis_data
+  aevora_postgres_data:
+    name: aevora_postgres_data
