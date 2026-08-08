@@ -398,11 +398,12 @@
     .navbar-left { display:flex; align-items:center; gap:0.75rem; }
 
     .fold-trigger {
-      display:flex; align-items:center; justify-content:center;
-      background:none; border:1px solid var(--border); color:var(--text);
-      cursor:pointer; width:34px; height:34px; border-radius:8px;
+      display: none; align-items: center; justify-content: center;
+      background: none; border: 1px solid var(--border); color: var(--text);
+      cursor: pointer; width: 34px; height: 34px; border-radius: 8px;
       transition: background 0.2s ease, transform 0.2s cubic-bezier(0.34,1.3,0.64,1);
     }
+    .app-layout.sidebar-folded .fold-trigger { display: flex !important; }
     .fold-trigger:hover { background: var(--surface-hover); transform: scale(1.08); }
     .brand-title { font-size:0.9375rem; font-weight:600; letter-spacing:-0.01em; }
 
@@ -583,8 +584,8 @@
     }
     .tools-popover {
       position:absolute; bottom:calc(100% + 10px); left:1rem;
-      width:260px; background:var(--surface-solid);
-      border:1px solid var(--border); border-radius:10px;
+      width:300px; background:var(--surface-solid);
+      border:1px solid var(--border); border-radius:12px;
       box-shadow:var(--card-shadow); display:none; flex-direction:column;
       overflow:hidden; z-index:100;
       animation:popUp 0.18s cubic-bezier(0.16,1,0.3,1) forwards;
@@ -595,14 +596,35 @@
       font-size:0.68rem; text-transform:uppercase; font-weight:600;
       letter-spacing:0.04em; color:var(--text-muted); padding:0.5rem 0.75rem;
       background:var(--surface-hover); border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
     }
+    .popover-hint { font-size:0.62rem; text-transform:none; letter-spacing:0; opacity:0.65; }
+    .tool-list { overflow-y:auto; max-height:280px; }
     .tool-option {
-      padding:0.6rem 0.75rem; display:flex; align-items:center;
-      gap:0.5rem; font-size:0.83rem; color:var(--text);
-      cursor:pointer; transition:background 0.15s ease, transform 0.15s ease;
+      padding:0.6rem 0.75rem; display:flex; flex-direction:column;
+      gap:0.22rem; font-size:0.83rem; color:var(--text);
+      cursor:pointer; transition:background 0.12s ease;
+      border-bottom:1px solid var(--border);
     }
-    .tool-option:hover { background:var(--surface-hover); transform:translateX(2px); }
-    .tool-option span  { font-weight:600; color:var(--gh-green); }
+    .tool-option:last-child { border-bottom:none; }
+    .tool-option:hover,
+    .tool-option.kbd-focus { background:var(--surface-hover); }
+    .tool-option-name {
+      font-weight:700; color:var(--gh-green); font-size:0.84rem;
+      display:flex; align-items:center; gap:0.3rem;
+    }
+    .tool-option-name svg { flex-shrink:0; }
+    .tool-option-desc { font-size:0.77rem; color:var(--text-muted); line-height:1.4; }
+    .tool-option-params {
+      display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;
+    }
+    .tool-param-badge {
+      font-size:0.67rem; font-family:'SF Mono','Fira Code',monospace;
+      background:var(--tag-bg); color:var(--tag-text);
+      padding:1px 6px; border-radius:4px; font-weight:600;
+    }
+    .tool-param-badge.required { opacity:1; }
+    .tool-param-badge.optional { opacity:0.55; }
     .no-tools-msg { padding:0.75rem; font-size:0.82rem; color:var(--text-muted); }
 
     /* Input box with animated border glow */
@@ -837,7 +859,6 @@
 
               <span class="history-item-label">{{ item.title }}</span>
 
-              <!-- Delete button — NOTE: add 'ai_chat:delete_session' URL in your urls.py -->
               <button class="history-delete-btn"
                       data-session-id="{{ item.session.id }}"
                       data-is-current="{% if item.session.id == session.id %}1{% else %}0{% endif %}"
@@ -928,16 +949,39 @@
       </div>
 
       <div class="chat-input-wrapper">
-        <div class="tools-popover" id="toolsPopover">
-          <div class="popover-header">Select Tool / Agent</div>
-          {% for tool in available_tools %}
-          <div class="tool-option" data-tool="@{{ tool.name }}">
-            <span>@{{ tool.name }}</span>
-            {{ tool.description|truncatechars:38 }}
+        <div class="tools-popover" id="toolsPopover" role="listbox" aria-label="Available tools">
+          <div class="popover-header">
+            <span>Tools &amp; Agents</span>
+            <span class="popover-hint">↑↓ navigate · Enter pick · Esc close</span>
           </div>
-          {% empty %}
-          <div class="no-tools-msg">No tools configured yet.</div>
-          {% endfor %}
+          <div class="tool-list" id="toolList">
+            {% for tool in available_tools %}
+            <div class="tool-option"
+                 role="option"
+                 data-tool="@{{ tool.name }}"
+                 data-name="{{ tool.name }}"
+                 tabindex="-1">
+              <div class="tool-option-name">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                @{{ tool.name }}
+              </div>
+              {% if tool.description %}
+              <div class="tool-option-desc">{{ tool.description }}</div>
+              {% endif %}
+              {% if tool.parameters.properties %}
+              <div class="tool-option-params">
+                {% for param_name, param_def in tool.parameters.properties.items %}
+                  <span class="tool-param-badge {% if param_name in tool.parameters.required %}required{% else %}optional{% endif %}">
+                    {{ param_name }}{% if param_name not in tool.parameters.required %}?{% endif %}
+                  </span>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            {% empty %}
+            <div class="no-tools-msg">No tools configured yet — add a ServerConfig row.</div>
+            {% endfor %}
+          </div>
         </div>
 
         <div class="input-box">
@@ -1007,13 +1051,7 @@
     const AI_AVATAR  = "https://avatars.githubusercontent.com/u/142692213?v=4";
     const WORD_SPEED = 28;
 
-    // ── NOTE FOR DEVELOPERS ───────────────────────────────────────
-    // Add a delete endpoint in your urls.py, e.g.:
-    //   path('chat/<str:session_id>/delete/', views.delete_session, name='delete_session')
-    // The view should accept POST + CSRF, delete the session, return JSON {ok:true}
-    // Update DELETE_URL_TEMPLATE below to match your URL pattern:
     const DELETE_URL_TEMPLATE = (id) => `/chat/${id}/delete/`;
-    // ─────────────────────────────────────────────────────────────
 
     const THINKING_PHRASES = [
       "Reading your message","Thinking it through","Gathering the details",
@@ -1231,22 +1269,56 @@
               },
             });
 
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.ok) {
+              const errorText = data.error || `Failed to delete chat (Status: ${res.status})`;
+              item.classList.remove('deleting');
+              const confirmText = item.querySelector('.delete-confirm-text');
+              if (confirmText) confirmText.textContent = errorText;
+              const confirmActions = item.querySelector('.delete-confirm-actions');
+              if (confirmActions) {
+                confirmActions.innerHTML = '<button class="btn-del-no">OK</button>';
+                const okBtn = confirmActions.querySelector('.btn-del-no');
+                if (okBtn) {
+                  okBtn.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    const confirm = item.querySelector('.delete-confirm');
+                    if (confirm) confirm.classList.remove('visible');
+                  });
+                }
+              }
+              return;
+            }
+
             // Collapse height after fade
             setTimeout(() => {
               item.classList.add('collapsed');
               setTimeout(() => {
                 item.remove();
                 updateHistoryLine();
-                // If we deleted the current chat, go to new chat
                 if (isCurrent) window.location.href = newChatUrl;
               }, 350);
             }, 200);
 
           } catch (err) {
-            // Revert on network failure
             item.classList.remove('deleting');
-            const confirm = item.querySelector('.delete-confirm');
-            if (confirm) confirm.classList.remove('visible');
+            const confirmText = item.querySelector('.delete-confirm-text');
+            if (confirmText) confirmText.textContent = 'Network error deleting chat';
+            const confirmActions = item.querySelector('.delete-confirm-actions');
+            if (confirmActions) {
+              confirmActions.innerHTML = '<button class="btn-del-no">OK</button>';
+              const okBtn = confirmActions.querySelector('.btn-del-no');
+              if (okBtn) {
+                okBtn.addEventListener('click', (ev) => {
+                  ev.preventDefault();
+                  ev.stopPropagation();
+                  const confirm = item.querySelector('.delete-confirm');
+                  if (confirm) confirm.classList.remove('visible');
+                });
+              }
+            }
           }
         });
       });
@@ -1263,10 +1335,10 @@
 
     /* ── Sidebar fold ───────────────────────────────────────── */
     const appLayout = document.getElementById('appLayout');
-    document.getElementById('foldSidebarBtn')
-      .addEventListener('click', () => appLayout.classList.add('sidebar-folded'));
-    document.getElementById('toggleSidebarBtn')
-      .addEventListener('click', () => appLayout.classList.toggle('sidebar-folded'));
+    const foldBtn = document.getElementById('foldSidebarBtn');
+    if (foldBtn) foldBtn.addEventListener('click', () => appLayout.classList.add('sidebar-folded'));
+    const toggleBtn = document.getElementById('toggleSidebarBtn');
+    if (toggleBtn) toggleBtn.addEventListener('click', () => appLayout.classList.toggle('sidebar-folded'));
 
     /* ── Markdown render for existing messages ──────────────── */
     marked.setOptions({ breaks: true, gfm: true });
@@ -1277,31 +1349,111 @@
     /* ── Tool popover ───────────────────────────────────────── */
     const chatInput    = document.getElementById('chatInput');
     const toolsPopover = document.getElementById('toolsPopover');
+    const toolList     = document.getElementById('toolList');
     const toolMenuBtn  = document.getElementById('toolMenuTrigger');
     const sendBtn      = document.getElementById('sendBtn');
     const chatFeed     = document.getElementById('chatFeed');
 
-    const togglePopover = show => toolsPopover.classList.toggle('active', show);
+    // All tool options (static NodeList baked from Django template)
+    const allToolOptions = Array.from(document.querySelectorAll('.tool-option[data-tool]'));
+    let kbdIdx = -1;
+
+    function openPopover() { toolsPopover.classList.add('active'); kbdIdx = -1; }
+    function closePopover() { toolsPopover.classList.remove('active'); kbdIdx = -1; setKbdFocus(-1); }
+
+    function setKbdFocus(idx) {
+      const visible = allToolOptions.filter(o => o.style.display !== 'none');
+      visible.forEach((o, i) => o.classList.toggle('kbd-focus', i === idx));
+      if (visible[idx]) visible[idx].scrollIntoView({ block: 'nearest' });
+    }
+
+    function filterTools(query) {
+      const q = query.toLowerCase();
+      let anyVisible = false;
+      allToolOptions.forEach(opt => {
+        const name = opt.dataset.name || '';
+        const desc = opt.querySelector('.tool-option-desc')?.textContent || '';
+        const match = !q || name.toLowerCase().includes(q) || desc.toLowerCase().includes(q);
+        opt.style.display = match ? '' : 'none';
+        if (match) anyVisible = true;
+      });
+      return anyVisible;
+    }
+
+    function pickOption(opt) {
+      if (!opt) return;
+      const tag  = opt.dataset.tool;           // e.g. "@review_pr"
+      const cur  = chatInput.value;
+      // replace everything after the last '@' with the picked tool name
+      const atIdx = cur.lastIndexOf('@');
+      chatInput.value = (atIdx >= 0 ? cur.slice(0, atIdx) : cur) + tag + ' ';
+      closePopover();
+      filterTools('');   // reset filter for next time
+      chatInput.focus();
+      // trigger auto-resize
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+    }
+
+    // Clicking @ button always opens full list
     toolMenuBtn.addEventListener('click', e => {
       e.stopPropagation();
-      togglePopover(!toolsPopover.classList.contains('active'));
+      if (toolsPopover.classList.contains('active')) {
+        closePopover();
+      } else {
+        filterTools('');
+        openPopover();
+      }
     });
+
+    // Click on a tool option
+    allToolOptions.forEach(opt => {
+      opt.addEventListener('click', () => pickOption(opt));
+    });
+
+    // Input handler — detect @<query> anywhere in text
     chatInput.addEventListener('input', () => {
-      togglePopover(chatInput.value.endsWith('@'));
+      const val = chatInput.value;
+      const atIdx = val.lastIndexOf('@');
+      // only activate if '@' is the last non-space token start
+      const afterAt = atIdx >= 0 ? val.slice(atIdx + 1) : null;
+      const hasSpaceAfterAt = afterAt !== null && afterAt.includes(' ');
+
+      if (atIdx >= 0 && !hasSpaceAfterAt) {
+        filterTools(afterAt || '');
+        openPopover();
+      } else {
+        closePopover();
+      }
+
       chatInput.style.height = 'auto';
       chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
     });
-    document.querySelectorAll('.tool-option[data-tool]').forEach(opt => {
-      opt.addEventListener('click', () => {
-        const tag = opt.dataset.tool;
-        const cur = chatInput.value;
-        chatInput.value = (cur.endsWith('@') ? cur.slice(0,-1) : cur) + tag + ' ';
-        togglePopover(false);
-        chatInput.focus();
-      });
+
+    // Keyboard nav inside textarea while popover is open
+    chatInput.addEventListener('keydown', e => {
+      if (!toolsPopover.classList.contains('active')) return;
+      const visible = allToolOptions.filter(o => o.style.display !== 'none');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        kbdIdx = Math.min(kbdIdx + 1, visible.length - 1);
+        setKbdFocus(kbdIdx);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        kbdIdx = Math.max(kbdIdx - 1, 0);
+        setKbdFocus(kbdIdx);
+      } else if ((e.key === 'Enter' || e.key === 'Tab') && kbdIdx >= 0) {
+        e.preventDefault();
+        pickOption(visible[kbdIdx]);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closePopover();
+      }
     });
+
+    // Close on outside click
     document.addEventListener('click', e => {
-      if (!toolsPopover.contains(e.target) && e.target !== toolMenuBtn) togglePopover(false);
+      if (!toolsPopover.contains(e.target) && e.target !== toolMenuBtn) closePopover();
     });
 
     /* ── Ripples on interactive buttons ────────────────────── */

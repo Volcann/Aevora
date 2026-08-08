@@ -5,10 +5,10 @@ from volcanai.core.models import UUIDTimeStampedModel
 
 class ServerConfig(UUIDTimeStampedModel):
     name = models.CharField(max_length=100, unique=True)
-    command = models.CharField(max_length=255)
-
-    args = models.JSONField(default=list)
-    env_vars = models.JSONField(default=dict, blank=True)
+    url = models.URLField(
+        blank=True,
+        help_text="SSE endpoint URL, e.g. http://host.docker.internal:8080/sse",
+    )
 
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
