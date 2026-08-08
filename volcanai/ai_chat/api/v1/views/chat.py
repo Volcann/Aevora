@@ -12,11 +12,13 @@ from volcanai.ai_chat.utils import _gemini_stream, _sse
 def chat_stream(request, session_id):
     session = get_object_or_404(ChatSession, id=session_id, user=request.user)
     prompt = request.POST.get("prompt", "").strip()
+
     if not prompt:
         return StreamingHttpResponse(
             iter([_sse({"type": "done"})]),
             content_type="text/event-stream",
         )
+
     return StreamingHttpResponse(
         _gemini_stream(session, prompt),
         content_type="text/event-stream",
