@@ -147,7 +147,6 @@
     .history-container::-webkit-scrollbar-thumb:hover {
       background: var(--sb-thumb-hover) !important;
     }
-    /* Scrollbar always visible while actively scrolling */
     .is-scrolling::-webkit-scrollbar-thumb {
       background: var(--sb-thumb) !important;
     }
@@ -251,7 +250,6 @@
       color: var(--text); text-decoration: none; cursor: pointer; margin-bottom: 2px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       position: relative; z-index: 2;
-      /* scroll-reveal */
       opacity: 0; transform: translateX(-10px);
       transition:
         background 0.15s ease,
@@ -272,7 +270,6 @@
       padding-left: calc(2.25rem - 3px);
       box-shadow: inset 3px 0 0 0 var(--gh-green-glow);
     }
-    /* dot marker */
     .history-item::before {
       content: '';
       position: absolute; left: 16.5px; top: 50%; transform: translateY(-50%);
@@ -290,7 +287,6 @@
     }
     .history-item svg { display: none; }
 
-    /* Item title text */
     .history-item-label {
       flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       min-width: 0;
@@ -322,7 +318,6 @@
     }
     .history-delete-btn:active { transform: scale(0.88) !important; }
 
-    /* Deleting exit animation */
     .history-item.deleting {
       pointer-events: none !important;
       overflow: hidden;
@@ -627,7 +622,6 @@
     .tool-param-badge.optional { opacity:0.55; }
     .no-tools-msg { padding:0.75rem; font-size:0.82rem; color:var(--text-muted); }
 
-    /* Input box with animated border glow */
     .input-box {
       display:flex; align-items:flex-end;
       background:var(--surface); border:1px solid var(--border);
@@ -674,7 +668,6 @@
       line-height:24px; padding:4px 0; position:relative; z-index:1;
     }
 
-    /* Send button with ripple */
     .btn-send {
       background:var(--gh-green); color:#fff; border:none;
       width:32px; height:32px; border-radius:8px;
@@ -692,7 +685,6 @@
     .btn-send:active { transform:scale(0.94); }
     .btn-send:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
 
-    /* Ripple effect */
     .ripple {
       position:absolute; border-radius:50%;
       background:rgba(255,255,255,0.35);
@@ -872,7 +864,6 @@
                 </svg>
               </button>
 
-              <!-- Inline confirm overlay -->
               <div class="delete-confirm" data-session-id="{{ item.session.id }}">
                 <span class="delete-confirm-text">Delete?</span>
                 <div class="delete-confirm-actions">
@@ -1044,650 +1035,18 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js" crossorigin="anonymous"></script>
 
+  <!-- Django-interpolated constants — must come before chat.js -->
   <script>
-    const SESSION_ID = "{{ session.id }}";
-    const STREAM_URL = "{% url 'ai_chat:chat_stream' session_id=session.id %}";
-    const CSRF_TOKEN = "{{ csrf_token }}";
-    const AI_AVATAR  = "https://avatars.githubusercontent.com/u/142692213?v=4";
-    const WORD_SPEED = 28;
-
-    const DELETE_URL_TEMPLATE = (id) => `/chat/${id}/delete/`;
-
-    const THINKING_PHRASES = [
-      "Reading your message","Thinking it through","Gathering the details",
-      "Connecting the dots","Summing things up","Double-checking the answer",
-      "Researching that for you","Working through the steps","Almost there",
-      "Pulling it together","Just a moment","Weighing the options",
-    ];
-    const BAR_WIDTHS = [120,160,100,200,140,180,110,220];
-
-    /* ── Ripple helper ──────────────────────────────────────── */
-    function addRipple(btn, e) {
-      const r = btn.getBoundingClientRect();
-      const size = Math.max(r.width, r.height);
-      const x = (e.clientX - r.left) - size / 2;
-      const y = (e.clientY - r.top) - size / 2;
-      const rip = document.createElement('span');
-      rip.className = 'ripple';
-      rip.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
-      btn.appendChild(rip);
-      rip.addEventListener('animationend', () => rip.remove());
-    }
-
-    /* ── Scrollbar active class while scrolling ─────────────── */
-    let scrollTimer;
-    function onScroll(el) {
-      el.classList.add('is-scrolling');
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => el.classList.remove('is-scrolling'), 800);
-    }
-    document.querySelectorAll('.chat-messages, .history-container').forEach(el => {
-      el.addEventListener('scroll', () => onScroll(el), { passive: true });
-    });
-
-    /* ── Color presets ──────────────────────────────────────── */
-    const PRESETS = [
-      { h:138, s:55, l:42, label:'Forest'  },
-      { h:211, s:80, l:42, label:'Ocean'   },
-      { h:260, s:65, l:52, label:'Violet'  },
-      { h:  0, s:72, l:48, label:'Crimson' },
-      { h: 28, s:80, l:48, label:'Amber'   },
-      { h:180, s:60, l:38, label:'Teal'    },
-      { h:330, s:65, l:48, label:'Rose'    },
-    ];
-
-    const root = document.documentElement;
-
-    function getAccentValues() {
-      return {
-        h: parseInt(getComputedStyle(root).getPropertyValue('--accent-h')) || 138,
-        s: parseInt(getComputedStyle(root).getPropertyValue('--accent-s')) || 55,
-        l: parseInt(getComputedStyle(root).getPropertyValue('--accent-l')) || 42,
-      };
-    }
-
-    function applyAccent(h, s, l) {
-      root.style.setProperty('--accent-h', h);
-      root.style.setProperty('--accent-s', s + '%');
-      root.style.setProperty('--accent-l', l + '%');
-      localStorage.setItem('volcann-accent', JSON.stringify({ h, s, l }));
-      document.getElementById('sliderSat').style.background =
-        `linear-gradient(90deg,hsl(${h},10%,50%) 0%,hsl(${h},100%,${l}%) 100%)`;
-      document.getElementById('sliderLit').style.background =
-        `linear-gradient(90deg,#111 0%,hsl(${h},${s}%,50%) 50%,#fff 100%)`;
-      const swatch = document.getElementById('colorSwatch');
-      swatch.classList.remove('pulse');
-      void swatch.offsetWidth;
-      swatch.classList.add('pulse');
-      document.getElementById('sliderHue').value = h;
-      document.getElementById('sliderSat').value = s;
-      document.getElementById('sliderLit').value = l;
-      document.getElementById('valHue').textContent = h + '°';
-      document.getElementById('valSat').textContent = s + '%';
-      document.getElementById('valLit').textContent = l + '%';
-      document.querySelectorAll('.preset-dot').forEach(d => {
-        d.classList.toggle('selected', +d.dataset.h===h && +d.dataset.s===s && +d.dataset.l===l);
-      });
-    }
-
-    const presetRow = document.getElementById('presetRow');
-    PRESETS.forEach(p => {
-      const dot = document.createElement('button');
-      dot.className = 'preset-dot';
-      dot.title = p.label;
-      dot.dataset.h = p.h; dot.dataset.s = p.s; dot.dataset.l = p.l;
-      dot.style.background = `hsl(${p.h},${p.s}%,${p.l}%)`;
-      dot.addEventListener('click', () => applyAccent(p.h, p.s, p.l));
-      presetRow.appendChild(dot);
-    });
-
-    function readSliders() {
-      const h = +document.getElementById('sliderHue').value;
-      const s = +document.getElementById('sliderSat').value;
-      const l = +document.getElementById('sliderLit').value;
-      document.getElementById('valHue').textContent = h + '°';
-      document.getElementById('valSat').textContent = s + '%';
-      document.getElementById('valLit').textContent = l + '%';
-      applyAccent(h, s, l);
-    }
-    ['sliderHue','sliderSat','sliderLit'].forEach(id =>
-      document.getElementById(id).addEventListener('input', readSliders)
-    );
-    document.getElementById('btnResetColor').addEventListener('click', () => applyAccent(138, 55, 42));
-
-    const panelTrigger = document.getElementById('colorPanelTrigger');
-    const colorCard    = document.getElementById('colorCard');
-    panelTrigger.addEventListener('click', () => {
-      const open = colorCard.classList.toggle('open');
-      panelTrigger.classList.toggle('open', open);
-      panelTrigger.setAttribute('aria-expanded', open);
-    });
-    document.addEventListener('click', e => {
-      if (!document.getElementById('colorPanel').contains(e.target)) {
-        colorCard.classList.remove('open');
-        panelTrigger.classList.remove('open');
-        panelTrigger.setAttribute('aria-expanded', 'false');
-      }
-    });
-    (function initSliders() {
-      const v = getAccentValues();
-      applyAccent(v.h, v.s, v.l);
-    })();
-
-    /* ── Timeline line + scroll-reveal ─────────────────────── */
-    const historyContainer = document.getElementById('historyContainer');
-    const historyLine      = document.getElementById('historyLine');
-
-    function getHistoryItems() {
-      return document.querySelectorAll('.history-item');
-    }
-
-    function updateHistoryLine() {
-      if (!historyLine) return;
-      const listEl = document.getElementById('historyList');
-      if (!listEl) return;
-      const containerRect = historyContainer.getBoundingClientRect();
-
-      const scrollProgress = historyContainer.scrollTop;
-      const maxScroll = historyContainer.scrollHeight - historyContainer.clientHeight;
-      const fraction = maxScroll > 0 ? Math.min(scrollProgress / maxScroll, 1) : 1;
-      const lineHeight = Math.max(8, fraction * listEl.offsetHeight);
-      historyLine.style.height = lineHeight + 'px';
-      if (lineHeight > 10) historyLine.classList.add('active');
-      else historyLine.classList.remove('active');
-
-      getHistoryItems().forEach(item => {
-        const itemRect = item.getBoundingClientRect();
-        if (itemRect.top < containerRect.bottom + 40) {
-          const delay = parseInt(item.dataset.index || 0) * 55;
-          setTimeout(() => item.classList.add('revealed'), delay);
-        }
-      });
-    }
-
-    if (historyContainer) {
-      historyContainer.addEventListener('scroll', updateHistoryLine, { passive: true });
-      setTimeout(() => {
-        updateHistoryLine();
-        setTimeout(() => {
-          const activeItem = document.querySelector('.history-item.active');
-          const listEl = document.getElementById('historyList');
-          if (activeItem && historyLine && listEl) {
-            const listRect  = listEl.getBoundingClientRect();
-            const activeRect = activeItem.getBoundingClientRect();
-            const pct = Math.min(100, ((activeRect.bottom - listRect.top) / listEl.offsetHeight) * 100);
-            historyLine.style.height = pct + '%';
-            historyLine.classList.add('active');
-          } else if (historyLine) {
-            historyLine.style.height = '60%';
-            historyLine.classList.add('active');
-          }
-        }, 300);
-      }, 120);
-    }
-
-    /* ── Delete chat ────────────────────────────────────────── */
-    function initDeleteButtons() {
-      document.querySelectorAll('.history-delete-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.preventDefault();
-          e.stopPropagation();
-          const sessionId = btn.dataset.sessionId;
-          const item = btn.closest('.history-item');
-          const confirm = item.querySelector('.delete-confirm');
-          if (confirm) confirm.classList.add('visible');
-        });
-      });
-
-      document.querySelectorAll('.btn-del-no').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.preventDefault();
-          e.stopPropagation();
-          const confirm = btn.closest('.delete-confirm');
-          if (confirm) confirm.classList.remove('visible');
-        });
-      });
-
-      document.querySelectorAll('.btn-del-yes').forEach(btn => {
-        btn.addEventListener('click', async e => {
-          e.preventDefault();
-          e.stopPropagation();
-          const sessionId   = btn.dataset.sessionId;
-          const isCurrent   = btn.dataset.isCurrent === '1';
-          const item        = btn.closest('.history-item');
-          const newChatUrl  = "{% url 'ai_chat:ai_chat' %}";
-
-          // Start exit animation
-          item.classList.add('deleting');
-
-          try {
-            const res = await fetch(DELETE_URL_TEMPLATE(sessionId), {
-              method: 'POST',
-              headers: {
-                'X-CSRFToken': CSRF_TOKEN,
-                'Content-Type': 'application/json',
-              },
-            });
-
-            const data = await res.json().catch(() => ({}));
-
-            if (!res.ok || !data.ok) {
-              const errorText = data.error || `Failed to delete chat (Status: ${res.status})`;
-              item.classList.remove('deleting');
-              const confirmText = item.querySelector('.delete-confirm-text');
-              if (confirmText) confirmText.textContent = errorText;
-              const confirmActions = item.querySelector('.delete-confirm-actions');
-              if (confirmActions) {
-                confirmActions.innerHTML = '<button class="btn-del-no">OK</button>';
-                const okBtn = confirmActions.querySelector('.btn-del-no');
-                if (okBtn) {
-                  okBtn.addEventListener('click', (ev) => {
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    const confirm = item.querySelector('.delete-confirm');
-                    if (confirm) confirm.classList.remove('visible');
-                  });
-                }
-              }
-              return;
-            }
-
-            // Collapse height after fade
-            setTimeout(() => {
-              item.classList.add('collapsed');
-              setTimeout(() => {
-                item.remove();
-                updateHistoryLine();
-                if (isCurrent) window.location.href = newChatUrl;
-              }, 350);
-            }, 200);
-
-          } catch (err) {
-            item.classList.remove('deleting');
-            const confirmText = item.querySelector('.delete-confirm-text');
-            if (confirmText) confirmText.textContent = 'Network error deleting chat';
-            const confirmActions = item.querySelector('.delete-confirm-actions');
-            if (confirmActions) {
-              confirmActions.innerHTML = '<button class="btn-del-no">OK</button>';
-              const okBtn = confirmActions.querySelector('.btn-del-no');
-              if (okBtn) {
-                okBtn.addEventListener('click', (ev) => {
-                  ev.preventDefault();
-                  ev.stopPropagation();
-                  const confirm = item.querySelector('.delete-confirm');
-                  if (confirm) confirm.classList.remove('visible');
-                });
-              }
-            }
-          }
-        });
-      });
-    }
-
-    initDeleteButtons();
-
-    /* ── Theme toggle ───────────────────────────────────────── */
-    document.getElementById('themeToggle').addEventListener('click', () => {
-      const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      root.setAttribute('data-theme', next);
-      localStorage.setItem('volcann-theme', next);
-    });
-
-    /* ── Sidebar fold ───────────────────────────────────────── */
-    const appLayout = document.getElementById('appLayout');
-    const foldBtn = document.getElementById('foldSidebarBtn');
-    if (foldBtn) foldBtn.addEventListener('click', () => appLayout.classList.add('sidebar-folded'));
-    const toggleBtn = document.getElementById('toggleSidebarBtn');
-    if (toggleBtn) toggleBtn.addEventListener('click', () => appLayout.classList.toggle('sidebar-folded'));
-
-    /* ── Markdown render for existing messages ──────────────── */
-    marked.setOptions({ breaks: true, gfm: true });
-    document.querySelectorAll('.js-render-md').forEach(el => {
-      el.innerHTML = marked.parse(el.textContent.trim() || '');
-    });
-
-    /* ── Tool popover ───────────────────────────────────────── */
-    const chatInput    = document.getElementById('chatInput');
-    const toolsPopover = document.getElementById('toolsPopover');
-    const toolList     = document.getElementById('toolList');
-    const toolMenuBtn  = document.getElementById('toolMenuTrigger');
-    const sendBtn      = document.getElementById('sendBtn');
-    const chatFeed     = document.getElementById('chatFeed');
-
-    // All tool options (static NodeList baked from Django template)
-    const allToolOptions = Array.from(document.querySelectorAll('.tool-option[data-tool]'));
-    let kbdIdx = -1;
-
-    function openPopover() { toolsPopover.classList.add('active'); kbdIdx = -1; }
-    function closePopover() { toolsPopover.classList.remove('active'); kbdIdx = -1; setKbdFocus(-1); }
-
-    function setKbdFocus(idx) {
-      const visible = allToolOptions.filter(o => o.style.display !== 'none');
-      visible.forEach((o, i) => o.classList.toggle('kbd-focus', i === idx));
-      if (visible[idx]) visible[idx].scrollIntoView({ block: 'nearest' });
-    }
-
-    function filterTools(query) {
-      const q = query.toLowerCase();
-      let anyVisible = false;
-      allToolOptions.forEach(opt => {
-        const name = opt.dataset.name || '';
-        const desc = opt.querySelector('.tool-option-desc')?.textContent || '';
-        const match = !q || name.toLowerCase().includes(q) || desc.toLowerCase().includes(q);
-        opt.style.display = match ? '' : 'none';
-        if (match) anyVisible = true;
-      });
-      return anyVisible;
-    }
-
-    function pickOption(opt) {
-      if (!opt) return;
-      const tag  = opt.dataset.tool;           // e.g. "@review_pr"
-      const cur  = chatInput.value;
-      // replace everything after the last '@' with the picked tool name
-      const atIdx = cur.lastIndexOf('@');
-      chatInput.value = (atIdx >= 0 ? cur.slice(0, atIdx) : cur) + tag + ' ';
-      closePopover();
-      filterTools('');   // reset filter for next time
-      chatInput.focus();
-      // trigger auto-resize
-      chatInput.style.height = 'auto';
-      chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
-    }
-
-    // Clicking @ button always opens full list
-    toolMenuBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      if (toolsPopover.classList.contains('active')) {
-        closePopover();
-      } else {
-        filterTools('');
-        openPopover();
-      }
-    });
-
-    // Click on a tool option
-    allToolOptions.forEach(opt => {
-      opt.addEventListener('click', () => pickOption(opt));
-    });
-
-    // Input handler — detect @<query> anywhere in text
-    chatInput.addEventListener('input', () => {
-      const val = chatInput.value;
-      const atIdx = val.lastIndexOf('@');
-      // only activate if '@' is the last non-space token start
-      const afterAt = atIdx >= 0 ? val.slice(atIdx + 1) : null;
-      const hasSpaceAfterAt = afterAt !== null && afterAt.includes(' ');
-
-      if (atIdx >= 0 && !hasSpaceAfterAt) {
-        filterTools(afterAt || '');
-        openPopover();
-      } else {
-        closePopover();
-      }
-
-      chatInput.style.height = 'auto';
-      chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
-    });
-
-    // Keyboard nav inside textarea while popover is open
-    chatInput.addEventListener('keydown', e => {
-      if (!toolsPopover.classList.contains('active')) return;
-      const visible = allToolOptions.filter(o => o.style.display !== 'none');
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        kbdIdx = Math.min(kbdIdx + 1, visible.length - 1);
-        setKbdFocus(kbdIdx);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        kbdIdx = Math.max(kbdIdx - 1, 0);
-        setKbdFocus(kbdIdx);
-      } else if ((e.key === 'Enter' || e.key === 'Tab') && kbdIdx >= 0) {
-        e.preventDefault();
-        pickOption(visible[kbdIdx]);
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        closePopover();
-      }
-    });
-
-    // Close on outside click
-    document.addEventListener('click', e => {
-      if (!toolsPopover.contains(e.target) && e.target !== toolMenuBtn) closePopover();
-    });
-
-    /* ── Ripples on interactive buttons ────────────────────── */
-    [sendBtn, document.querySelector('.btn-new-chat')].forEach(btn => {
-      if (btn) btn.addEventListener('click', e => addRipple(btn, e));
-    });
-
-    /* ── Scroll helper ──────────────────────────────────────── */
-    const scrollToBottom = () => { chatFeed.scrollTop = chatFeed.scrollHeight; };
-
-    function escHtml(s) {
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')
-              .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function toolIndicatorHTML(toolName, state) {
-      const ICONS = {
-        running: `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`,
-        done:    `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`,
-        error:   `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>`,
-        busy:    `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`,
-      };
-      const LABELS = { running:'Running…', done:'Done', error:'Failed', busy:'Queued' };
-      const cls = state==='done' ? 'done' : state==='error' ? 'error' : state==='busy' ? 'busy' : 'running';
-      return `<div class="tool-indicator ${cls}">${ICONS[state]||ICONS.running}
-        <code>@${escHtml(toolName)}</code> — ${LABELS[state]||state}</div>`;
-    }
-
-    function buildThinkingHTML() {
-      return `
-        <div class="ai-thinking" id="thinkingBlock">
-          <div class="wave-bars">
-            ${Array.from({length:7},()=>`<div class="wave-bar"></div>`).join('')}
-          </div>
-          <div class="thinking-text-col">
-            <span class="thinking-label">
-              <span class="thinking-phrase" id="thinkingPhrase">${THINKING_PHRASES[0]}</span><span class="thinking-dots"><span>.</span><span>.</span><span>.</span></span>
-            </span>
-            <div class="thinking-bar-wrap" id="thinkingBarWrap">
-              <div class="thinking-bar"></div>
-            </div>
-          </div>
-        </div>`;
-    }
-
-    let isStreaming = false;
-
-    async function sendMessage(prompt) {
-      if (isStreaming || !prompt.trim()) return;
-      isStreaming = true;
-      sendBtn.disabled = true;
-
-      const userDiv = document.createElement('div');
-      userDiv.className = 'message user';
-      userDiv.innerHTML = `
-        <img class="message-avatar" src="${AI_AVATAR}" alt="You">
-        <div class="message-content">${escHtml(prompt).replace(/\n/g,'<br>')}</div>`;
-      chatFeed.appendChild(userDiv);
-      scrollToBottom();
-
-      const aiDiv = document.createElement('div');
-      aiDiv.className = 'message ai';
-      aiDiv.innerHTML = `
-        <img class="message-avatar" src="${AI_AVATAR}" alt="AI">
-        <div class="message-content">${buildThinkingHTML()}</div>`;
-      chatFeed.appendChild(aiDiv);
-      scrollToBottom();
-
-      const contentEl = aiDiv.querySelector('.message-content');
-      let textEl = null, cursorEl = null, rawText = '';
-      const toolEls = {};
-      let wordQueue = [], wordTimer = null, sseDone = false;
-      let phraseIdx = 0, barWidthIdx = 0, phraseTimer = null, barSizeTimer = null;
-
-      function startThinkingAnimators() {
-        phraseTimer = setInterval(() => {
-          const phraseEl = document.getElementById('thinkingPhrase');
-          if (!phraseEl) { clearInterval(phraseTimer); return; }
-          phraseEl.style.opacity = '0';
-          setTimeout(() => {
-            phraseIdx = (phraseIdx + 1) % THINKING_PHRASES.length;
-            phraseEl.textContent = THINKING_PHRASES[phraseIdx];
-            phraseEl.style.opacity = '1';
-          }, 300);
-        }, 2600);
-        barSizeTimer = setInterval(() => {
-          const barWrap = document.getElementById('thinkingBarWrap');
-          if (!barWrap) { clearInterval(barSizeTimer); return; }
-          barWidthIdx = (barWidthIdx + 1) % BAR_WIDTHS.length;
-          barWrap.style.width = BAR_WIDTHS[barWidthIdx] + 'px';
-        }, 1800);
-      }
-
-      function stopThinkingAnimators() {
-        clearInterval(phraseTimer);
-        clearInterval(barSizeTimer);
-      }
-
-      startThinkingAnimators();
-
-      function finalizeText() {
-        if (!textEl) return;
-        if (cursorEl) { cursorEl.remove(); cursorEl = null; }
-        textEl.innerHTML = rawText ? marked.parse(rawText) : '';
-        Object.values(toolEls).forEach(t => contentEl.appendChild(t));
-        scrollToBottom();
-      }
-
-      function collapseThinking(callback) {
-        const block = document.getElementById('thinkingBlock');
-        if (!block) { callback(); return; }
-        block.classList.add('collapsing');
-        block.addEventListener('transitionend', function handler() {
-          block.removeEventListener('transitionend', handler);
-          block.remove(); callback();
-        }, { once: true });
-        setTimeout(() => { block.remove(); callback(); }, 500);
-      }
-
-      function ensureTextEl() {
-        if (!textEl) {
-          stopThinkingAnimators();
-          collapseThinking(() => {});
-          contentEl.innerHTML = '';
-          textEl = document.createElement('div');
-          contentEl.appendChild(textEl);
-          cursorEl = document.createElement('span');
-          cursorEl.className = 'stream-cursor';
-          contentEl.appendChild(cursorEl);
-        }
-        return textEl;
-      }
-
-      function getToolEl(name) {
-        if (!toolEls[name]) {
-          const el = document.createElement('div');
-          contentEl.appendChild(el);
-          toolEls[name] = el;
-        }
-        return toolEls[name];
-      }
-
-      function processQueue() {
-        if (wordQueue.length === 0) {
-          wordTimer = null;
-          if (sseDone) finalizeText();
-          return;
-        }
-        const token = wordQueue.shift();
-        rawText += token;
-        const tEl = ensureTextEl();
-        tEl.innerHTML = marked.parse(rawText);
-        Object.values(toolEls).forEach(t => contentEl.appendChild(t));
-        if (cursorEl) contentEl.appendChild(cursorEl);
-        scrollToBottom();
-        wordTimer = setTimeout(processQueue, WORD_SPEED);
-      }
-
-      function enqueueText(text) {
-        const tokens = text.split(/(\s+)/);
-        for (const t of tokens) { if (t) wordQueue.push(t); }
-        if (!wordTimer) processQueue();
-      }
-
-      try {
-        const res = await fetch(STREAM_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': CSRF_TOKEN },
-          body: `prompt=${encodeURIComponent(prompt)}`,
-        });
-
-        if (!res.ok) {
-          stopThinkingAnimators();
-          contentEl.innerHTML = `<span style="color:var(--err-text)">Server error ${res.status}: ${res.statusText}</span>`;
-          return;
-        }
-
-        const reader  = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buf = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += decoder.decode(value, { stream: true });
-          const parts = buf.split('\n\n');
-          buf = parts.pop() ?? '';
-
-          for (const part of parts) {
-            if (!part.startsWith('data: ')) continue;
-            let ev;
-            try { ev = JSON.parse(part.slice(6)); } catch { continue; }
-            switch (ev.type) {
-              case 'chunk':      ensureTextEl(); enqueueText(ev.text); break;
-              case 'tool_start': ensureTextEl(); getToolEl(ev.tool).innerHTML = toolIndicatorHTML(ev.tool,'running'); scrollToBottom(); break;
-              case 'tool_busy':  ensureTextEl(); getToolEl(ev.tool).innerHTML = toolIndicatorHTML(ev.tool,'busy'); break;
-              case 'tool_done': { const el = toolEls[ev.tool]; if (el) el.innerHTML = toolIndicatorHTML(ev.tool,'done'); break; }
-              case 'tool_error': ensureTextEl(); getToolEl(ev.tool).innerHTML = toolIndicatorHTML(ev.tool,'error'); break;
-              case 'done':       sseDone = true; if (!wordTimer) finalizeText(); break;
-            }
-          }
-        }
-
-        if (!sseDone) { sseDone = true; if (!wordTimer) finalizeText(); }
-        if (!textEl) {
-          stopThinkingAnimators();
-          contentEl.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">No response.</span>';
-        }
-
-      } catch (err) {
-        stopThinkingAnimators();
-        contentEl.innerHTML = `<span style="color:var(--err-text)">Connection lost: ${escHtml(err.message)}</span>`;
-      } finally {
-        isStreaming = false;
-        sendBtn.disabled = false;
-        scrollToBottom();
-      }
-    }
-
-    function handleSend() {
-      const text = chatInput.value.trim();
-      if (!text || isStreaming) return;
-      chatInput.value = '';
-      chatInput.style.height = 'auto';
-      sendMessage(text);
-    }
-
-    sendBtn.addEventListener('click', handleSend);
-    chatInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-    });
-
-    scrollToBottom();
-    chatInput.focus();
+    window.VOLCANN = {
+      SESSION_ID:   "{{ session.id }}",
+      STREAM_URL:   "{% url 'ai_chat:chat_stream' session_id=session.id %}",
+      CSRF_TOKEN:   "{{ csrf_token }}",
+      NEW_CHAT_URL: "{% url 'ai_chat:ai_chat' %}",
+      AI_AVATAR:    "https://avatars.githubusercontent.com/u/142692213?v=4",
+      WORD_SPEED:   28,
+    };
   </script>
+  <script src="{% static 'ai_chat/chat.js' %}"></script>
+
 </body>
 </html>

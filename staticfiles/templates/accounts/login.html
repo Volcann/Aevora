@@ -1,0 +1,507 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in to Volcann</title>
+  <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/142692213?v=4">
+  <!-- Prevent FOUC -->
+  <script>
+    (function(){
+      var t=localStorage.getItem('volcann-theme');
+      if(t) document.documentElement.setAttribute('data-theme',t);
+      else if(window.matchMedia('(prefers-color-scheme:dark)').matches)
+        document.documentElement.setAttribute('data-theme','dark');
+    })();
+  </script>
+  <style>
+    /* ── Design tokens ──────────────────────────────────────────── */
+    :root {
+      --gh-green:        #2da44e;
+      --gh-green-dark:   #2c974b;
+      --gh-green-bright: #3fb950;
+      --gh-green-glow:   rgba(45, 164, 78, 0.32);
+      --gh-blue:         #0969da;
+      --gh-purple:       #bc8cff;
+
+      /* Light mode */
+      --bg:              #f6f8fa;
+      --surface:         rgba(255, 255, 255, 0.88);
+      --surface-solid:   #ffffff;
+      --border:          #d0d7de;
+      --text:            #1f2328;
+      --text-muted:      #57606a;
+      --input-bg:        #f6f8fa;
+      --link:            #0969da;
+      --err-bg:          #fff8f8;
+      --err-border:      #fca5a5;
+      --err-text:        #cf222e;
+      --orb1:            rgba(45, 164, 78, 0.09);
+      --orb2:            rgba(9, 105, 218, 0.06);
+      --grid:            rgba(0, 0, 0, 0.038);
+      --card-shadow:     0 8px 32px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
+      --card-glow:       rgba(45, 164, 78, 0.08);
+      --toggle-track:    #e5e7eb;
+      --toggle-thumb-bg: #ffffff;
+    }
+
+    [data-theme="dark"] {
+      --bg:              #0d1117;
+      --surface:         rgba(22, 27, 34, 0.82);
+      --surface-solid:   #161b22;
+      --border:          #30363d;
+      --text:            #e6edf3;
+      --text-muted:      #8b949e;
+      --input-bg:        rgba(13, 17, 23, 0.75);
+      --link:            #58a6ff;
+      --err-bg:          rgba(248, 81, 73, 0.07);
+      --err-border:      rgba(248, 81, 73, 0.38);
+      --err-text:        #ff7b72;
+      --orb1:            rgba(45, 164, 78, 0.13);
+      --orb2:            rgba(88, 166, 255, 0.09);
+      --grid:            rgba(45, 164, 78, 0.032);
+      --card-shadow:     0 8px 40px rgba(0,0,0,0.45), 0 1px 4px rgba(0,0,0,0.25);
+      --card-glow:       rgba(45, 164, 78, 0.12);
+      --gh-blue:         #58a6ff;
+      --toggle-track:    #21262d;
+      --toggle-thumb-bg: #e6edf3;
+    }
+
+    /* ── Reset ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Body ───────────────────────────────────────────────────── */
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                   Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      color: var(--text);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 70% 55% at 18% 18%, var(--orb1), transparent 65%),
+        radial-gradient(ellipse 60% 70% at 82% 82%, var(--orb2), transparent 65%),
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+      transition: background-color 0.35s ease, color 0.35s ease;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Dark-mode scanline overlay */
+    [data-theme="dark"] body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px, transparent 3px,
+        rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Ambient orbs ───────────────────────────────────────────── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(80px);
+      z-index: 0;
+      animation: orbDrift 18s ease-in-out infinite;
+    }
+    .orb-1 {
+      width: 420px; height: 420px;
+      background: var(--orb1);
+      top: -160px; left: -100px;
+    }
+    .orb-2 {
+      width: 360px; height: 360px;
+      background: var(--orb2);
+      bottom: -120px; right: -80px;
+      animation-direction: reverse;
+      animation-duration: 22s;
+    }
+    @keyframes orbDrift {
+      0%,100% { transform: translate(0,0) scale(1); }
+      33%      { transform: translate(25px,-18px) scale(1.05); }
+      66%      { transform: translate(-18px,12px) scale(0.96); }
+    }
+
+    /* ── Theme toggle ───────────────────────────────────────────── */
+    .theme-toggle {
+      position: fixed;
+      top: 16px; right: 16px;
+      z-index: 200;
+      width: 52px; height: 28px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--toggle-track);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 3px;
+      transition: background 0.3s ease, border-color 0.3s ease,
+                  box-shadow 0.2s ease;
+      outline: none;
+    }
+    .theme-toggle:focus-visible {
+      box-shadow: 0 0 0 3px var(--gh-green-glow);
+    }
+    .toggle-thumb {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--toggle-thumb-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    [data-theme="dark"] .toggle-thumb { transform: translateX(24px); }
+    .toggle-thumb svg { width: 11px; height: 11px; }
+    .icon-sun  { display: block; color: #d97706; }
+    .icon-moon { display: none;  color: #94a3b8; }
+    [data-theme="dark"] .icon-sun  { display: none; }
+    [data-theme="dark"] .icon-moon { display: block; }
+
+    /* ── Container ──────────────────────────────────────────────── */
+    .login-container {
+      width: 100%;
+      max-width: 360px;
+      position: relative;
+      z-index: 1;
+      animation: slideUpFade 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    @keyframes slideUpFade { to { opacity:1; transform:translateY(0); } }
+
+    /* ── Avatar ring ────────────────────────────────────────────── */
+    .avatar-wrapper { text-align: center; margin-bottom: 1.5rem; }
+    .avatar-ring {
+      display: inline-block;
+      position: relative;
+      width: 72px; height: 72px;
+      border-radius: 50%;
+    }
+    .avatar-ring::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        var(--gh-green), #58a6ff, var(--gh-purple), var(--gh-green)
+      );
+      animation: spinRing 5s linear infinite;
+    }
+    .avatar-ring::after {
+      content: '';
+      position: absolute;
+      inset: 2.5px;
+      border-radius: 50%;
+      background: var(--bg);
+      transition: background 0.35s ease;
+    }
+    @keyframes spinRing { to { transform: rotate(360deg); } }
+    .avatar {
+      position: absolute;
+      inset: 4.5px;
+      width: calc(100% - 9px);
+      height: calc(100% - 9px);
+      border-radius: 50%;
+      object-fit: cover;
+      z-index: 1;
+      display: block;
+    }
+
+    /* ── Heading ────────────────────────────────────────────────── */
+    h1 {
+      text-align: center;
+      font-size: 1.375rem;
+      font-weight: 600;
+      letter-spacing: -0.022em;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+      transition: color 0.35s ease;
+    }
+
+    /* ── Card ───────────────────────────────────────────────────── */
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--card-shadow), 0 0 0 1px rgba(45,164,78,0.07);
+      margin-bottom: 18px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease,
+                  background 0.35s ease;
+    }
+    .login-card:hover {
+      border-color: rgba(45,164,78,0.28);
+      box-shadow: var(--card-shadow),
+                  0 0 0 1px rgba(45,164,78,0.16),
+                  0 0 28px var(--card-glow);
+    }
+
+    /* ── Form groups ────────────────────────────────────────────── */
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text);
+      transition: color 0.35s ease;
+    }
+    .password-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .password-header label { margin-bottom: 0; }
+
+    /* ── Inputs ─────────────────────────────────────────────────── */
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.5625rem 0.75rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      outline: none;
+      -webkit-appearance: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease,
+                  background 0.35s ease, color 0.35s ease;
+    }
+    input[type="text"]::placeholder,
+    input[type="password"]::placeholder { color: var(--text-muted); opacity: 0.7; }
+    input[type="text"]:hover,
+    input[type="password"]:hover { border-color: rgba(45,164,78,0.4); }
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--gh-green);
+      background: var(--surface-solid);
+      box-shadow: 0 0 0 3px var(--gh-green-glow), 0 0 14px rgba(45,164,78,0.12);
+    }
+
+    /* ── Links ──────────────────────────────────────────────────── */
+    a {
+      color: var(--link);
+      text-decoration: none;
+      font-size: 0.8125rem;
+      transition: color 0.2s ease;
+    }
+    a:hover { text-decoration: underline; }
+
+    /* ── Primary button ─────────────────────────────────────────── */
+    .btn-primary {
+      width: 100%;
+      padding: 0.5625rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: #ffffff;
+      background: linear-gradient(160deg, #2da44e 0%, #2a8f43 100%);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      letter-spacing: 0.01em;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.18s ease, box-shadow 0.18s ease,
+                  background 0.18s ease;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg,
+        rgba(255,255,255,0.15) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(160deg, #3fb950 0%, #2da44e 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 18px rgba(45,164,78,0.38),
+                  0 0 0 1px rgba(45,164,78,0.22);
+    }
+    .btn-primary:hover::after { opacity: 1; }
+    .btn-primary:active { transform: translateY(0); box-shadow: none; }
+
+    /* ── Error messages ─────────────────────────────────────────── */
+    .error-messages {
+      background: var(--err-bg);
+      border: 1px solid var(--err-border);
+      border-radius: 6px;
+      padding: 0.625rem 0.875rem;
+      margin-bottom: 1rem;
+      font-size: 0.8125rem;
+      color: var(--err-text);
+      line-height: 1.5;
+      transition: background 0.35s ease, border-color 0.35s ease,
+                  color 0.35s ease;
+    }
+    .error-messages ul { margin: 0; padding-left: 1.25rem; }
+    .error-messages li:last-child { margin-bottom: 0; }
+
+    /* ── Create account box ─────────────────────────────────────── */
+    .create-account-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      background: var(--surface);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: border-color 0.3s ease, background 0.35s ease,
+                  color 0.35s ease;
+    }
+    .create-account-box a { font-weight: 600; }
+
+    /* ── Footer tag ─────────────────────────────────────────────── */
+    .tech-tag {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      opacity: 0.45;
+    }
+
+    @media (max-width: 400px) { .login-card { padding: 18px 14px; } }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1" aria-hidden="true"></div>
+  <div class="orb orb-2" aria-hidden="true"></div>
+
+  <!-- Theme toggle -->
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+    <span class="toggle-thumb">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41
+                 M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </span>
+  </button>
+
+  <div class="login-container">
+
+    <div class="avatar-wrapper">
+      <span class="avatar-ring" aria-hidden="true">
+        <img class="avatar"
+             src="https://avatars.githubusercontent.com/u/142692213?v=4"
+             alt="Volcann">
+      </span>
+    </div>
+
+    <h1>Sign in to Volcann</h1>
+
+    <div class="login-card">
+      <form action="{% url 'accounts:login' %}" method="POST">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="error-messages">
+            <ul>
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label for="id_username">Username or email address</label>
+          <input
+            type="text"
+            name="username"
+            id="id_username"
+            autocomplete="username"
+            placeholder="hello@example.com"
+            value="{{ form.username.value|default:'' }}"
+            required
+          >
+          {% if form.username.errors %}
+            <div class="error-messages" style="margin-top: 0.5rem; margin-bottom: 0;">
+              {{ form.username.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <div class="password-header">
+            <label for="id_password">Password</label>
+            <a href="{% url 'accounts:forgot_password' %}">Forgot password?</a>
+          </div>
+          <input
+            type="password"
+            name="password"
+            id="id_password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            required
+          >
+          {% if form.password.errors %}
+            <div class="error-messages" style="margin-top: 0.5rem; margin-bottom: 0;">
+              {{ form.password.errors.0 }}
+            </div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn-primary">Sign in</button>
+      </form>
+    </div>
+
+    <div class="create-account-box">
+      New to Volcann? <a href="{% url 'accounts:register' %}">Create an account</a>
+    </div>
+
+    <p class="tech-tag">Volcann · Secure Auth</p>
+
+  </div>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var btn  = document.getElementById('themeToggle');
+      var saved = localStorage.getItem('volcann-theme');
+      var sys   = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.setAttribute('data-theme', saved || sys);
+
+      btn.addEventListener('click', function () {
+        var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        localStorage.setItem('volcann-theme', next);
+      });
+    })();
+  </script>
+</body>
+</html>
