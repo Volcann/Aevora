@@ -216,10 +216,7 @@ def select_tools_for_prompt(prompt: str, top_n: int = 4) -> tuple[list, dict]:
     all_gemini_tools, tool_router, keyword_index = cached
     prompt_words = set(prompt.lower().replace("_", " ").split())
 
-    scores = {
-        name: len(prompt_words & kws)
-        for name, kws in keyword_index.items()
-    }
+    scores = {name: len(prompt_words & kws) for name, kws in keyword_index.items()}
     top_names = set(sorted(scores, key=scores.get, reverse=True)[:top_n])
 
     if not any(scores[n] > 0 for n in top_names):

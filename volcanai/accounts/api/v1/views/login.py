@@ -8,7 +8,7 @@ User = get_user_model()
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("ai_chat:jarvis")
+        return redirect("ai_chat:volcanris")
 
     if request.method == "POST":
         form = LoginForm(request.POST)
@@ -20,7 +20,7 @@ def login_view(request):
             )
             if user is not None:
                 login(request, user)
-                return redirect(request.GET.get("next") or "ai_chat:jarvis")
+                return redirect(request.GET.get("next") or "ai_chat:volcanris")
             form.add_error(None, "Invalid username or password.")
     else:
         form = LoginForm()
