@@ -21,9 +21,8 @@ def _gemini_stream(session, prompt):
             Message.objects.filter(
                 session=session,
                 role=MessageRole.AI_GENERATED,
-            )
-            .order_by("-created_at")[:5]
-        )[::-1]
+            ).order_by("created_at")
+        )[-12:]
 
         history = [
             {
@@ -33,7 +32,7 @@ def _gemini_stream(session, prompt):
             for message in prior
         ]
 
-        gemini_tools, tool_router = get_all_tools_for_gemini()
+        gemini_tools, tool_router = select_tools_for_prompt(prompt)
         model = genai.GenerativeModel(
             model_name=getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite"),
             tools=gemini_tools,
@@ -164,7 +163,7 @@ def get_available_tools_list(cache_seconds: int = 300) -> list[dict]:
     return ui_tools
 
 
-def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict]:
+def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict, dict]:
     cached = cache.get("mcp_tools_cache")
     if cached and cached[0]:
         return cached
@@ -173,6 +172,7 @@ def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict]:
 
     gemini_tools = []
     tool_router = {}
+    keyword_index = {}
 
     for server in servers:
         try:
@@ -192,13 +192,42 @@ def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict]:
                     )
                 )
                 tool_router[tool["name"]] = server
+                raw = (tool["name"] + " " + tool.get("description", "")).lower()
+                keyword_index[tool["name"]] = set(raw.replace("_", " ").split())
 
         except Exception as exc:  # noqa: BLE001
             print(f"[MCP] Could not reach server '{server.name}': {exc}")
 
     if gemini_tools:
-        cache.set("mcp_tools_cache", (gemini_tools, tool_router), cache_seconds)
-    return gemini_tools, tool_router
+        cache.set("mcp_tools_cache", (gemini_tools, tool_router, keyword_index), cache_seconds)
+    return gemini_tools, tool_router, keyword_index
+
+
+def _get_tool_name(gemini_tool) -> str:
+    return gemini_tool.function_declarations[0].name
+
+
+def select_tools_for_prompt(prompt: str, top_n: int = 4) -> tuple[list, dict]:
+    cached = cache.get("mcp_tools_cache")
+    if not cached:
+        all_tools, router, _ = get_all_tools_for_gemini()
+        return all_tools, router
+
+    all_gemini_tools, tool_router, keyword_index = cached
+    prompt_words = set(prompt.lower().replace("_", " ").split())
+
+    scores = {
+        name: len(prompt_words & kws)
+        for name, kws in keyword_index.items()
+    }
+    top_names = set(sorted(scores, key=scores.get, reverse=True)[:top_n])
+
+    if not any(scores[n] > 0 for n in top_names):
+        return all_gemini_tools, tool_router
+
+    selected_tools = [t for t in all_gemini_tools if _get_tool_name(t) in top_names]
+    selected_router = {k: v for k, v in tool_router.items() if k in top_names}
+    return selected_tools, selected_router
 
 
 def _mcp_schema_to_gemini(schema: dict):
