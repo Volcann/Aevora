@@ -3,6 +3,7 @@ import json
 import google.generativeai as genai
 from django.conf import settings
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 
 from volcanai.ai_chat.choices import MessageRole
 from volcanai.ai_chat.models import ChatSession, Message, ServerConfig
@@ -133,15 +134,9 @@ def _gemini_stream(session, prompt):
 def _ensure_default_server_config():
     servers = ServerConfig.objects.filter(is_active=True)
     if not servers.exists():
-        ServerConfig.objects.update_or_create(
-            name="local_mcp",
-            defaults={
-                "url": "http://host.docker.internal:8001",
-                "description": "MCP Gateway (streamable-http)",
-                "is_active": True,
-            },
+        raise ValidationError(
+            "No active ServerConfig found. Please run the management command 'python manage.py reboot_tools' to create one."
         )
-        servers = ServerConfig.objects.filter(is_active=True)
     return servers
 
 

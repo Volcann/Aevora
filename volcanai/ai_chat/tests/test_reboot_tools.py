@@ -1,11 +1,12 @@
 from unittest.mock import patch
 
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase
 
 from volcanai.ai_chat.models import ServerConfig
-from volcanai.ai_chat.utils import get_all_tools_for_gemini
+from volcanai.ai_chat.utils import _ensure_default_server_config, get_all_tools_for_gemini
 
 
 class RebootToolsTestCase(TestCase):
@@ -121,3 +122,9 @@ class RebootToolsTestCase(TestCase):
             names = [t.function_declarations[0].name for t in selected_tools]
             self.assertEqual(names, ["environment__setup_project"])
             self.assertEqual(list(router.keys()), ["environment__setup_project"])
+
+    def test_ensure_default_server_config_raises_validation_error(self):
+        ServerConfig.objects.all().delete()
+        with self.assertRaises(ValidationError) as ctx:
+            _ensure_default_server_config()
+        self.assertIn("reboot_tools", str(ctx.exception))
