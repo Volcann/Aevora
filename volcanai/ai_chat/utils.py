@@ -20,12 +20,13 @@ def _gemini_stream(session, prompt):
         prior = list(
             Message.objects.filter(
                 session=session,
+                role=MessageRole.AI_GENERATED,
             ).order_by("created_at"),
         )
 
         history = [
             {
-                "role": "user" if message.role == MessageRole.HUMAN else "ai_generated",
+                "role": "user" if message.role == MessageRole.HUMAN else MessageRole.AI_GENERATED,
                 "parts": [message.content],
             }
             for message in prior
