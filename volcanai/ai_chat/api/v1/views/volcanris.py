@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, render
 
 from volcanai.ai_chat.choices import MessageRole
 from volcanai.ai_chat.models import ChatSession, Message
+from volcanai.ai_chat.utils import cleanup_empty_sessions
 
 
 @login_required
@@ -11,6 +12,7 @@ def volcanris_view(request):
     if session_id:
         session = get_object_or_404(ChatSession, id=session_id, user=request.user)
     else:
+        cleanup_empty_sessions(request.user)
         session = (
             ChatSession.objects.filter(user=request.user, is_active=True)
             .order_by("-updated_at")
@@ -19,6 +21,7 @@ def volcanris_view(request):
         if not session:
             session = ChatSession.objects.create(user=request.user)
 
+    cleanup_empty_sessions(request.user, exclude_session_id=session.id)
     recent_sessions = ChatSession.objects.filter(user=request.user).order_by("-updated_at")[:10]
     messages = Message.objects.filter(
         session=session,

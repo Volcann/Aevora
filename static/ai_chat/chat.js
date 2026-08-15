@@ -652,6 +652,7 @@ async function sendMessage(prompt) {
 
         switch (ev.type) {
           case "chunk":
+            window.VOLCANN.HAS_AI_MESSAGE = true;
             ensureTextEl();
             enqueueText(ev.text);
             break;
@@ -674,6 +675,7 @@ async function sendMessage(prompt) {
             getToolEl(ev.tool).innerHTML = toolIndicatorHTML(ev.tool, "error");
             break;
           case "done":
+            window.VOLCANN.HAS_AI_MESSAGE = true;
             sseDone = true;
             if (!wordTimer) finalizeText();
             break;
@@ -711,6 +713,45 @@ function handleSend() {
 sendBtn.addEventListener("click", handleSend);
 chatInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+});
+
+/* ── Auto-delete empty session when clicking New Chat / Back / navigating away ── */
+function deleteCurrentIfNoAi() {
+  if (!window.VOLCANN || window.VOLCANN.HAS_AI_MESSAGE) return;
+  const sessionId = window.VOLCANN.SESSION_ID;
+  if (!sessionId) return;
+  const url = DELETE_URL(sessionId);
+  if (navigator.sendBeacon) {
+    const data = new FormData();
+    data.append("csrfmiddlewaretoken", CSRF_TOKEN);
+    navigator.sendBeacon(url, data);
+  } else {
+    fetch(url, {
+      method: "POST",
+      headers: { "X-CSRFToken": CSRF_TOKEN, "Content-Type": "application/json" },
+      keepalive: true,
+    }).catch(() => {});
+  }
+}
+
+document.querySelector(".btn-new-chat")?.addEventListener("click", () => {
+  deleteCurrentIfNoAi();
+});
+
+document.querySelectorAll(".history-item").forEach((item) => {
+  item.addEventListener("click", () => {
+    if (item.dataset.sessionId !== window.VOLCANN.SESSION_ID) {
+      deleteCurrentIfNoAi();
+    }
+  });
+});
+
+window.addEventListener("pagehide", () => {
+  deleteCurrentIfNoAi();
+});
+
+window.addEventListener("popstate", () => {
+  deleteCurrentIfNoAi();
 });
 
 /* ── Init ───────────────────────────────────────────────────── */

@@ -5,9 +5,21 @@ from django.conf import settings
 from django.core.cache import cache
 
 from volcanai.ai_chat.choices import MessageRole
-from volcanai.ai_chat.models import Message, ServerConfig
+from volcanai.ai_chat.models import ChatSession, Message, ServerConfig
 from volcanai.ai_chat.regex_utils import extract_prompt_words, extract_words, is_prefix_match
 from volcanai.ai_chat.services.mcp_manager import MCPClient
+
+
+def cleanup_empty_sessions(user, exclude_session_id=None):
+    if not user or not user.is_authenticated:
+        return
+
+    queryset = ChatSession.objects.filter(user=user).exclude(
+        messages__role=MessageRole.AI_GENERATED
+    )
+    if exclude_session_id:
+        queryset = queryset.exclude(id=exclude_session_id)
+    queryset.delete()
 
 
 def _sse(data):

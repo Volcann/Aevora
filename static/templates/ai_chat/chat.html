@@ -1217,6 +1217,7 @@
       NEW_CHAT_URL: "{% url 'ai_chat:ai_chat' %}",
       AI_AVATAR:    "https://avatars.githubusercontent.com/u/142692213?v=4",
       WORD_SPEED:   28,
+      HAS_AI_MESSAGE: {% if has_ai_message %}true{% else %}false{% endif %},
     };
   </script>
   <script src="{% static 'ai_chat/chat.js' %}"></script>

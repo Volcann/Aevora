@@ -43,3 +43,30 @@ class ChatDeleteTestCase(TestCase):
 
         self.assertFalse(ChatSession.objects.filter(id=self.session.id).exists())
         self.assertFalse(Message.objects.filter(session_id=self.session.id).exists())
+
+    def test_ai_chat_deletes_empty_sessions(self):
+        self.client.login(username="testuser", password="password123")
+        empty_session = ChatSession.objects.create(user=self.user, title="Empty Chat")
+        human_only_session = ChatSession.objects.create(user=self.user, title="Human Only")
+        Message.objects.create(
+            session=human_only_session, role=MessageRole.HUMAN, content="User question"
+        )
+
+        url = reverse("ai_chat:ai_chat")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+
+        self.assertFalse(ChatSession.objects.filter(id=empty_session.id).exists())
+        self.assertFalse(ChatSession.objects.filter(id=human_only_session.id).exists())
+        self.assertTrue(ChatSession.objects.filter(id=self.session.id).exists())
+
+    def test_chat_session_view_cleans_up_other_empty_sessions(self):
+        self.client.login(username="testuser", password="password123")
+        empty_session = ChatSession.objects.create(user=self.user, title="Empty Chat")
+
+        url = reverse("ai_chat:chat_session", kwargs={"session_id": self.session.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        self.assertFalse(ChatSession.objects.filter(id=empty_session.id).exists())
+        self.assertTrue(ChatSession.objects.filter(id=self.session.id).exists())
