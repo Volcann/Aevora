@@ -21,8 +21,9 @@ def _gemini_stream(session, prompt):
             Message.objects.filter(
                 session=session,
                 role=MessageRole.AI_GENERATED,
-            ).order_by("created_at"),
-        )
+            )
+            .order_by("-created_at")[:5]
+        )[::-1]
 
         history = [
             {
@@ -34,7 +35,7 @@ def _gemini_stream(session, prompt):
 
         gemini_tools, tool_router = get_all_tools_for_gemini()
         model = genai.GenerativeModel(
-            model_name=getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"),
+            model_name=getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite"),
             tools=gemini_tools,
         )
         chat = model.start_chat(history=history)
