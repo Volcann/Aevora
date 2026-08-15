@@ -1,3 +1,5 @@
+import json
+
 from django.core.cache import cache
 from django.core.management.base import BaseCommand
 
@@ -18,6 +20,44 @@ DEFAULT_PROBES = [
     "review ",
     "rev #22",
 ]
+
+TYPE_NAMES = {
+    1: "STRING",
+    2: "NUMBER",
+    3: "INTEGER",
+    4: "BOOLEAN",
+    5: "ARRAY",
+    6: "OBJECT",
+}
+
+
+def clean_schema(schema):
+    if not schema:
+        return {}
+    raw = type(schema).to_dict(schema) if hasattr(type(schema), "to_dict") else schema
+
+    def _clean(node):
+        if not isinstance(node, dict):
+            return node
+        res = {}
+        if node.get("type_"):
+            t_val = node["type_"]
+            res["type"] = TYPE_NAMES.get(t_val, str(t_val))
+        elif node.get("type"):
+            res["type"] = node["type"]
+        if node.get("description"):
+            res["description"] = node["description"]
+        if node.get("properties"):
+            res["properties"] = {k: _clean(v) for k, v in node["properties"].items()}
+        if node.get("required"):
+            res["required"] = node["required"]
+        if node.get("enum"):
+            res["enum"] = node["enum"]
+        if node.get("items"):
+            res["items"] = _clean(node["items"])
+        return res
+
+    return _clean(raw)
 
 
 class Command(BaseCommand):
@@ -42,6 +82,13 @@ class Command(BaseCommand):
             action="store_true",
             help="Bust the MCP tools cache before running.",
         )
+        parser.add_argument(
+            "--show-schema",
+            "--schema",
+            action="store_true",
+            dest="show_schema",
+            help="Display the input schema for each tool in output.",
+        )
 
     def handle(self, *args, **options):
         if options["no_cache"]:
@@ -64,10 +111,16 @@ class Command(BaseCommand):
         tool_count = len(all_gemini_tools)
         self.stdout.write(self.style.SUCCESS(f"  {tool_count} tool(s) available:\n"))
         for tool in all_gemini_tools:
-            name = tool.function_declarations[0].name
+            fn = tool.function_declarations[0]
+            name = fn.name
             kws = keyword_index.get(name, set())
             self.stdout.write(f"    • {name}")
-            self.stdout.write(self.style.HTTP_INFO(f"      keywords: {', '.join(sorted(kws))}\n"))
+            self.stdout.write(self.style.HTTP_INFO(f"      keywords: {', '.join(sorted(kws))}"))
+            if options["show_schema"]:
+                schema_dict = clean_schema(fn.parameters)
+                schema_str = json.dumps(schema_dict, indent=8)
+                self.stdout.write(self.style.NOTICE(f"      schema:\n{schema_str}"))
+            self.stdout.write("")
 
         probes = list(DEFAULT_PROBES)
         if options["prompts"]:
