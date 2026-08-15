@@ -823,6 +823,19 @@
     .nav-btn:hover { background: var(--surface-hover); border-color: var(--gh-green); color: var(--gh-green); }
     .avatar-xs { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
 
+    .nav-btn.btn-jarvis {
+      color: var(--gh-green);
+      border-color: hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.35);
+      background: var(--tag-bg);
+      text-decoration: none;
+    }
+    .nav-btn.btn-jarvis:hover {
+      background: var(--gh-green);
+      color: #ffffff;
+      border-color: var(--gh-green);
+      box-shadow: 0 2px 10px var(--gh-green-glow);
+    }
+
     .nav-btn.btn-logout {
       color: var(--err-text);
       border-color: var(--border);
@@ -966,6 +979,12 @@
           </div>
         </div>
         <div class="sidebar-actions">
+          <a href="{% url 'ai_chat:jarvis' %}" class="icon-btn-action" title="Open JARVIS" style="text-decoration:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </a>
           <button class="icon-btn-action" id="openProfileModalIcon" title="View Profile">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </button>
@@ -991,6 +1010,13 @@
           <span class="brand-title">Volcann Assistant</span>
         </div>
         <div class="navbar-right">
+          <a href="{% url 'ai_chat:jarvis' %}" class="nav-btn btn-jarvis" title="JARVIS System">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span>JARVIS</span>
+          </a>
           <button class="nav-btn" id="openProfileBtnNav" title="View Profile">
             <img class="avatar-xs" src="https://avatars.githubusercontent.com/u/142692213?v=4" alt="User">
             <span>Profile</span>
