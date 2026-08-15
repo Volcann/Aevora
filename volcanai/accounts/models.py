@@ -6,6 +6,7 @@ from volcanai.core.models import UUIDTimeStampedModel
 
 class User(AbstractUser, UUIDTimeStampedModel):
     email = models.EmailField(unique=True)
+    theme_config = models.JSONField(default=dict, blank=True)
 
     class Meta:
         db_table = "users"
