@@ -26,7 +26,7 @@ def _gemini_stream(session, prompt):
 
         history = [
             {
-                "role": "user" if message.role == MessageRole.HUMAN else MessageRole.AI_GENERATED,
+                "role": "user" if message.role == MessageRole.HUMAN else "model",
                 "parts": [message.content],
             }
             for message in prior
@@ -34,7 +34,7 @@ def _gemini_stream(session, prompt):
 
         gemini_tools, tool_router = get_all_tools_for_gemini()
         model = genai.GenerativeModel(
-            model_name=getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash"),
+            model_name=getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"),
             tools=gemini_tools,
         )
         chat = model.start_chat(history=history)

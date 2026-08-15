@@ -352,6 +352,216 @@
     box-shadow: 0 0 12px var(--gh-green-glow);
   }
 
+  /* ── Real-Time JARVIS AI Chat Components ── */
+  .session-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .session-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .session-select {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 3px 8px;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    outline: none;
+    cursor: pointer;
+    max-width: 180px;
+  }
+  .new-session-btn {
+    background: var(--tag-bg);
+    color: var(--gh-green);
+    border: 1px solid var(--gh-green);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+  }
+  .new-session-btn:hover {
+    box-shadow: 0 0 10px var(--gh-green-glow);
+    transform: translateY(-1px);
+  }
+
+  .jarvis-chat-log {
+    width: 100%;
+    max-height: 180px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 6px 2px;
+    margin-top: 8px;
+    margin-bottom: 10px;
+    text-align: left;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) transparent;
+  }
+  .jarvis-chat-log::-webkit-scrollbar { width: 4px; }
+  .jarvis-chat-log::-webkit-scrollbar-thumb { background: var(--sb-thumb); border-radius: 4px; }
+
+  .msg-bubble {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.45;
+    word-break: break-word;
+    max-width: 90%;
+  }
+  .msg-user {
+    align-self: flex-end;
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    border-top-right-radius: 2px;
+    color: var(--text);
+  }
+  .msg-jarvis {
+    align-self: flex-start;
+    background: hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.08);
+    border: 1px solid hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.3);
+    border-top-left-radius: 2px;
+    color: var(--text);
+  }
+  .msg-jarvis-author {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--gh-green);
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .msg-user-author {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+    text-align: right;
+  }
+
+  .chat-input-card {
+    width: 100%;
+    background: var(--surface-solid);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 10px;
+  }
+  .chat-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .jarvis-input-field {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 7px 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .jarvis-input-field:focus {
+    border-color: var(--gh-green);
+    box-shadow: 0 0 10px var(--gh-green-glow);
+  }
+  .icon-btn {
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .icon-btn:hover {
+    border-color: var(--gh-green);
+    color: var(--gh-green);
+    box-shadow: 0 0 8px var(--gh-green-glow);
+  }
+  .icon-btn.recording {
+    background: rgba(248, 81, 73, 0.2);
+    border-color: #ff7b72;
+    color: #ff7b72;
+    animation: micPulse 1.2s infinite;
+  }
+  @keyframes micPulse { 0%,100%{box-shadow:0 0 4px rgba(248,81,73,0.4)} 50%{box-shadow:0 0 12px rgba(248,81,73,0.8)} }
+
+  .send-btn {
+    background: linear-gradient(135deg, var(--gh-green), var(--gh-green-dark));
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 10px var(--gh-green-glow);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .send-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px var(--gh-green-glow);
+  }
+  .send-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .chat-options-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 0 2px;
+  }
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+  }
+
   .hud-user-chip {
     display: inline-flex;
     align-items: center;
@@ -547,11 +757,11 @@
 
   /* ── Dialogue box ── */
   .dialogue {
-    margin-top: 30px; position: relative;
+    margin-top: 20px; position: relative;
     opacity: 0; transform: translateY(18px);
     animation: dialogueIn 0.8s cubic-bezier(0.16,1,0.3,1) 2.0s forwards;
     width: 100%;
-    max-width: 480px;
+    max-width: 540px;
   }
   @keyframes dialogueIn { to{opacity:1;transform:translateY(0)} }
   .dialogue-inner {
@@ -702,7 +912,7 @@
   }
 </style>
 </head>
-<body>
+<body data-session-id="{{ session.id }}">
 
 <div class="orb orb-1" aria-hidden="true"></div>
 <div class="orb orb-2" aria-hidden="true"></div>
@@ -804,39 +1014,57 @@
 
   <div class="dialogue">
     <div class="dialogue-inner">
-      <div class="greeting-label">Online · Ready</div>
-      <div class="greeting-text">Hi, <em>how</em> are you?<span class="caret"></span></div>
+      <div class="greeting-label" id="jarvisStatusLabel">Online · Ready</div>
 
-      <form method="POST" class="tts-card">
-        {% csrf_token %}
-        <div class="tts-card-header">
-          <span class="tts-card-title">Neural Text-To-Speech (edge-tts)</span>
-          <a href="{% url 'ai_chat:ai_chat' %}" class="chat-nav-btn">Open AI Chat &rarr;</a>
+      <!-- Session Header -->
+      <div class="session-header">
+        <div class="session-selector">
+          <select class="session-select" id="sessionSelect" title="Switch session">
+            {% for s in recent_sessions %}
+            <option value="{{ s.id }}" {% if s.id == session.id %}selected{% endif %}>
+              {{ s.title|default:"New Chat" }}
+            </option>
+            {% endfor %}
+          </select>
         </div>
-        <div class="tts-input-group">
-          <textarea name="text_input" class="tts-textarea" rows="2" placeholder="Enter text for JARVIS speech..." required>{{ text }}</textarea>
-          <div class="tts-controls-row">
-            <select name="voice" class="tts-select">
-              <option value="en-US-AriaNeural" {% if voice == "en-US-AriaNeural" %}selected{% endif %}>English (US) - Aria (Female)</option>
-              <option value="en-US-GuyNeural" {% if voice == "en-US-GuyNeural" %}selected{% endif %}>English (US) - Guy (Male)</option>
-              <option value="en-GB-SoniaNeural" {% if voice == "en-GB-SoniaNeural" %}selected{% endif %}>English (UK) - Sonia (Female)</option>
-              <option value="es-ES-AlvaroNeural" {% if voice == "es-ES-AlvaroNeural" %}selected{% endif %}>Spanish - Alvaro (Male)</option>
-              <option value="fr-FR-DeniseNeural" {% if voice == "fr-FR-DeniseNeural" %}selected{% endif %}>French - Denise (Female)</option>
-            </select>
-            <button type="submit" class="tts-submit-btn">Speak</button>
+        <a href="{% url 'ai_chat:ai_chat' %}" class="new-session-btn" title="Start new session">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New
+        </a>
+      </div>
+
+      <!-- Real-time chat log -->
+      <div class="jarvis-chat-log" id="jarvisChatLog">
+        {% for msg in messages %}
+          {% if msg.role == "human" %}
+            <div class="msg-bubble msg-user">
+              <div class="msg-user-author">YOU</div>
+              {{ msg.content }}
+            </div>
+          {% else %}
+            <div class="msg-bubble msg-jarvis">
+              <div class="msg-jarvis-author">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                JARVIS
+              </div>
+              {{ msg.content }}
+            </div>
+          {% endif %}
+        {% empty %}
+          <div style="text-align:center;color:var(--text-muted);font-size:12px;padding:12px 0;font-family:'Orbitron',monospace;letter-spacing:0.1em;">
+            ── Awaiting your command ──
           </div>
-        </div>
-        {% if audio_data %}
-          <div class="tts-audio-box">
-            <audio controls autoplay>
-              <source src="{{ audio_data }}" type="audio/mp3">
-              Your browser does not support the audio element.
-            </audio>
-          </div>
-        {% endif %}
-      </form>
+        {% endfor %}
+      </div>
+
+      <!-- Tap-to-talk hint -->
+      <div id="tapHint" style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-muted);margin-top:6px;opacity:0.8;">▲ Tap the orb to speak</div>
+
+      <!-- Hidden CSRF for AJAX -->
+      {% csrf_token %}
+      <span id="streamingStatus" style="display:none;"></span>
     </div>
-    <div class="wave">
+    <div class="wave" id="jarvisWave">
       <div class="wb"></div><div class="wb"></div><div class="wb"></div>
       <div class="wb"></div><div class="wb"></div><div class="wb"></div>
       <div class="wb"></div><div class="wb"></div><div class="wb"></div>
@@ -1367,6 +1595,290 @@
   if (pOpenBtn) pOpenBtn.addEventListener('click', openProfileModal);
   if (pCloseBtn) pCloseBtn.addEventListener('click', closeProfileModal);
   if (pBackdrop) pBackdrop.addEventListener('click', closeProfileModal);
+
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════
+     REAL-TIME JARVIS GEMINI STREAMING ENGINE
+     SSE fetch + ReadableStream · Zero delay
+     ═══════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  /* ── DOM refs ── */
+  const chatLog       = document.getElementById('jarvisChatLog');
+  const statusLabel   = document.getElementById('jarvisStatusLabel');
+  const streamStatus  = document.getElementById('streamingStatus');
+  const sessionSelect = document.getElementById('sessionSelect');
+  const jarvisWave    = document.getElementById('jarvisWave');
+  const sphereWrap    = document.getElementById('sphereWrap');
+  const tapHint       = document.getElementById('tapHint');
+
+  /* ── Session id from Django data attribute ── */
+  let currentSessionId = sessionSelect ? sessionSelect.value : (document.body.dataset.sessionId || '');
+
+  /* ── Session switch: reload with ?session_id=... ── */
+  if (sessionSelect) {
+    sessionSelect.addEventListener('change', () => {
+      window.location.href = '?session_id=' + sessionSelect.value;
+    });
+  }
+
+  /* ── Helper: append bubble to chat log ── */
+  function appendBubble(role, content) {
+    // Remove "awaiting" placeholder if present
+    const placeholder = chatLog.querySelector('[data-placeholder]');
+    if (placeholder) placeholder.remove();
+
+    const bubble = document.createElement('div');
+    bubble.className = `msg-bubble ${role === 'user' ? 'msg-user' : 'msg-jarvis'}`;
+
+    if (role === 'user') {
+      const author = document.createElement('div');
+      author.className = 'msg-user-author';
+      author.textContent = 'YOU';
+      bubble.appendChild(author);
+    } else {
+      const author = document.createElement('div');
+      author.className = 'msg-jarvis-author';
+      author.innerHTML = `<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> JARVIS`;
+      bubble.appendChild(author);
+    }
+
+    const text = document.createElement('span');
+    text.className = 'msg-text';
+    text.textContent = content || '';
+    bubble.appendChild(text);
+
+    chatLog.appendChild(bubble);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return text; // return the span so we can stream into it
+  }
+
+  /* ── Set HUD status ── */
+  function setStatus(label, statusText) {
+    if (statusLabel) statusLabel.textContent = label;
+    if (streamStatus) streamStatus.textContent = statusText;
+  }
+
+  /* ── Wave animation: active when streaming ── */
+  function setWaveActive(active) {
+    if (jarvisWave) jarvisWave.style.opacity = active ? '1' : '';
+  }
+
+  /* ── Browser TTS (Web Speech) — male voice default ── */
+  function speakText(text, onEnd) {
+    if (!window.speechSynthesis) { if (onEnd) onEnd(); return; }
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 0.92;
+    utt.pitch = 0.80;
+    if (onEnd) utt.onend = onEnd;
+    function assignVoice() {
+      const voices = window.speechSynthesis.getVoices();
+      // Priority: male en-US voices
+      const male = voices.find(v => /david|guy|mark|james|daniel|alex|google us english|microsoft david|en-us.*male/i.test(v.name) && /en[-_]?(us|gb|au)/i.test(v.lang))
+                || voices.find(v => /male/i.test(v.name))
+                || voices.find(v => /en[-_]?(us|gb)/i.test(v.lang) && !/female|woman/i.test(v.name))
+                || voices[0];
+      if (male) utt.voice = male;
+      window.speechSynthesis.speak(utt);
+    }
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length) { assignVoice(); }
+    else { window.speechSynthesis.onvoiceschanged = assignVoice; }
+  }
+
+  /* ── CSRF token ── */
+  function getCsrf() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+  }
+
+  /* ── Tool call indicator in the chat log ── */
+  function appendToolIndicator(toolName, done) {
+    let indicator = chatLog.querySelector(`[data-tool="${toolName}"]`);
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.dataset.tool = toolName;
+      indicator.style.cssText = 'font-family:Orbitron,monospace;font-size:9px;letter-spacing:0.12em;color:var(--gh-green);padding:4px 8px;opacity:0.8;display:flex;align-items:center;gap:6px;';
+      chatLog.appendChild(indicator);
+    }
+    indicator.innerHTML = done
+      ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> TOOL: ${toolName} ✓`
+      : `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Running: ${toolName}…`;
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  /* ══════════════════════════════════════════
+     CORE: Send prompt → stream SSE response
+     ══════════════════════════════════════════ */
+  let isBusy = false;
+  async function sendMessage(prompt) {
+    if (!prompt || !currentSessionId || isBusy) return;
+    isBusy = true;
+
+    setStatus('Processing…', 'Streaming');
+    setWaveActive(true);
+
+    // Append user bubble
+    appendBubble('user', prompt);
+
+    // Prepare JARVIS bubble to stream into
+    const jarvisTextNode = appendBubble('jarvis', '');
+    let fullResponse = '';
+
+    try {
+      const streamUrl = `{% url 'ai_chat:chat_stream' session_id='00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', currentSessionId);
+
+      const formData = new FormData();
+      formData.append('prompt', prompt);
+      formData.append('csrfmiddlewaretoken', getCsrf());
+
+      const response = await fetch(streamUrl, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'text/event-stream' },
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete line
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+
+            if (event.type === 'chunk') {
+              fullResponse += event.text;
+              jarvisTextNode.textContent = fullResponse;
+              chatLog.scrollTop = chatLog.scrollHeight;
+              setStatus('JARVIS Speaking…', 'Live');
+
+            } else if (event.type === 'tool_start') {
+              appendToolIndicator(event.tool, false);
+              setStatus(`Tool: ${event.tool}`, 'Running');
+
+            } else if (event.type === 'tool_done') {
+              appendToolIndicator(event.tool, true);
+              setStatus('Processing…', 'Streaming');
+
+            } else if (event.type === 'tool_error') {
+              appendToolIndicator(event.tool, true);
+
+            } else if (event.type === 'done') {
+              setStatus('Online · Ready', '');
+              setWaveActive(false);
+              speakText(fullResponse);
+              break;
+            }
+          } catch (e) { /* malformed SSE line, skip */ }
+        }
+      }
+    } catch (err) {
+      jarvisTextNode.textContent = `⚠ Connection error: ${err.message}`;
+      setStatus('Error · Reconnecting', '');
+      setWaveActive(false);
+    } finally {
+      isBusy = false;
+    }
+  }
+
+  /* ══════════════════════════════════════════
+     SPHERE TAP → GREET → LISTEN → RESPOND
+     ══════════════════════════════════════════ */
+  let recognition = null;
+  let isListening = false;
+  let greetedOnce = false;
+
+  function startListening() {
+    if (!recognition) return;
+    if (isListening) return;
+    isListening = true;
+    setStatus('Listening…', '🎙');
+    if (tapHint) tapHint.textContent = '🎙 Listening… tap orb to cancel';
+    recognition.start();
+  }
+
+  function stopListening() {
+    if (!recognition || !isListening) return;
+    recognition.stop();
+    isListening = false;
+  }
+
+  function greetAndListen() {
+    if (isListening) { stopListening(); return; }
+    if (!greetedOnce) {
+      greetedOnce = true;
+      speakText('How can I help you?', () => startListening());
+    } else {
+      startListening();
+    }
+  }
+
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (e) => {
+      const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+      // Show live transcript in status
+      setStatus('Heard: ' + transcript, '🎙');
+      if (e.results[e.results.length - 1].isFinal) {
+        isListening = false;
+        setStatus('Processing…', '⚡');
+        if (tapHint) tapHint.textContent = '▲ Tap the orb to speak';
+        const prompt = transcript.trim();
+        if (prompt) sendMessage(prompt);
+      }
+    };
+
+    recognition.onerror = () => {
+      isListening = false;
+      setStatus('Online · Ready', '');
+      if (tapHint) tapHint.textContent = '▲ Tap the orb to speak';
+    };
+
+    recognition.onend = () => {
+      if (isListening) { isListening = false; }
+      if (tapHint && statusLabel && statusLabel.textContent === 'Listening…') {
+        tapHint.textContent = '▲ Tap the orb to speak';
+      }
+    };
+
+    // Wire sphere tap
+    if (sphereWrap) {
+      sphereWrap.addEventListener('click', greetAndListen);
+    }
+
+    if (tapHint) tapHint.style.cursor = 'pointer';
+    if (tapHint) tapHint.addEventListener('click', greetAndListen);
+
+  } else {
+    if (tapHint) tapHint.textContent = 'Voice not supported — use a modern browser';
+  }
+
+  /* ── Auto-scroll to bottom on load ── */
+  if (chatLog) chatLog.scrollTop = chatLog.scrollHeight;
+
+  /* ── Pre-load TTS voices ── */
+  if (window.speechSynthesis) window.speechSynthesis.getVoices();
 
 })();
 </script>
