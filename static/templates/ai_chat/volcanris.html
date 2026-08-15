@@ -2393,13 +2393,7 @@
                 {% for s in recent_sessions %}
                 <option
                   value="{{ s.id }}"
-                  {%
-                  if
-                  s.id=""
-                  ="session.id"
-                  %}selected{%
-                  endif
-                  %}
+                  {% if s.id == session.id %}selected{% endif %}
                 >
                   {{ s.title|default:"New Chat" }}
                 </option>
