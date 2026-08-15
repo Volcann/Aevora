@@ -12,3 +12,4 @@ class MessageRole(models.TextChoices):
     HUMAN = "human", "Human"
     AI_GENERATED = "ai_generated", "AI Generated"
     TOOL_RESULT = "tool_result", "Tool Result"
+    MODEL = "model", "Model"
