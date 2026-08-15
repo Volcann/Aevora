@@ -14,22 +14,24 @@ def ai_chat(request):
 
 @login_required
 def chat_session_view(request, session_id):
-    session = get_object_or_404(ChatSession, id=session_id, user=request.user)
+    target_session = get_object_or_404(ChatSession, id=session_id, user=request.user)
 
     recent = ChatSession.objects.filter(user=request.user).order_by("-updated_at")[:20]
     session_list = []
-    for session in recent:
+    for item in recent:
         first = (
-            Message.objects.filter(session=session, role=MessageRole.AI_GENERATED)
+            Message.objects.filter(session=item, role=MessageRole.AI_GENERATED)
             .order_by("created_at")
             .values_list("content", flat=True)
             .first()
         )
-        title = (first[:48] + "…") if first and len(first) > 48 else (first or "New Chat")
-        session_list.append({"session": session, "title": title})
+        title = item.title or (
+            (first[:48] + "…") if first and len(first) > 48 else (first or "New Chat")
+        )
+        session_list.append({"session": item, "title": title})
 
     messages = Message.objects.filter(
-        session=session,
+        session=target_session,
         role__in=[MessageRole.HUMAN, MessageRole.AI_GENERATED],
     ).order_by("created_at")
 
@@ -39,7 +41,7 @@ def chat_session_view(request, session_id):
         request,
         "ai_chat/chat.html",
         {
-            "session": session,
+            "session": target_session,
             "session_list": session_list,
             "messages": messages,
             "available_tools": available_tools,
