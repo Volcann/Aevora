@@ -3,8 +3,8 @@ from django.urls import path
 from volcanai.ai_chat.api.v1.views.chat import chat_stream
 from volcanai.ai_chat.api.v1.views.chat_delete import delete_session
 from volcanai.ai_chat.api.v1.views.chat_session import ai_chat, chat_session_view
-from volcanai.ai_chat.api.v1.views.volcanris import volcanris_view
 from volcanai.ai_chat.api.v1.views.theme import theme_api
+from volcanai.ai_chat.api.v1.views.volcanris import volcanris_view
 
 app_name = "ai_chat"
 

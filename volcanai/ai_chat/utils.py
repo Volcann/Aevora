@@ -6,6 +6,7 @@ from django.core.cache import cache
 
 from volcanai.ai_chat.choices import MessageRole
 from volcanai.ai_chat.models import Message, ServerConfig
+from volcanai.ai_chat.regex_utils import extract_prompt_words, extract_words, is_prefix_match
 from volcanai.ai_chat.services.mcp_manager import MCPClient
 
 
@@ -31,6 +32,8 @@ def _gemini_stream(session, prompt):
             }
             for message in prior
         ]
+        while history and history[0]["role"] != "user":
+            history.pop(0)
 
         gemini_tools, tool_router = select_tools_for_prompt(prompt)
         model = genai.GenerativeModel(
@@ -192,8 +195,8 @@ def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict, dict
                     )
                 )
                 tool_router[tool["name"]] = server
-                raw = (tool["name"] + " " + tool.get("description", "")).lower()
-                keyword_index[tool["name"]] = set(raw.replace("_", " ").split())
+                raw = tool["name"] + " " + tool.get("description", "")
+                keyword_index[tool["name"]] = extract_words(raw)
 
         except Exception as exc:  # noqa: BLE001
             print(f"[MCP] Could not reach server '{server.name}': {exc}")
@@ -207,20 +210,41 @@ def _get_tool_name(gemini_tool) -> str:
     return gemini_tool.function_declarations[0].name
 
 
-def select_tools_for_prompt(prompt: str, top_n: int = 4) -> tuple[list, dict]:
+def select_tools_for_prompt(prompt: str, top_n: int = 2) -> tuple[list, dict]:
     cached = cache.get("mcp_tools_cache")
     if not cached:
-        all_tools, router, _ = get_all_tools_for_gemini()
-        return all_tools, router
+        all_gemini_tools, tool_router, keyword_index = get_all_tools_for_gemini()
+    else:
+        all_gemini_tools, tool_router, keyword_index = cached
 
-    all_gemini_tools, tool_router, keyword_index = cached
-    prompt_words = set(prompt.lower().replace("_", " ").split())
+    if not all_gemini_tools:
+        return [], {}
 
-    scores = {name: len(prompt_words & kws) for name, kws in keyword_index.items()}
-    top_names = set(sorted(scores, key=scores.get, reverse=True)[:top_n])
-
-    if not any(scores[n] > 0 for n in top_names):
+    prompt_words = extract_prompt_words(prompt)
+    if not prompt_words:
         return all_gemini_tools, tool_router
+
+    scores = {}
+    for name, all_kws in keyword_index.items():
+        name_words = extract_words(name)
+        desc_words = all_kws - name_words
+
+        score = 0
+        for pw in prompt_words:
+            if pw in name_words:
+                score += 3
+            elif any(is_prefix_match(pw, nw) for nw in name_words):
+                score += 2
+            elif pw in desc_words or any(is_prefix_match(pw, dw) for dw in desc_words):
+                score += 1
+
+        scores[name] = score
+
+    matched = {name: score for name, score in scores.items() if score > 0}
+    if not matched:
+        return all_gemini_tools, tool_router
+
+    top_names = set(sorted(matched, key=matched.get, reverse=True)[:top_n])
 
     selected_tools = [t for t in all_gemini_tools if _get_tool_name(t) in top_names]
     selected_router = {k: v for k, v in tool_router.items() if k in top_names}
