@@ -3,13 +3,13 @@ from django.urls import path
 from volcanai.ai_chat.api.v1.views.chat import chat_stream
 from volcanai.ai_chat.api.v1.views.chat_delete import delete_session
 from volcanai.ai_chat.api.v1.views.chat_session import ai_chat, chat_session_view
-from volcanai.ai_chat.api.v1.views.jarvis import jarvis_view
+from volcanai.ai_chat.api.v1.views.volcanris import volcanris_view
 from volcanai.ai_chat.api.v1.views.theme import theme_api
 
 app_name = "ai_chat"
 
 urlpatterns = [
-    path("", jarvis_view, name="jarvis"),
+    path("", volcanris_view, name="volcanris"),
     path("start/", ai_chat, name="ai_chat"),
     path("api/theme/", theme_api, name="theme_api"),
     path("<uuid:session_id>/", chat_session_view, name="chat_session"),
