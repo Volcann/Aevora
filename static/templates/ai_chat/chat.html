@@ -811,6 +811,83 @@
       .ai-thinking,.history-item { transition:none; }
       .history-item { opacity:1; transform:none; }
     }
+
+    /* ─── Profile Modal & Header / Sidebar Actions ───────────── */
+    .navbar-right { display: flex; align-items: center; gap: 0.5rem; }
+    .nav-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 8px; font-size: 0.8125rem; font-weight: 500;
+      background: var(--surface-solid); border: 1px solid var(--border); color: var(--text);
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .nav-btn:hover { background: var(--surface-hover); border-color: var(--gh-green); color: var(--gh-green); }
+    .avatar-xs { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+
+    .nav-btn.btn-logout {
+      color: var(--err-text);
+      border-color: var(--border);
+    }
+    .nav-btn.btn-logout:hover {
+      background: var(--err-bg);
+      border-color: var(--err-text);
+      color: var(--err-text);
+    }
+
+    .user-profile-trigger {
+      display: flex; align-items: center; gap: 0.75rem; cursor: pointer; flex: 1; min-width: 0;
+      border-radius: 8px; padding: 2px 4px; transition: background 0.2s ease;
+    }
+    .user-profile-trigger:hover { background: var(--surface-hover); }
+
+    .sidebar-actions { display: flex; align-items: center; gap: 4px; }
+    .icon-btn-action {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface-solid); color: var(--text-muted); cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .icon-btn-action:hover { background: var(--surface-hover); color: var(--text); border-color: var(--gh-green); }
+    .icon-btn-action.btn-logout-icon:hover { background: var(--err-bg); color: var(--err-text); border-color: var(--err-text); }
+
+    .profile-modal {
+      position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+    }
+    .profile-modal.active { opacity: 1; pointer-events: auto; }
+    .profile-modal-backdrop {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    }
+    .profile-modal-card {
+      position: relative; width: 90%; max-width: 420px; background: var(--surface-solid);
+      border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--card-shadow);
+      padding: 1.75rem; z-index: 2; transform: translateY(12px) scale(0.96); transition: transform 0.25s ease;
+    }
+    .profile-modal.active .profile-modal-card { transform: translateY(0) scale(1); }
+
+    .profile-modal-close {
+      position: absolute; top: 14px; right: 16px; background: none; border: none;
+      font-size: 1.5rem; line-height: 1; color: var(--text-muted); cursor: pointer; transition: color 0.2s;
+    }
+    .profile-modal-close:hover { color: var(--text); }
+
+    .profile-header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 1.25rem; }
+    .profile-avatar-lg { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gh-green); box-shadow: 0 0 16px var(--gh-green-glow); margin-bottom: 0.75rem; }
+    .profile-name { font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .profile-badge { font-size: 0.75rem; font-weight: 600; color: var(--gh-green); background: var(--tag-bg); padding: 3px 10px; border-radius: 12px; }
+
+    .profile-body { display: flex; flex-direction: column; gap: 0.75rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 1rem 0; margin-bottom: 1.25rem; }
+    .profile-field { display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; }
+    .field-label { color: var(--text-muted); }
+    .field-value { font-weight: 600; color: var(--text); }
+
+    .profile-footer { display: flex; width: 100%; }
+    .btn-logout-full {
+      width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 0.65rem 1rem; border-radius: 10px; font-weight: 600; font-size: 0.875rem;
+      background: var(--err-bg); color: var(--err-text); border: 1px solid rgba(248,81,73,0.3);
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn-logout-full:hover { background: rgba(248,81,73,0.18); border-color: var(--err-text); }
   </style>
 </head>
 <body>
@@ -881,10 +958,23 @@
       </div>
 
       <div class="sidebar-footer">
-        <img class="avatar-sm" src="https://avatars.githubusercontent.com/u/142692213?v=4" alt="User">
-        <div class="user-info">
-          <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
-          <span class="user-plan">Volcann Pro</span>
+        <div class="user-profile-trigger" id="openProfileBtnSidebar" title="View Profile">
+          <img class="avatar-sm" src="https://avatars.githubusercontent.com/u/142692213?v=4" alt="User">
+          <div class="user-info">
+            <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <span class="user-plan">Volcann Pro</span>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button class="icon-btn-action" id="openProfileModalIcon" title="View Profile">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </button>
+          <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="icon-btn-action btn-logout-icon" title="Logout">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
+          </form>
         </div>
       </div>
     </aside>
@@ -900,17 +990,30 @@
           </button>
           <span class="brand-title">Volcann Assistant</span>
         </div>
-        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-          <span class="toggle-thumb">
-            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <circle cx="12" cy="12" r="4"/>
-              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-            </svg>
-            <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-          </span>
-        </button>
+        <div class="navbar-right">
+          <button class="nav-btn" id="openProfileBtnNav" title="View Profile">
+            <img class="avatar-xs" src="https://avatars.githubusercontent.com/u/142692213?v=4" alt="User">
+            <span>Profile</span>
+          </button>
+          <form method="POST" action="{% url 'accounts:logout' %}" style="margin:0;display:inline-flex;">
+            {% csrf_token %}
+            <button type="submit" class="nav-btn btn-logout" title="Sign Out">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Logout</span>
+            </button>
+          </form>
+          <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+            <span class="toggle-thumb">
+              <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+              </svg>
+              <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </span>
+          </button>
+        </div>
       </header>
 
       <div class="chat-messages" id="chatFeed">
@@ -1047,6 +1150,74 @@
     };
   </script>
   <script src="{% static 'ai_chat/chat.js' %}"></script>
+
+  <!-- Profile Modal -->
+  <div class="profile-modal" id="profileModal" aria-hidden="true">
+    <div class="profile-modal-backdrop" id="profileModalBackdrop"></div>
+    <div class="profile-modal-card">
+      <button class="profile-modal-close" id="closeProfileModal" title="Close">&times;</button>
+      <div class="profile-header">
+        <img class="profile-avatar-lg" src="https://avatars.githubusercontent.com/u/142692213?v=4" alt="Profile Picture">
+        <h3 class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</h3>
+        <span class="profile-badge">Volcann Pro Member</span>
+      </div>
+      <div class="profile-body">
+        <div class="profile-field">
+          <span class="field-label">Username</span>
+          <span class="field-value">@{{ request.user.username }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="field-label">Email</span>
+          <span class="field-value">{{ request.user.email|default:"No email attached" }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="field-label">Member Since</span>
+          <span class="field-value">{{ request.user.date_joined|date:"M j, Y" }}</span>
+        </div>
+      </div>
+      <div class="profile-footer">
+        <form method="POST" action="{% url 'accounts:logout' %}" style="width:100%;margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="btn-logout-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Log Out
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var modal = document.getElementById('profileModal');
+      var backdrop = document.getElementById('profileModalBackdrop');
+      var closeBtn = document.getElementById('closeProfileModal');
+      var openBtns = [
+        document.getElementById('openProfileBtnNav'),
+        document.getElementById('openProfileBtnSidebar'),
+        document.getElementById('openProfileModalIcon')
+      ];
+
+      function openModal() {
+        if (modal) {
+          modal.classList.add('active');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+      }
+      function closeModal() {
+        if (modal) {
+          modal.classList.remove('active');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+      }
+
+      openBtns.forEach(function(btn) {
+        if (btn) btn.addEventListener('click', openModal);
+      });
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      if (backdrop) backdrop.addEventListener('click', closeModal);
+    })();
+  </script>
 
 </body>
 </html>
