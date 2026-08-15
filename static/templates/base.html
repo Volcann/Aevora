@@ -8,6 +8,42 @@
 
   <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/142692213?v=4">
 
+  <script>
+    (function() {
+      var backendTheme = {% if user_theme_json %}{{ user_theme_json|safe }}{% else %}{}{% endif %};
+      if (backendTheme.theme) {
+        document.documentElement.setAttribute('data-theme', backendTheme.theme);
+      }
+      if (backendTheme.primary_color) {
+        document.documentElement.style.setProperty('--primary-color', backendTheme.primary_color);
+      }
+      if (backendTheme.accent_color) {
+        document.documentElement.style.setProperty('--link-color', backendTheme.accent_color);
+      }
+      window.VOLCANN_THEME = backendTheme;
+      window.saveBackendTheme = function(updatedConfig) {
+        var merged = Object.assign({}, window.VOLCANN_THEME || {}, updatedConfig);
+        window.VOLCANN_THEME = merged;
+        if (merged.theme) document.documentElement.setAttribute('data-theme', merged.theme);
+        if (merged.primary_color) document.documentElement.style.setProperty('--primary-color', merged.primary_color);
+        if (merged.accent_color) document.documentElement.style.setProperty('--link-color', merged.accent_color);
+        var csrfToken = (function() {
+          if (window.VOLCANN && window.VOLCANN.CSRF_TOKEN) return window.VOLCANN.CSRF_TOKEN;
+          var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+          return match ? decodeURIComponent(match[1]) : '';
+        })();
+        fetch('/chat/api/theme/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify(merged)
+        }).catch(function() {});
+      };
+    })();
+  </script>
+
   <style>
     :root {
       --primary-color: #2da44e;

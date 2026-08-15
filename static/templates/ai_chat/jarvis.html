@@ -8,23 +8,49 @@
 
 <script>
   (function(){
-    var t = localStorage.getItem('volcann-theme');
+    var backendTheme = {% if user_theme_json %}{{ user_theme_json|safe }}{% else %}{}{% endif %};
+    var t = backendTheme.theme || localStorage.getItem('volcann-theme');
     if (t) document.documentElement.setAttribute('data-theme', t);
     else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
       document.documentElement.setAttribute('data-theme', 'dark');
     else
       document.documentElement.setAttribute('data-theme', 'dark');
 
+    if (backendTheme.primary_color) {
+      document.documentElement.style.setProperty('--primary-color', backendTheme.primary_color);
+    }
+    var r = document.documentElement;
+    if (backendTheme.accent_h !== undefined) r.style.setProperty('--accent-h', backendTheme.accent_h);
+    if (backendTheme.accent_s !== undefined) r.style.setProperty('--accent-s', backendTheme.accent_s + '%');
+    if (backendTheme.accent_l !== undefined) r.style.setProperty('--accent-l', backendTheme.accent_l + '%');
+
     var saved = localStorage.getItem('volcann-accent');
-    if (saved) {
+    if (saved && backendTheme.accent_h === undefined) {
       try {
         var c = JSON.parse(saved);
-        var r = document.documentElement;
         if (c.h !== undefined) r.style.setProperty('--accent-h', c.h);
         if (c.s !== undefined) r.style.setProperty('--accent-s', c.s + '%');
         if (c.l !== undefined) r.style.setProperty('--accent-l', c.l + '%');
       } catch(e) {}
     }
+    window.VOLCANN_THEME = backendTheme;
+    window.saveBackendTheme = function(updatedConfig) {
+      var merged = Object.assign({}, window.VOLCANN_THEME || {}, updatedConfig);
+      window.VOLCANN_THEME = merged;
+      if (merged.theme) document.documentElement.setAttribute('data-theme', merged.theme);
+      if (merged.primary_color) document.documentElement.style.setProperty('--primary-color', merged.primary_color);
+      if (merged.accent_h !== undefined) r.style.setProperty('--accent-h', merged.accent_h);
+      if (merged.accent_s !== undefined) r.style.setProperty('--accent-s', merged.accent_s + '%');
+      if (merged.accent_l !== undefined) r.style.setProperty('--accent-l', merged.accent_l + '%');
+      fetch('/chat/api/theme/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || ''
+        },
+        body: JSON.stringify(merged)
+      }).catch(function() {});
+    };
   })();
 </script>
 
@@ -897,8 +923,15 @@
   .preset-dot:hover { transform:scale(1.3); box-shadow:0 0 0 3px hsla(0,0%,50%,0.2); }
   .preset-dot.selected { border-color:var(--text); transform:scale(1.15); }
 
+  .btn-save-default {
+    flex:1; padding:6px 0; font-size:0.73rem; font-weight:600;
+    border:1px solid var(--gh-green); border-radius:7px;
+    background:var(--gh-green); color:#ffffff; cursor:pointer;
+    transition:background 0.15s ease, opacity 0.15s ease;
+  }
+  .btn-save-default:hover { opacity:0.9; }
   .btn-reset-color {
-    width:100%; padding:6px 0; font-size:0.73rem; font-weight:600;
+    flex:1; padding:6px 0; font-size:0.73rem; font-weight:600;
     border:1px solid var(--border); border-radius:7px;
     background:var(--surface-hover); color:var(--text-muted); cursor:pointer;
     transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
@@ -1116,7 +1149,10 @@
       </div>
       <div class="preset-row" id="presetRow"></div>
     </div>
-    <button class="btn-reset-color" id="btnResetColor">Reset to Default</button>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button class="btn-save-default" id="btnSaveDefault">Set as Default</button>
+      <button class="btn-reset-color" id="btnResetColor">Reset</button>
+    </div>
   </div>
   <button class="color-panel-trigger" id="colorPanelTrigger" title="Customize accent color"
           aria-label="Open color customizer" aria-expanded="false">
@@ -1151,6 +1187,7 @@
     valSat: document.getElementById('valSat'),
     valLit: document.getElementById('valLit'),
     btnReset: document.getElementById('btnResetColor'),
+    btnSaveDefault: document.getElementById('btnSaveDefault'),
     presetRow: document.getElementById('presetRow'),
     themeToggle: document.getElementById('themeToggle'),
     uptime: document.getElementById('uptime'),
@@ -1184,6 +1221,9 @@
     dom.root.style.setProperty("--accent-s", s + "%");
     dom.root.style.setProperty("--accent-l", l + "%");
     localStorage.setItem("volcann-accent", JSON.stringify({ h, s, l }));
+    if (typeof window.saveBackendTheme === "function") {
+      window.saveBackendTheme({ primary_color: hslStr, accent_h: +h, accent_s: +s, accent_l: +l });
+    }
 
     if (dom.sliderSat) dom.sliderSat.style.background = `linear-gradient(90deg,hsl(${h},10%,50%) 0%,hsl(${h},100%,${l}%) 100%)`;
     if (dom.sliderLit) dom.sliderLit.style.background = `linear-gradient(90deg,#111 0%,hsl(${h},${s}%,50%) 50%,#fff 100%)`;
@@ -1233,8 +1273,44 @@
     if (el) el.addEventListener('input', readSliders, { passive: true });
   });
 
+  if (dom.btnSaveDefault) {
+    dom.btnSaveDefault.addEventListener('click', () => {
+      const h = accent.h; const s = accent.s; const l = accent.l;
+      const theme = dom.root.getAttribute('data-theme') || 'dark';
+      if (typeof window.saveBackendTheme === 'function') {
+        window.saveBackendTheme({
+          theme: theme,
+          primary_color: `hsl(${h}, ${s}%, ${l}%)`,
+          accent_h: h,
+          accent_s: s,
+          accent_l: l,
+        });
+      }
+      const orig = dom.btnSaveDefault.textContent;
+      dom.btnSaveDefault.textContent = 'Saved! ✓';
+      setTimeout(() => { dom.btnSaveDefault.textContent = orig; }, 1800);
+    });
+  }
+
   if (dom.btnReset) {
-    dom.btnReset.addEventListener('click', () => applyAccent(138, 55, 42), { passive: true });
+    dom.btnReset.addEventListener('click', () => {
+      applyAccent(138, 55, 42);
+      const theme = 'dark';
+      dom.root.setAttribute('data-theme', theme);
+      localStorage.setItem('volcann-theme', theme);
+      if (typeof window.saveBackendTheme === 'function') {
+        window.saveBackendTheme({
+          theme: theme,
+          primary_color: 'hsl(138, 55%, 42%)',
+          accent_h: 138,
+          accent_s: 55,
+          accent_l: 42,
+        });
+      }
+      const orig = dom.btnReset.textContent;
+      dom.btnReset.textContent = 'Reset! ✓';
+      setTimeout(() => { dom.btnReset.textContent = orig; }, 1800);
+    });
   }
 
   // Color Panel Toggle
@@ -1261,6 +1337,9 @@
       const next = dom.root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       dom.root.setAttribute('data-theme', next);
       localStorage.setItem('volcann-theme', next);
+      if (typeof window.saveBackendTheme === 'function') {
+        window.saveBackendTheme({ theme: next });
+      }
     });
   }
 

@@ -9,20 +9,54 @@
 
   <script>
     (function(){
-      var t = localStorage.getItem('volcann-theme');
+      var backendTheme = {% if user_theme_json %}{{ user_theme_json|safe }}{% else %}{}{% endif %};
+      var t = backendTheme.theme || localStorage.getItem('volcann-theme');
       if (t) document.documentElement.setAttribute('data-theme', t);
       else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
         document.documentElement.setAttribute('data-theme', 'dark');
+
+      if (backendTheme.primary_color) {
+        document.documentElement.style.setProperty('--primary-color', backendTheme.primary_color);
+      }
+      var r = document.documentElement;
+      if (backendTheme.accent_h !== undefined) r.style.setProperty('--accent-h', backendTheme.accent_h);
+      if (backendTheme.accent_s !== undefined) r.style.setProperty('--accent-s', backendTheme.accent_s + '%');
+      if (backendTheme.accent_l !== undefined) r.style.setProperty('--accent-l', backendTheme.accent_l + '%');
+
       var saved = localStorage.getItem('volcann-accent');
-      if (saved) {
+      if (saved && backendTheme.accent_h === undefined) {
         try {
           var c = JSON.parse(saved);
-          var r = document.documentElement;
           if (c.h !== undefined) r.style.setProperty('--accent-h', c.h);
           if (c.s !== undefined) r.style.setProperty('--accent-s', c.s + '%');
           if (c.l !== undefined) r.style.setProperty('--accent-l', c.l + '%');
         } catch(e) {}
       }
+      window.VOLCANN_THEME = backendTheme;
+      window.saveBackendTheme = function(updatedConfig) {
+        var merged = Object.assign({}, window.VOLCANN_THEME || {}, updatedConfig);
+        window.VOLCANN_THEME = merged;
+        if (merged.theme) document.documentElement.setAttribute('data-theme', merged.theme);
+        if (merged.primary_color) document.documentElement.style.setProperty('--primary-color', merged.primary_color);
+        if (merged.accent_h !== undefined) r.style.setProperty('--accent-h', merged.accent_h);
+        if (merged.accent_s !== undefined) r.style.setProperty('--accent-s', merged.accent_s + '%');
+        if (merged.accent_l !== undefined) r.style.setProperty('--accent-l', merged.accent_l + '%');
+        var csrfToken = (function() {
+          // Prefer the already-rendered token from window.VOLCANN if available
+          if (window.VOLCANN && window.VOLCANN.CSRF_TOKEN) return window.VOLCANN.CSRF_TOKEN;
+          // Fallback: read from the csrftoken cookie (always present in Django)
+          var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+          return match ? decodeURIComponent(match[1]) : '';
+        })();
+        fetch('/chat/api/theme/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+          },
+          body: JSON.stringify(merged)
+        }).catch(function() {});
+      };
     })();
   </script>
 
@@ -789,8 +823,15 @@
     .preset-dot:hover { transform:scale(1.3); box-shadow:0 0 0 3px hsla(0,0%,50%,0.2); }
     .preset-dot.selected { border-color:var(--text); transform:scale(1.15); }
 
+    .btn-save-default {
+      flex:1; padding:6px 0; font-size:0.73rem; font-weight:600;
+      border:1px solid var(--gh-green); border-radius:7px;
+      background:var(--gh-green); color:#ffffff; cursor:pointer;
+      transition:background 0.15s ease, opacity 0.15s ease;
+    }
+    .btn-save-default:hover { opacity:0.9; }
     .btn-reset-color {
-      width:100%; padding:6px 0; font-size:0.73rem; font-weight:600;
+      flex:1; padding:6px 0; font-size:0.73rem; font-weight:600;
       border:1px solid var(--border); border-radius:7px;
       background:var(--surface-hover); color:var(--text-muted); cursor:pointer;
       transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
@@ -1151,7 +1192,10 @@
         </div>
         <div class="preset-row" id="presetRow"></div>
       </div>
-      <button class="btn-reset-color" id="btnResetColor">Reset to Default</button>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn-save-default" id="btnSaveDefault">Set as Default</button>
+        <button class="btn-reset-color" id="btnResetColor">Reset</button>
+      </div>
     </div>
     <button class="color-panel-trigger" id="colorPanelTrigger" title="Customize accent color"
             aria-label="Open color customizer" aria-expanded="false">

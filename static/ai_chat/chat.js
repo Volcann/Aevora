@@ -73,6 +73,9 @@ function applyAccent(h, s, l) {
   root.style.setProperty("--accent-s", s + "%");
   root.style.setProperty("--accent-l", l + "%");
   localStorage.setItem("volcann-accent", JSON.stringify({ h, s, l }));
+  if (typeof window.saveBackendTheme === "function") {
+    window.saveBackendTheme({ primary_color: `hsl(${h}, ${s}%, ${l}%)`, accent_h: +h, accent_s: +s, accent_l: +l });
+  }
 
   document.getElementById("sliderSat").style.background =
     `linear-gradient(90deg,hsl(${h},10%,50%) 0%,hsl(${h},100%,${l}%) 100%)`;
@@ -123,9 +126,48 @@ function readSliders() {
 ["sliderHue", "sliderSat", "sliderLit"].forEach((id) =>
   document.getElementById(id).addEventListener("input", readSliders)
 );
-document.getElementById("btnResetColor").addEventListener("click", () =>
-  applyAccent(138, 55, 42)
-);
+document.getElementById("btnSaveDefault")?.addEventListener("click", () => {
+  const values = getAccentValues();
+  const theme = root.getAttribute("data-theme") || "dark";
+  const primary_color = `hsl(${values.h}, ${values.s}%, ${values.l}%)`;
+  if (typeof window.saveBackendTheme === "function") {
+    window.saveBackendTheme({
+      theme: theme,
+      primary_color: primary_color,
+      accent_h: values.h,
+      accent_s: values.s,
+      accent_l: values.l,
+    });
+  }
+  const btn = document.getElementById("btnSaveDefault");
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = "Saved! ✓";
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  }
+});
+
+document.getElementById("btnResetColor")?.addEventListener("click", () => {
+  applyAccent(138, 55, 42);
+  const theme = "dark";
+  root.setAttribute("data-theme", theme);
+  localStorage.setItem("volcann-theme", theme);
+  if (typeof window.saveBackendTheme === "function") {
+    window.saveBackendTheme({
+      theme: theme,
+      primary_color: "hsl(138, 55%, 42%)",
+      accent_h: 138,
+      accent_s: 55,
+      accent_l: 42,
+    });
+  }
+  const btn = document.getElementById("btnResetColor");
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = "Reset! ✓";
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  }
+});
 
 // Color panel open / close
 const panelTrigger = document.getElementById("colorPanelTrigger");
@@ -282,10 +324,13 @@ initDeleteButtons();
 /* ══════════════════════════════════════════════════════════════
    THEME TOGGLE
    ══════════════════════════════════════════════════════════════ */
-document.getElementById("themeToggle").addEventListener("click", () => {
+document.getElementById("themeToggle")?.addEventListener("click", () => {
   const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
   root.setAttribute("data-theme", next);
   localStorage.setItem("volcann-theme", next);
+  if (typeof window.saveBackendTheme === "function") {
+    window.saveBackendTheme({ theme: next });
+  }
 });
 
 /* ══════════════════════════════════════════════════════════════
