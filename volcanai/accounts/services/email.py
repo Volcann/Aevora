@@ -20,12 +20,22 @@ class EmailService:
         msg.send(fail_silently=False)
 
     @classmethod
-    def send_welcome_email(cls, *, user) -> None:
+    def send_welcome_email(
+        cls,
+        *,
+        user,
+        protocol: str = "http",
+        domain: str = "localhost",
+    ) -> None:
         cls._send(
             to=user.email,
             subject="Welcome to Volcann! 🎉",
             template="emails/sign_up.html",
-            context={"user": user},
+            context={
+                "user": user,
+                "protocol": protocol,
+                "domain": domain,
+            },
         )
 
     @classmethod

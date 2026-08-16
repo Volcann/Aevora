@@ -30,7 +30,9 @@ def register_view(request):
             login(request, user)
 
             try:
-                EmailService.send_welcome_email(user=user)
+                protocol = "https" if request.is_secure() else "http"
+                domain = request.get_host()
+                EmailService.send_welcome_email(user=user, protocol=protocol, domain=domain)
             except Exception:
                 logger.exception("Failed to send welcome email to %s", user.email)
 
