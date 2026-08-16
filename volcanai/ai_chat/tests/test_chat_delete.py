@@ -18,12 +18,12 @@ class ChatDeleteTestCase(TestCase):
         self.session = ChatSession.objects.create(user=self.user, title="Test Chat")
         self.msg1 = Message.objects.create(
             session=self.session,
-            role=MessageRole.HUMAN,
+            role=MessageRole.USER,
             content="Hello",
         )
         self.msg2 = Message.objects.create(
             session=self.session,
-            role=MessageRole.AI_GENERATED,
+            role=MessageRole.MODEL,
             content="Hi there!",
         )
 
@@ -49,7 +49,7 @@ class ChatDeleteTestCase(TestCase):
         empty_session = ChatSession.objects.create(user=self.user, title="Empty Chat")
         human_only_session = ChatSession.objects.create(user=self.user, title="Human Only")
         Message.objects.create(
-            session=human_only_session, role=MessageRole.HUMAN, content="User question"
+            session=human_only_session, role=MessageRole.USER, content="User question"
         )
 
         url = reverse("ai_chat:ai_chat")

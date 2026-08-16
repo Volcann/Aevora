@@ -22,7 +22,7 @@ def chat_session_view(request, session_id):
     session_list = []
     for item in recent:
         first = (
-            Message.objects.filter(session=item, role=MessageRole.AI_GENERATED)
+            Message.objects.filter(session=item, role=MessageRole.MODEL)
             .order_by("created_at")
             .values_list("content", flat=True)
             .first()
@@ -34,10 +34,10 @@ def chat_session_view(request, session_id):
 
     messages = Message.objects.filter(
         session=target_session,
-        role__in=[MessageRole.HUMAN, MessageRole.AI_GENERATED],
+        role__in=[MessageRole.USER, MessageRole.MODEL],
     ).order_by("created_at")
 
-    has_ai_message = messages.filter(role=MessageRole.AI_GENERATED).exists()
+    has_ai_message = messages.filter(role=MessageRole.MODEL).exists()
 
     available_tools = get_available_tools_list()
 

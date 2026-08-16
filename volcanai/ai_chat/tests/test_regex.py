@@ -15,9 +15,7 @@ class RegexTestCase(TestCase):
 
     def test_extract_prompt_words(self):
         self.assertEqual(extract_prompt_words("setu- #22"), {"setu"})
-        self.assertEqual(
-            extract_prompt_words("setup the project for me"), {"setup", "project"}
-        )
+        self.assertEqual(extract_prompt_words("setup the project for me"), {"setup", "project"})
         self.assertEqual(extract_prompt_words("a the to"), set())
 
     def test_is_prefix_match(self):

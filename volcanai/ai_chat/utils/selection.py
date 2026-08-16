@@ -37,9 +37,7 @@ def select_tools_for_prompt(prompt: str, top_n: int = 2) -> tuple[list, dict]:
                 score += 3
             elif any(is_prefix_match(pw, nw) for nw in name_words):
                 score += 2
-            elif pw in desc_words or any(
-                is_prefix_match(pw, dw) for dw in desc_words
-            ):
+            elif pw in desc_words or any(is_prefix_match(pw, dw) for dw in desc_words):
                 score += 1
 
         scores[name] = score

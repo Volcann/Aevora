@@ -9,7 +9,5 @@ class ToolCallStatus(models.TextChoices):
 
 
 class MessageRole(models.TextChoices):
-    HUMAN = "human", "Human"
-    AI_GENERATED = "ai_generated", "AI Generated"
-    TOOL_RESULT = "tool_result", "Tool Result"
+    USER = "user", "User"
     MODEL = "model", "Model"

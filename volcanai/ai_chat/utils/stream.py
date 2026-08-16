@@ -26,11 +26,7 @@ def _gemini_stream(session, prompt):
 
         history = [
             {
-                "role": (
-                    "user"
-                    if message.role == MessageRole.USER
-                    else MessageRole.MODEL
-                ),
+                "role": ("user" if message.role == MessageRole.USER else MessageRole.MODEL),
                 "parts": [message.content],
             }
             for message in prior
@@ -40,9 +36,7 @@ def _gemini_stream(session, prompt):
 
         gemini_tools, tool_router = select_tools_for_prompt(prompt)
         model = genai.GenerativeModel(
-            model_name=getattr(
-                settings, "GEMINI_MODEL", "gemini-3.5-flash-lite"
-            ),
+            model_name=getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite"),
             tools=gemini_tools,
         )
         chat = model.start_chat(history=history)
@@ -93,7 +87,7 @@ def _gemini_stream(session, prompt):
                             ),
                         ),
                     )
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001
                     yield _sse({"type": "tool_error", "tool": fc.name})
                     tool_parts.append(
                         genai.protos.Part(
@@ -106,9 +100,7 @@ def _gemini_stream(session, prompt):
 
             user_input = tool_parts
 
-        Message.objects.create(
-            session=session, role=MessageRole.USER, content=prompt
-        )
+        Message.objects.create(session=session, role=MessageRole.USER, content=prompt)
         Message.objects.create(
             session=session,
             role=MessageRole.MODEL,
@@ -119,7 +111,7 @@ def _gemini_stream(session, prompt):
             session.title = prompt[:48] + ("…" if len(prompt) > 48 else "")
             session.save(update_fields=["title", "updated_at"])
 
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         yield _sse({"type": "chunk", "text": f"\n\n⚠ Error: {exc}"})
 
     yield _sse({"type": "done"})

@@ -43,7 +43,7 @@ def get_available_tools_list(cache_seconds: int = 300) -> list[dict]:
                         },
                     }
                 )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"[MCP] Could not reach server '{server.name}': {exc}")
 
     if ui_tools:
@@ -74,9 +74,7 @@ def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict, dict
                             genai.protos.FunctionDeclaration(
                                 name=tool["name"],
                                 description=tool.get("description", ""),
-                                parameters=_mcp_schema_to_gemini(
-                                    tool.get("inputSchema", {})
-                                ),
+                                parameters=_mcp_schema_to_gemini(tool.get("inputSchema", {})),
                             )
                         ]
                     )
@@ -84,7 +82,7 @@ def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict, dict
                 tool_router[tool["name"]] = server
                 raw = tool["name"] + " " + tool.get("description", "")
                 keyword_index[tool["name"]] = extract_words(raw)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"[MCP] Could not reach server '{server.name}': {exc}")
 
     if gemini_tools:
