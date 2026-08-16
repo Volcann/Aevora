@@ -2422,7 +2422,7 @@
 
           <!-- Real-time chat log -->
           <div class="volcanris-chat-log" id="volcanrisChatLog">
-            {% for msg in messages %} {% if msg.role == "human" %}
+            {% for msg in messages %} {% if msg.role == "user" or msg.role == "human" %}
             <div class="msg-bubble msg-user">
               <div class="msg-user-author">YOU</div>
               <div class="msg-text">{{ msg.content }}</div>

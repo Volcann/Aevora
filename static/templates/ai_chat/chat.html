@@ -1094,11 +1094,11 @@
           </div>
         {% else %}
           {% for msg in messages %}
-          <div class="message {% if msg.role == 'human' %}user{% else %}ai{% endif %}">
+          <div class="message {% if msg.role == 'user' or msg.role == 'human' %}user{% else %}ai{% endif %}">
             <img class="message-avatar" src="https://avatars.githubusercontent.com/u/142692213?v=4"
-                 alt="{% if msg.role == 'human' %}You{% else %}AI{% endif %}">
-            <div class="message-content {% if msg.role != 'human' %}js-render-md{% endif %}">
-              {% if msg.role == 'human' %}
+                 alt="{% if msg.role == 'user' or msg.role == 'human' %}You{% else %}AI{% endif %}">
+            <div class="message-content {% if msg.role == 'model' or msg.role == 'ai' or msg.role != 'user' and msg.role != 'human' %}js-render-md{% endif %}">
+              {% if msg.role == 'user' or msg.role == 'human' %}
                 {{ msg.content|linebreaksbr }}
               {% else %}
                 {{ msg.content }}
