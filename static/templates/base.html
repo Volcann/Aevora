@@ -11,15 +11,35 @@
   <script>
     (function() {
       var backendTheme = {% if user_theme_json %}{{ user_theme_json|safe }}{% else %}{}{% endif %};
-      if (backendTheme.theme) {
-        document.documentElement.setAttribute('data-theme', backendTheme.theme);
+      var t = backendTheme.theme || localStorage.getItem('volcann-theme');
+      if (t) {
+        document.documentElement.setAttribute('data-theme', t);
+      } else if (!document.documentElement.getAttribute('data-theme')) {
+        document.documentElement.setAttribute('data-theme', 'dark');
       }
+
       if (backendTheme.primary_color) {
         document.documentElement.style.setProperty('--primary-color', backendTheme.primary_color);
       }
       if (backendTheme.accent_color) {
         document.documentElement.style.setProperty('--link-color', backendTheme.accent_color);
       }
+
+      var r = document.documentElement;
+      if (backendTheme.accent_h !== undefined) r.style.setProperty('--accent-h', backendTheme.accent_h);
+      if (backendTheme.accent_s !== undefined) r.style.setProperty('--accent-s', backendTheme.accent_s + '%');
+      if (backendTheme.accent_l !== undefined) r.style.setProperty('--accent-l', backendTheme.accent_l + '%');
+
+      var saved = localStorage.getItem('volcann-accent');
+      if (saved && backendTheme.accent_h === undefined) {
+        try {
+          var c = JSON.parse(saved);
+          if (c.h !== undefined) r.style.setProperty('--accent-h', c.h);
+          if (c.s !== undefined) r.style.setProperty('--accent-s', c.s + '%');
+          if (c.l !== undefined) r.style.setProperty('--accent-l', c.l + '%');
+        } catch(e) {}
+      }
+
       window.VOLCANN_THEME = backendTheme;
       window.saveBackendTheme = function(updatedConfig) {
         var merged = Object.assign({}, window.VOLCANN_THEME || {}, updatedConfig);
@@ -27,6 +47,10 @@
         if (merged.theme) document.documentElement.setAttribute('data-theme', merged.theme);
         if (merged.primary_color) document.documentElement.style.setProperty('--primary-color', merged.primary_color);
         if (merged.accent_color) document.documentElement.style.setProperty('--link-color', merged.accent_color);
+        if (merged.accent_h !== undefined) r.style.setProperty('--accent-h', merged.accent_h);
+        if (merged.accent_s !== undefined) r.style.setProperty('--accent-s', merged.accent_s + '%');
+        if (merged.accent_l !== undefined) r.style.setProperty('--accent-l', merged.accent_l + '%');
+
         var csrfToken = (function() {
           if (window.VOLCANN && window.VOLCANN.CSRF_TOKEN) return window.VOLCANN.CSRF_TOKEN;
           var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
@@ -320,12 +344,13 @@
       display: flex;
       flex-direction: column;
     }
-
-    {% block extra_css %}{% endblock %}
   </style>
-</head>
-<body>
 
+  {% block extra_css %}{% endblock %}
+</head>
+<body {% block body_attrs %}{% endblock %}>
+
+  {% block navbar %}
   {% if user.is_authenticated %}
   <nav class="nav">
     <a class="nav-brand" href="{% url 'ai_chat:ai_chat' %}">
@@ -382,11 +407,14 @@
     </div>
   </nav>
   {% endif %}
+  {% endblock navbar %}
 
   {% if messages %}
   <div class="messages-container">
     {% for message in messages %}
+    {% if message.level %}
     <div class="message {{ message.tags }}">{{ message }}</div>
+    {% endif %}
     {% endfor %}
   </div>
   {% endif %}

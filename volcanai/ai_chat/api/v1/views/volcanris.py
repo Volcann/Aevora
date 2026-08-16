@@ -23,7 +23,7 @@ def volcanris_view(request):
 
     cleanup_empty_sessions(request.user, exclude_session_id=session.id)
     recent_sessions = ChatSession.objects.filter(user=request.user).order_by("-updated_at")[:10]
-    messages = Message.objects.filter(
+    chat_messages = Message.objects.filter(
         session=session,
         role__in=[MessageRole.USER, MessageRole.MODEL],
     ).order_by("created_at")
@@ -34,6 +34,6 @@ def volcanris_view(request):
         {
             "session": session,
             "recent_sessions": recent_sessions,
-            "messages": messages,
+            "chat_messages": chat_messages,
         },
     )

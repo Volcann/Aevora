@@ -1,0 +1,65 @@
+<div class="profile-modal" id="profileModal" aria-hidden="true">
+  <div class="profile-modal-backdrop" id="profileModalBackdrop"></div>
+  <div class="profile-modal-card">
+    <button
+      class="profile-modal-close"
+      id="closeProfileModal"
+      title="Close"
+    >
+      &times;
+    </button>
+    <div class="profile-header">
+      <img
+        class="profile-avatar-lg"
+        src="https://avatars.githubusercontent.com/u/142692213?v=4"
+        alt="Profile Picture"
+      />
+      <h3 class="profile-name">
+        {{ request.user.get_full_name|default:request.user.username }}
+      </h3>
+      <span class="profile-badge">VOLCANRIS Protocol Level 5</span>
+    </div>
+    <div class="profile-body">
+      <div class="profile-field">
+        <span class="field-label">Operator</span>
+        <span class="field-value">@{{ request.user.username }}</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label">Email</span>
+        <span class="field-value"
+          >{{ request.user.email|default:"No email attached" }}</span
+        >
+      </div>
+      <div class="profile-field">
+        <span class="field-label">Access Granted</span>
+        <span class="field-value"
+          >{{ request.user.date_joined|date:"M j, Y" }}</span
+        >
+      </div>
+    </div>
+    <div class="profile-footer">
+      <form
+        method="POST"
+        action="{% url 'accounts:logout' %}"
+        style="width: 100%; margin: 0"
+      >
+        {% csrf_token %}
+        <button type="submit" class="btn-logout-full">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Disconnect / Sign Out
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
