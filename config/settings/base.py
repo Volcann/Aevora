@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -20,6 +21,9 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "drf_yasg",
     "channels",
     "django_celery_beat",
     "corsheaders",
@@ -116,6 +120,30 @@ LOGIN_REDIRECT_URL = "/chat/"
 JWT_SECRET_KEY = env("JWT_SECRET_KEY", default=SECRET_KEY)
 JWT_ALGORITHM = env("JWT_ALGORITHM", default="HS256")
 ONBOARDING_TOKEN_EXPIRY_HOURS = env.int("ONBOARDING_TOKEN_EXPIRY_HOURS", default=168)
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
+    "DEFAULT_RENDERER_CLASSES": (
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ),
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "SIGNING_KEY": JWT_SECRET_KEY,
+    "ALGORITHM": JWT_ALGORITHM,
+}
 
 APP_BASE_URL = env("APP_BASE_URL", default="http://localhost:3000")
 ADMIN_FRONTEND_URL = env(
