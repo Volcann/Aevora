@@ -67,7 +67,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "volcanai.core.context_processors.theme_context",
             ],
         },
     },
@@ -133,6 +132,12 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ),
+    "DEFAULT_FILTER_BACKENDS": (
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "volcanai.core.pagination.StandardResultsSetPagination",
+    "PAGE_SIZE": 20,
 }
 
 SIMPLE_JWT = {
@@ -144,6 +149,18 @@ SIMPLE_JWT = {
     "SIGNING_KEY": JWT_SECRET_KEY,
     "ALGORITHM": JWT_ALGORITHM,
 }
+
+SWAGGER_SETTINGS = {
+    "USE_SESSION_AUTH": False,
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+        },
+    },
+}
+SWAGGER_USE_COMPAT_RENDERERS = False
 
 APP_BASE_URL = env("APP_BASE_URL", default="http://localhost:3000")
 ADMIN_FRONTEND_URL = env(
