@@ -5,8 +5,10 @@ from django.conf import settings
 from rest_framework_simplejwt.exceptions import TokenBackendError, TokenError
 from rest_framework_simplejwt.state import token_backend
 
-ONBOARDING_PURPOSE = "set_initial_password"
-RESET_PASSWORD_PURPOSE = "reset_password"
+from volcanai.accounts.choices import TokenPurpose
+
+ONBOARDING_PURPOSE = TokenPurpose.ONBOARDING
+RESET_PASSWORD_PURPOSE = TokenPurpose.RESET_PASSWORD
 
 
 class TokenService:
@@ -14,7 +16,7 @@ class TokenService:
     def generate_token(
         cls,
         user,
-        purpose: str = ONBOARDING_PURPOSE,
+        purpose: str,
         expiry_hours: int | None = None,
     ) -> str:
         now = datetime.now(UTC)

@@ -1,3 +1,4 @@
+from volcanai.accounts.choices import TokenPurpose
 from volcanai.accounts.services.password import PasswordService
 from volcanai.accounts.services.redis_token_store import (
     consume_reset_token,
@@ -13,6 +14,7 @@ __all__ = [
     "ONBOARDING_PURPOSE",
     "RESET_PASSWORD_PURPOSE",
     "PasswordService",
+    "TokenPurpose",
     "TokenService",
     "consume_reset_token",
     "store_reset_token",
