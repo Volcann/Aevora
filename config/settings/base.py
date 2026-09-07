@@ -161,6 +161,7 @@ SWAGGER_SETTINGS = {
 }
 SWAGGER_USE_COMPAT_RENDERERS = False
 
+BACKEND_URL = env("BACKEND_URL", default="http://localhost:8002")
 APP_BASE_URL = env("APP_BASE_URL", default="http://localhost:3000")
 ADMIN_FRONTEND_URL = env(
     "ADMIN_FRONTEND_URL",

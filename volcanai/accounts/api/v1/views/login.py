@@ -1,28 +1,15 @@
-from django.contrib.auth import authenticate, get_user_model, login
-from django.shortcuts import redirect, render
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-from volcanai.accounts.api.v1.forms.login import LoginForm
+from volcanai.accounts.api.v1.docs.login import login_schema
+from volcanai.accounts.api.v1.serializers.login import LoginSerializer
 
-User = get_user_model()
 
+class LoginView(TokenObtainPairView):
+    permission_classes = (AllowAny,)
+    serializer_class = LoginSerializer
 
-def login_view(request):
-    if request.user.is_authenticated:
-        return redirect("ai_chat:volcanris")
-
-    if request.method == "POST":
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            user = authenticate(
-                request,
-                username=form.cleaned_data["username"],
-                password=form.cleaned_data["password"],
-            )
-            if user is not None:
-                login(request, user)
-                return redirect(request.GET.get("next") or "ai_chat:volcanris")
-            form.add_error(None, "Invalid username or password.")
-    else:
-        form = LoginForm()
-
-    return render(request, "accounts/login.html", {"form": form})
+    @swagger_auto_schema(**login_schema)
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)

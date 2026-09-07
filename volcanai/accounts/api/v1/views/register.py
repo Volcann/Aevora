@@ -1,44 +1,36 @@
-import logging
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import generics, status
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from django.contrib import messages
-from django.contrib.auth import get_user_model, login
-from django.shortcuts import redirect, render
-
-from volcanai.accounts.api.v1.forms.register import RegisterForm
-from volcanai.accounts.services.email import EmailService
-
-logger = logging.getLogger(__name__)
-
-User = get_user_model()
+from volcanai.accounts.api.v1.docs.register import register_schema
+from volcanai.accounts.api.v1.serializers.me import UserMeSerializer
+from volcanai.accounts.api.v1.serializers.register import RegisterSerializer
 
 
-def register_view(request):
-    if request.user.is_authenticated:
-        return redirect("ai_chat:volcanris")
+class RegisterView(generics.CreateAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = RegisterSerializer
 
-    if request.method == "POST":
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            user = User.objects.create_user(
-                username=data["username"],
-                email=data["email"],
-                password=data["password"],
-                first_name=data.get("first_name", ""),
-                last_name=data.get("last_name", ""),
-            )
-            login(request, user)
+    @swagger_auto_schema(**register_schema)
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
 
-            try:
-                protocol = "https" if request.is_secure() else "http"
-                domain = request.get_host()
-                EmailService.send_welcome_email(user=user, protocol=protocol, domain=domain)
-            except Exception:
-                logger.exception("Failed to send welcome email to %s", user.email)
-
-            messages.success(request, f"Welcome to Volcann, {user.first_name or user.username}! 🎉")
-            return redirect("ai_chat:volcanris")
-    else:
-        form = RegisterForm()
-
-    return render(request, "accounts/register.html", {"form": form})
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        user_data = UserMeSerializer(user).data
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "message": "User registered successfully.",
+                "user": user_data,
+                "tokens": {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                },
+            },
+            status=status.HTTP_201_CREATED,
+        )
