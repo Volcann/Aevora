@@ -17,4 +17,4 @@ class Message(UUIDTimeStampedModel):
     token_count = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.role} — {self.id}"
+        return f"{self.role} - {self.id}"

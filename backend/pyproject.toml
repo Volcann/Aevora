@@ -1,7 +1,7 @@
 [project]
 name = "volcani"
 version = "0.1.0"
-description = "Django MCP Hub — Gemini AI + local MCP tools"
+description = "Django MCP Hub - Gemini AI + local MCP tools"
 readme = "README.md"
 requires-python = ">=3.12"
 

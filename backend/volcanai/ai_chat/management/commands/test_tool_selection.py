@@ -156,7 +156,7 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(
                     self.style.ERROR(
-                        f"  router : ✗ mismatch — "
+                        f"  router : ✗ mismatch - "
                         f"extra={router_keys - names_set}  "
                         f"missing={names_set - router_keys}\n"
                     )
@@ -168,4 +168,4 @@ class Command(BaseCommand):
         if failed:
             self.stdout.write(self.style.ERROR(f"  failed : {failed}"))
         else:
-            self.stdout.write(self.style.SUCCESS("  failed : 0  — all router checks clean ✓"))
+            self.stdout.write(self.style.SUCCESS("  failed : 0  - all router checks clean ✓"))

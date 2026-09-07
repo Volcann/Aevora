@@ -35,4 +35,4 @@ class ToolCall(UUIDTimeStampedModel):
     completed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.tool_name} — {self.status}"
+        return f"{self.tool_name} - {self.status}"
