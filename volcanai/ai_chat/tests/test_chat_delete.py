@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
 from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
 
 from volcanai.ai_chat.choices import MessageRole
 from volcanai.ai_chat.models import ChatSession, Message
@@ -8,7 +9,7 @@ from volcanai.ai_chat.models import ChatSession, Message
 User = get_user_model()
 
 
-class ChatDeleteTestCase(TestCase):
+class ChatDeleteTestCase(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username="testuser",
@@ -29,15 +30,17 @@ class ChatDeleteTestCase(TestCase):
 
     def test_delete_session_requires_login(self):
         url = reverse("ai_chat:delete_session", kwargs={"session_id": self.session.id})
-        response = self.client.post(url)
-        self.assertEqual(response.status_code, 302)
+        response = self.client.delete(url)
+        self.assertIn(
+            response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
+        )
 
     def test_delete_session_deletes_session_and_messages(self):
-        self.client.login(username="testuser", password="password123")
+        self.client.force_authenticate(user=self.user)
         url = reverse("ai_chat:delete_session", kwargs={"session_id": self.session.id})
-        response = self.client.post(url)
+        response = self.client.delete(url)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         self.assertTrue(data["ok"])
 
@@ -45,28 +48,48 @@ class ChatDeleteTestCase(TestCase):
         self.assertFalse(Message.objects.filter(session_id=self.session.id).exists())
 
     def test_ai_chat_deletes_empty_sessions(self):
-        self.client.login(username="testuser", password="password123")
+        self.client.force_authenticate(user=self.user)
         empty_session = ChatSession.objects.create(user=self.user, title="Empty Chat")
         human_only_session = ChatSession.objects.create(user=self.user, title="Human Only")
         Message.objects.create(
             session=human_only_session, role=MessageRole.USER, content="User question"
         )
 
-        url = reverse("ai_chat:ai_chat")
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 302)
+        url = reverse("ai_chat:sessions")
+        response = self.client.post(url, {})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.assertFalse(ChatSession.objects.filter(id=empty_session.id).exists())
         self.assertFalse(ChatSession.objects.filter(id=human_only_session.id).exists())
         self.assertTrue(ChatSession.objects.filter(id=self.session.id).exists())
 
     def test_chat_session_view_cleans_up_other_empty_sessions(self):
-        self.client.login(username="testuser", password="password123")
+        self.client.force_authenticate(user=self.user)
         empty_session = ChatSession.objects.create(user=self.user, title="Empty Chat")
 
-        url = reverse("ai_chat:chat_session", kwargs={"session_id": self.session.id})
+        url = reverse("ai_chat:session_detail", kwargs={"session_id": self.session.id})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertFalse(ChatSession.objects.filter(id=empty_session.id).exists())
         self.assertTrue(ChatSession.objects.filter(id=self.session.id).exists())
+
+    def test_sessions_list_pagination_and_filtering(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse("ai_chat:sessions")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertIn("count", data)
+        self.assertIn("results", data)
+        self.assertIn("next", data)
+        self.assertIn("previous", data)
+        self.assertEqual(data["count"], 1)
+
+        search_resp = self.client.get(f"{url}?search=Test")
+        self.assertEqual(search_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(search_resp.json()["count"], 1)
+
+        no_match_resp = self.client.get(f"{url}?search=NonExistent")
+        self.assertEqual(no_match_resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(no_match_resp.json()["count"], 0)
