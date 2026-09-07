@@ -12,6 +12,9 @@ class TestForgotPassword:
         response = api_client.post(self.url, {"email": user.email}, format="json")
 
         assert response.status_code == status.HTTP_200_OK
+        assert response.data == {
+            "message": "If this email is registered, a password reset link has been sent."
+        }
         assert len(mail.outbox) == 1
         assert "Reset your Volcann password" in mail.outbox[0].subject
         assert "token=" in mail.outbox[0].body
@@ -20,6 +23,9 @@ class TestForgotPassword:
         response = api_client.post(self.url, {"email": "notfound@example.com"}, format="json")
 
         assert response.status_code == status.HTTP_200_OK
+        assert response.data == {
+            "message": "If this email is registered, a password reset link has been sent."
+        }
         assert len(mail.outbox) == 0
 
     def test_forgot_password_returns_400_for_invalid_email(self, api_client):

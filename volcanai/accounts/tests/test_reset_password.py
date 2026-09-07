@@ -27,6 +27,9 @@ class TestResetPassword:
         response = api_client.post(self.url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
+        assert response.data == {
+            "message": "Password reset successfully. You can now sign in with your new password."
+        }
         user.refresh_from_db()
         assert user.check_password("BrandNewPassword123!")
 
@@ -85,6 +88,9 @@ class TestResetPassword:
         response = api_client.post(self.url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
+        assert response.data == {
+            "message": "Password reset successfully. You can now sign in with your new password."
+        }
         user.refresh_from_db()
         assert user.check_password("LegacyPassword123!")
 

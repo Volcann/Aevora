@@ -16,6 +16,7 @@ class TestChangePassword:
         response = auth_client.post(self.url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
+        assert response.data == {"message": "Password changed successfully."}
         user.refresh_from_db()
         assert user.check_password("NewDifferentPass123!")
 

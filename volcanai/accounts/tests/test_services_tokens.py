@@ -55,7 +55,11 @@ class TestTokenService:
 
     def test_decode_token_detects_expired_token(self, user, monkeypatch):
         past_time = datetime.now(UTC) - timedelta(hours=10)
-        token = TokenService.generate_token(user=user, expiry_hours=1)
+        token = TokenService.generate_token(
+            user=user,
+            purpose=ONBOARDING_PURPOSE,
+            expiry_hours=1,
+        )
 
         def mock_now(_tz):
             return past_time

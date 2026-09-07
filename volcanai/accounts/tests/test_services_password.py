@@ -2,7 +2,6 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
-from django.test import RequestFactory
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.exceptions import AuthenticationFailed, NotFound, ValidationError
@@ -16,22 +15,27 @@ User = get_user_model()
 @pytest.mark.django_db
 class TestPasswordService:
     def test_forgot_password_sends_email_and_stores_token(self, user):
-        response = PasswordService.forgot_password(user=user)
+        result = PasswordService.forgot_password(user=user)
 
-        assert "message" in response
+        assert result is None
         assert len(mail.outbox) == 1
         assert "Reset your Volcann password" in mail.outbox[0].subject
 
-    def test_forgot_password_uses_request_domain_and_scheme(self, user, settings):
+    def test_forgot_password_uses_default_app_base_url_when_none(self, user, settings):
         settings.APP_BASE_URL = None
-        factory = RequestFactory()
-        request = factory.post("/api/v1/accounts/forgot-password/", HTTP_HOST="custom.domain.com")
+        result = PasswordService.forgot_password(user=user)
 
-        response = PasswordService.forgot_password(user=user, request=request)
-
-        assert "message" in response
+        assert result is None
         assert len(mail.outbox) == 1
-        assert "custom.domain.com" in mail.outbox[0].body
+        assert "http://localhost:3000" in mail.outbox[0].body
+
+    def test_forgot_password_uses_configured_app_base_url(self, user, settings):
+        settings.APP_BASE_URL = "https://custom.domain.com"
+        result = PasswordService.forgot_password(user=user)
+
+        assert result is None
+        assert len(mail.outbox) == 1
+        assert "https://custom.domain.com" in mail.outbox[0].body
 
     def test_reset_password_with_valid_jwt_token(self, user, reset_password_token):
         store_reset_token(reset_password_token, 3600)
@@ -40,7 +44,7 @@ class TestPasswordService:
             password="NewPassword123!",
         )
 
-        assert "message" in result
+        assert result is None
         user.refresh_from_db()
         assert user.check_password("NewPassword123!")
 
@@ -75,7 +79,7 @@ class TestPasswordService:
             uid=uid,
         )
 
-        assert "message" in result
+        assert result is None
         user.refresh_from_db()
         assert user.check_password("LegacyPassword123!")
 
@@ -113,7 +117,7 @@ class TestPasswordService:
             new_password="ChangedPassword123!",
         )
 
-        assert "message" in result
+        assert result is None
         user.refresh_from_db()
         assert user.check_password("ChangedPassword123!")
 
