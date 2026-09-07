@@ -162,7 +162,9 @@ SWAGGER_SETTINGS = {
 SWAGGER_USE_COMPAT_RENDERERS = False
 
 BACKEND_URL = env("BACKEND_URL", default="http://localhost:8002")
-APP_BASE_URL = env("APP_BASE_URL", default="http://localhost:3000")
+APP_BASE_URL = (
+    env("APP_BASE_URL", default="http://localhost:3000") or "http://localhost:3000"
+).rstrip("/")
 ADMIN_FRONTEND_URL = env(
     "ADMIN_FRONTEND_URL",
     default="https://stage.admin-app-hr-tool.foliumaitech.com",

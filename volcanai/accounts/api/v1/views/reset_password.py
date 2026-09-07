@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 
 from volcanai.accounts.api.v1.docs.reset_password import reset_password_schema
 from volcanai.accounts.api.v1.serializers.reset_password import ResetPasswordSerializer
+from volcanai.accounts.services.password import PasswordService
 
 
 class ResetPasswordView(APIView):
@@ -15,5 +16,15 @@ class ResetPasswordView(APIView):
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        result = serializer.save()
-        return Response(result, status=status.HTTP_200_OK)
+        data = serializer.validated_data
+
+        PasswordService.reset_password(
+            token=data["token"],
+            password=data["password"],
+            uid=data.get("uid") or None,
+        )
+
+        return Response(
+            {"message": "Password reset successfully. You can now sign in with your new password."},
+            status=status.HTTP_200_OK,
+        )

@@ -19,7 +19,7 @@ class ForgotPasswordView(APIView):
 
         user = getattr(serializer, "user", None)
         if user:
-            PasswordService.forgot_password(user, request=request)
+            PasswordService.forgot_password(user)
 
         return Response(
             {"message": "If this email is registered, a password reset link has been sent."},

@@ -1,8 +1,6 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from volcanai.accounts.services.password import PasswordService
-
 
 class ResetPasswordSerializer(serializers.Serializer):
     token = serializers.CharField()
@@ -15,10 +13,3 @@ class ResetPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
         validate_password(attrs["password"])
         return attrs
-
-    def save(self) -> dict[str, str]:
-        return PasswordService.reset_password(
-            token=self.validated_data["token"],
-            password=self.validated_data["password"],
-            uid=self.validated_data.get("uid") or None,
-        )

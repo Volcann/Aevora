@@ -18,9 +18,12 @@ class ChangePasswordView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        result = PasswordService.change_password(
+        PasswordService.change_password(
             user=request.user,
             old_password=data["old_password"],
             new_password=data["new_password"],
         )
-        return Response(result, status=status.HTTP_200_OK)
+        return Response(
+            {"message": "Password changed successfully."},
+            status=status.HTTP_200_OK,
+        )
