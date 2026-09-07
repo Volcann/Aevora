@@ -6,7 +6,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from rest_framework import serializers
 
-from volcanai.accounts.services.email import EmailService
+from volcanai.notification.services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
