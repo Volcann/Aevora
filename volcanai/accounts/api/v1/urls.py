@@ -1,14 +1,15 @@
 from django.urls import path
 
 from volcanai.accounts.api.v1.views import (
+    ChangePasswordView,
     CustomTokenRefreshView,
     ForgotPasswordView,
     LoginView,
     LogoutView,
+    MeView,
     RegisterView,
     ResetPasswordView,
-    SetPasswordView,
-    UserMeView,
+    SetInitialPasswordView,
 )
 
 app_name = "accounts"
@@ -18,8 +19,9 @@ urlpatterns = [
     path("token/refresh/", CustomTokenRefreshView.as_view(), name="token_refresh"),
     path("register/", RegisterView.as_view(), name="register"),
     path("logout/", LogoutView.as_view(), name="logout"),
-    path("me/", UserMeView.as_view(), name="me"),
+    path("me/", MeView.as_view(), name="me"),
     path("forgot-password/", ForgotPasswordView.as_view(), name="forgot_password"),
     path("reset-password/", ResetPasswordView.as_view(), name="reset_password"),
-    path("set-password/", SetPasswordView.as_view(), name="set_password"),
+    path("set-password/", SetInitialPasswordView.as_view(), name="set_password"),
+    path("change-password/", ChangePasswordView.as_view(), name="change_password"),
 ]
