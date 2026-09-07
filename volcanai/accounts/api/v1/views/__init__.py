@@ -6,11 +6,9 @@ from volcanai.accounts.api.v1.views.me import MeView
 from volcanai.accounts.api.v1.views.register import RegisterView
 from volcanai.accounts.api.v1.views.reset_password import ResetPasswordView
 from volcanai.accounts.api.v1.views.set_password import SetInitialPasswordView
-from volcanai.accounts.api.v1.views.token_refresh import CustomTokenRefreshView
 
 __all__ = [
     "ChangePasswordView",
-    "CustomTokenRefreshView",
     "ForgotPasswordView",
     "LoginView",
     "LogoutView",

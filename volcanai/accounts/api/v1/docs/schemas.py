@@ -32,14 +32,6 @@ LoginSuccessSchema = openapi.Schema(
     },
 )
 
-TokenRefreshSuccessSchema = openapi.Schema(
-    type=openapi.TYPE_OBJECT,
-    properties={
-        "access": openapi.Schema(type=openapi.TYPE_STRING),
-        "refresh": openapi.Schema(type=openapi.TYPE_STRING),
-    },
-)
-
 MeSuccessSchema = UserSchema
 
 RegisterSuccessSchema = openapi.Schema(

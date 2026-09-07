@@ -6,7 +6,6 @@ from volcanai.accounts.api.v1.docs.me import me_get_schema, me_patch_schema
 from volcanai.accounts.api.v1.docs.register import register_schema
 from volcanai.accounts.api.v1.docs.reset_password import reset_password_schema
 from volcanai.accounts.api.v1.docs.set_password import set_initial_password_schema
-from volcanai.accounts.api.v1.docs.token_refresh import token_refresh_schema
 
 __all__ = [
     "change_password_schema",
@@ -18,5 +17,4 @@ __all__ = [
     "register_schema",
     "reset_password_schema",
     "set_initial_password_schema",
-    "token_refresh_schema",
 ]
