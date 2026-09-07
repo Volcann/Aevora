@@ -59,11 +59,7 @@ class EmailService:
         protocol: str = "http",
         domain: str = "localhost",
     ) -> None:
-        url = (
-            app_url
-            or getattr(settings, "BACKEND_URL", None)
-            or getattr(settings, "APP_BASE_URL", f"{protocol}://{domain}")
-        )
+        url = app_url or getattr(settings, "APP_BASE_URL", None) or "http://localhost:3000"
         context = {
             "user": user,
             "protocol": protocol,
@@ -91,7 +87,9 @@ class EmailService:
         if link:
             reset_url = link
         else:
-            base_url = getattr(settings, "APP_BASE_URL", f"{protocol}://{domain}").rstrip("/")
+            base_url = (getattr(settings, "APP_BASE_URL", None) or "http://localhost:3000").rstrip(
+                "/"
+            )
             reset_path = getattr(
                 settings,
                 "RESET_PASSWORD_FRONTEND_PATH",
