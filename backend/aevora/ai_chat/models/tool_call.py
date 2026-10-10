@@ -2,7 +2,6 @@ from django.db import models
 
 from aevora.ai_chat.choices import ToolCallStatus
 from aevora.ai_chat.models.message import Message
-from aevora.ai_chat.models.server_config import ServerConfig
 from aevora.core.models import UUIDTimeStampedModel
 
 
@@ -12,12 +11,8 @@ class ToolCall(UUIDTimeStampedModel):
         on_delete=models.CASCADE,
         related_name="tool_calls",
     )
-    server = models.ForeignKey(
-        ServerConfig,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name="tool_calls",
-    )
+    celery_task_id = models.CharField(max_length=255, null=True, blank=True)
+    error_message = models.TextField(null=True, blank=True)
 
     tool_name = models.CharField(max_length=100)
     status = models.CharField(

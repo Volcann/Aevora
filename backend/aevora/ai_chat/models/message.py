@@ -14,7 +14,6 @@ class Message(UUIDTimeStampedModel):
 
     role = models.CharField(max_length=20, choices=MessageRole.choices)
     content = models.TextField()
-    token_count = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.role} - {self.id}"
