@@ -1,20 +1,24 @@
 from unittest.mock import patch
 
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase
 
-from aevora.ai_chat.models import ServerConfig
-from aevora.ai_chat.utils import _ensure_default_server_config, get_all_tools_for_gemini
+from aevora.ai_chat.utils import (
+    get_all_tools_for_gemini,
+    get_available_tools_list,
+    select_tools_for_prompt,
+)
 
 
 class RebootToolsTestCase(TestCase):
     def setUp(self):
         cache.clear()
 
-    def test_reboot_tools_command_creates_server_and_caches_tools(self):
-        with patch("aevora.ai_chat.services.mcp_manager.MCPClient.list_tools") as mock_list_tools:
+    def test_reboot_tools_command_caches_tools(self):
+        with patch(
+            "aevora.ai_chat.services.mcp_manager.CeleryToolClient.list_tools"
+        ) as mock_list_tools:
             mock_list_tools.return_value = [
                 {
                     "name": "test_tool",
@@ -25,8 +29,6 @@ class RebootToolsTestCase(TestCase):
 
             call_command("reboot_tools")
 
-            self.assertTrue(ServerConfig.objects.filter(name="local_mcp").exists())
-
             cached = cache.get("mcp_tools_cache")
             self.assertIsNotNone(cached)
             gemini_tools, tool_router, _ = cached
@@ -34,13 +36,9 @@ class RebootToolsTestCase(TestCase):
             self.assertIn("test_tool", tool_router)
 
     def test_get_all_tools_for_gemini_caching(self):
-        ServerConfig.objects.create(
-            name="test_server",
-            url="http://localhost:8080/sse",
-            is_active=True,
-        )
-
-        with patch("aevora.ai_chat.services.mcp_manager.MCPClient.list_tools") as mock_list_tools:
+        with patch(
+            "aevora.ai_chat.services.mcp_manager.CeleryToolClient.list_tools"
+        ) as mock_list_tools:
             mock_list_tools.return_value = [
                 {
                     "name": "t1",
@@ -58,13 +56,9 @@ class RebootToolsTestCase(TestCase):
             self.assertEqual(router1, router2)
 
     def test_get_available_tools_list_caching(self):
-        ServerConfig.objects.create(
-            name="test_server",
-            url="http://localhost:8080/sse",
-            is_active=True,
-        )
-
-        with patch("aevora.ai_chat.services.mcp_manager.MCPClient.list_tools") as mock_list_tools:
+        with patch(
+            "aevora.ai_chat.services.mcp_manager.CeleryToolClient.list_tools"
+        ) as mock_list_tools:
             mock_list_tools.return_value = [
                 {
                     "name": "sample_tool",
@@ -77,8 +71,6 @@ class RebootToolsTestCase(TestCase):
                 }
             ]
 
-            from aevora.ai_chat.utils import get_available_tools_list
-
             tools1 = get_available_tools_list()
             self.assertEqual(mock_list_tools.call_count, 1)
             self.assertEqual(len(tools1), 1)
@@ -89,13 +81,9 @@ class RebootToolsTestCase(TestCase):
             self.assertEqual(tools1, tools2)
 
     def test_select_tools_for_prompt_cold_cache(self):
-        ServerConfig.objects.create(
-            name="test_server",
-            url="http://localhost:8080/sse",
-            is_active=True,
-        )
-
-        with patch("aevora.ai_chat.services.mcp_manager.MCPClient.list_tools") as mock_list_tools:
+        with patch(
+            "aevora.ai_chat.services.mcp_manager.CeleryToolClient.list_tools"
+        ) as mock_list_tools:
             mock_list_tools.return_value = [
                 {
                     "name": "lazy_reviewer__review_pr",
@@ -109,8 +97,6 @@ class RebootToolsTestCase(TestCase):
                 },
             ]
 
-            from aevora.ai_chat.utils import select_tools_for_prompt
-
             cache.clear()
             selected_tools, router = select_tools_for_prompt("setup project #1")
             names = [t.function_declarations[0].name for t in selected_tools]
@@ -122,9 +108,3 @@ class RebootToolsTestCase(TestCase):
             names = [t.function_declarations[0].name for t in selected_tools]
             self.assertEqual(names, ["environment__setup_project"])
             self.assertEqual(list(router.keys()), ["environment__setup_project"])
-
-    def test_ensure_default_server_config_raises_validation_error(self):
-        ServerConfig.objects.all().delete()
-        with self.assertRaises(ValidationError) as ctx:
-            _ensure_default_server_config()
-        self.assertIn("reboot_tools", str(ctx.exception))

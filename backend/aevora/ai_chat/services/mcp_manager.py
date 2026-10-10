@@ -1,42 +1,25 @@
-import httpx
-
-from aevora.ai_chat.models import ServerConfig
-
-_MCP_PATH = "/mcp"
+from celery import Celery as _Celery
 
 
-class MCPClient:
-    def __init__(self, server: ServerConfig, timeout: int = 30):
-        self.base_url = server.url.rstrip("/")
-        self.timeout = timeout
+def _get_celery_app() -> _Celery:
+    from aevora.celery import app
 
-    def _endpoint(self) -> str:
-        return f"{self.base_url}{_MCP_PATH}"
+    return app
 
-    def _post(self, method: str, params: dict) -> dict:
-        payload = {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": method,
-            "params": params,
-        }
-        with httpx.Client(timeout=self.timeout) as client:
-            resp = client.post(
-                self._endpoint(),
-                json=payload,
-                headers={
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            if "error" in data:
-                raise RuntimeError(f"MCP error: {data['error']}")
-            return data.get("result", {})
 
+class CeleryToolClient:
+    QUEUE = "laptop.tools"
+
+    # Dynamically fetches the tool registry from the laptop worker!
     def list_tools(self) -> list[dict]:
-        return self._post("tools/list", {}).get("tools", [])
+        app = _get_celery_app()
+        # Blocks until the worker responds with its tools
+        job = app.send_task("tools.list_tools", queue=self.QUEUE)
+        return job.get(timeout=10)
 
-    def call_tool(self, name: str, arguments: dict) -> dict:
-        return self._post("tools/call", {"name": name, "arguments": arguments})
+    # Dispatches the task to Celery dynamically based on tool name
+    def call_tool_async(self, name: str, arguments: dict):
+        app = _get_celery_app()
+        # The laptop worker registered tasks as 'tools.<name>'
+        task_name = f"tools.{name}"
+        return app.send_task(task_name, kwargs=arguments, queue=self.QUEUE)

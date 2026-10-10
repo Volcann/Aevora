@@ -5,7 +5,6 @@ from django.conf import settings
 
 from aevora.ai_chat.choices import MessageRole
 from aevora.ai_chat.models import Message
-from aevora.ai_chat.services.mcp_manager import MCPClient
 from aevora.ai_chat.utils.selection import select_tools_for_prompt
 
 
@@ -13,8 +12,13 @@ def _sse(data):
     return f"data: {json.dumps(data)}\n\n"
 
 
-def _gemini_stream(session, prompt):
+def _gemini_stream(session, prompt, is_new=False):  # noqa: FBT002
     try:
+        if is_new:
+            yield _sse(
+                {"type": "session_created", "session_id": str(session.id), "title": session.title}
+            )
+
         genai.configure(api_key=settings.GEMINI_API_KEY)
 
         prior = list(
@@ -71,11 +75,26 @@ def _gemini_stream(session, prompt):
             for fc in function_calls:
                 yield _sse({"type": "tool_start", "tool": fc.name})
                 try:
-                    server = tool_router.get(fc.name)
-                    if server:
-                        client = MCPClient(server)
+                    router_value = tool_router.get(fc.name)
+                    if router_value == "celery":
+                        import time
+
+                        from aevora.ai_chat.services.mcp_manager import CeleryToolClient
+
+                        client = CeleryToolClient()
                         args = dict(fc.args) if fc.args else {}
-                        result = client.call_tool(fc.name, args)
+
+                        job = client.call_tool_async(fc.name, args)
+
+                        while not job.ready():
+                            if job.state == "PROGRESS":
+                                msg = job.info.get("msg", "Processing...")
+                                yield _sse({"type": "chunk", "text": f"\n\n*⏳ {msg}*\n"})
+                            else:
+                                yield _sse({"type": "ping"})
+                            time.sleep(1.5)
+
+                        result = job.get()
                     else:
                         result = None
                     yield _sse({"type": "tool_done", "tool": fc.name})
