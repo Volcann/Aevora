@@ -7,6 +7,13 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8002",
+    "http://127.0.0.1:8002",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "tauri://localhost",
+    "http://tauri.localhost",
 ]
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

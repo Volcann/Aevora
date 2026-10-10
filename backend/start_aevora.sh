@@ -1,29 +1,44 @@
 #!/bin/bash
+set -e
 
 # Log output for debugging
 exec > >(tee -a /tmp/aevora_autostart.log) 2>&1
-echo "=== Script started at $(date) ==="
+echo "=== Aevora Stack Autostart [$(date)] ==="
 
-export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.local/bin
-
-echo "Waiting for service on port 8002..."
-while ! timeout 1 bash -c "cat < /dev/null > /dev/tcp/localhost/8002" 2>/dev/null; do
-    sleep 2
-done
+export PATH=$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-cd "${PROJECT_DIR}"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-if [ -f "${PROJECT_DIR}/.venv/bin/activate" ]; then
-    source "${PROJECT_DIR}/.venv/bin/activate"
-elif [ -f "${SCRIPT_DIR}/.venv/bin/activate" ]; then
-    source "${SCRIPT_DIR}/.venv/bin/activate"
+# 1. Start MCP Gateway on host (:8001) if not running
+if ! curl -sf http://127.0.0.1:8001/mcp > /dev/null 2>&1 && ! curl -sf http://127.0.0.1:8001 > /dev/null 2>&1; then
+    echo "[1/4] Starting MCP Gateway on :8001..."
+    cd /home/folium/Documents/utils
+    nohup /home/folium/.local/bin/uv run --package mcp-gateway gateway > /tmp/mcp-gateway.log 2>&1 &
+    sleep 2
+else
+    echo "[1/4] MCP Gateway already active on :8001."
 fi
 
-echo "Port 8002 active! Launching MCP tools in detached background mode..."
-make clean
+# 2. Start Aevora Backend inside Colima (:8002)
+echo "[2/4] Starting backend containers in Colima..."
+cd "${SCRIPT_DIR}"
+docker compose up -d
 
-# Run make tools detached in background & redirect output
-nohup make tools > /tmp/aevora_mcp.log 2>&1 &
-echo "MCP tools server started in background (PID: $!). Log: /tmp/aevora_mcp.log"
+# 3. Wait for Django backend to be ready on :8002
+echo "[3/4] Waiting for backend health check on :8002..."
+for i in $(seq 1 30); do
+    if curl -sf http://127.0.0.1:8002/api/v1/health/ > /dev/null 2>&1; then
+        echo "      Aevora backend is healthy!"
+        break
+    fi
+    sleep 1
+done
+
+# 4. Sync and cache MCP tools
+echo "[4/4] Syncing MCP tools with backend..."
+docker exec aevora_django python manage.py reboot_tools || true
+
+echo "=== Aevora Stack Ready ==="
+echo "Django Backend: http://127.0.0.1:8002"
+echo "MCP Gateway:    http://127.0.0.1:8001"
