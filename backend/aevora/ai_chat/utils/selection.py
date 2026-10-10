@@ -24,7 +24,7 @@ def select_tools_for_prompt(prompt: str, top_n: int = 2) -> tuple[list, dict]:
 
     prompt_words = extract_prompt_words(prompt)
     if not prompt_words:
-        return all_gemini_tools, tool_router
+        return [], {}
 
     scores = {}
     for name, all_kws in keyword_index.items():
@@ -44,7 +44,7 @@ def select_tools_for_prompt(prompt: str, top_n: int = 2) -> tuple[list, dict]:
 
     matched = {name: score for name, score in scores.items() if score > 0}
     if not matched:
-        return all_gemini_tools, tool_router
+        return [], {}
 
     top_names = set(sorted(matched, key=matched.get, reverse=True)[:top_n])
 
