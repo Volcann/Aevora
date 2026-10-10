@@ -11,7 +11,6 @@ class MessageSerializer(serializers.ModelSerializer):
             "session",
             "role",
             "content",
-            "token_count",
             "created_at",
             "updated_at",
         )

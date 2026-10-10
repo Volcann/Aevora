@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
@@ -9,7 +11,7 @@ from aevora.ai_chat.models import ChatSession, Message
 User = get_user_model()
 
 
-class ChatDeleteTestCase(APITestCase):
+class ChatSessionApiTestCase(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username="testuser",
@@ -40,39 +42,24 @@ class ChatDeleteTestCase(APITestCase):
         url = reverse("ai_chat:delete_session", kwargs={"session_id": self.session.id})
         response = self.client.delete(url)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()
-        self.assertTrue(data["ok"])
-
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(ChatSession.objects.filter(id=self.session.id).exists())
         self.assertFalse(Message.objects.filter(session_id=self.session.id).exists())
 
-    def test_ai_chat_deletes_empty_sessions(self):
+    def test_cannot_create_session_directly(self):
         self.client.force_authenticate(user=self.user)
-        empty_session = ChatSession.objects.create(user=self.user, title="Empty Chat")
-        human_only_session = ChatSession.objects.create(user=self.user, title="Human Only")
-        Message.objects.create(
-            session=human_only_session, role=MessageRole.USER, content="User question"
-        )
-
         url = reverse("ai_chat:sessions")
-        response = self.client.post(url, {})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response = self.client.post(url, {"title": "Direct create"})
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        self.assertFalse(ChatSession.objects.filter(id=empty_session.id).exists())
-        self.assertFalse(ChatSession.objects.filter(id=human_only_session.id).exists())
-        self.assertTrue(ChatSession.objects.filter(id=self.session.id).exists())
-
-    def test_chat_session_view_cleans_up_other_empty_sessions(self):
+    def test_retrieve_session_returns_messages(self):
         self.client.force_authenticate(user=self.user)
-        empty_session = ChatSession.objects.create(user=self.user, title="Empty Chat")
-
         url = reverse("ai_chat:session_detail", kwargs={"session_id": self.session.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertFalse(ChatSession.objects.filter(id=empty_session.id).exists())
-        self.assertTrue(ChatSession.objects.filter(id=self.session.id).exists())
+        data = response.json()
+        self.assertEqual(data["id"], str(self.session.id))
+        self.assertEqual(len(data["messages"]), 2)
 
     def test_sessions_list_pagination_and_filtering(self):
         self.client.force_authenticate(user=self.user)
@@ -93,3 +80,14 @@ class ChatDeleteTestCase(APITestCase):
         no_match_resp = self.client.get(f"{url}?search=NonExistent")
         self.assertEqual(no_match_resp.status_code, status.HTTP_200_OK)
         self.assertEqual(no_match_resp.json()["count"], 0)
+
+    @patch("aevora.ai_chat.api.v1.views.stream._gemini_stream")
+    def test_stream_creates_session_for_local_id(self, mock_stream):
+        mock_stream.return_value = iter([])
+        self.client.force_authenticate(user=self.user)
+        url = reverse("ai_chat:chat_stream", kwargs={"session_id": "local-12345"})
+        response = self.client.post(url, {"prompt": "Hello new session"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            ChatSession.objects.filter(user=self.user, title="Hello new session").exists()
+        )

@@ -1,13 +1,11 @@
-from aevora.ai_chat.api.v1.views.session import (
-    ChatSessionDetailView,
-    ChatSessionListCreateView,
-)
+from aevora.ai_chat.api.v1.views.session import ChatSessionViewSet
 from aevora.ai_chat.api.v1.views.stream import ChatStreamView
+from aevora.ai_chat.api.v1.views.tool_test import ToolTestView
 from aevora.ai_chat.api.v1.views.tools import ToolsListView
 
 __all__ = [
-    "ChatSessionDetailView",
-    "ChatSessionListCreateView",
+    "ChatSessionViewSet",
     "ChatStreamView",
+    "ToolTestView",
     "ToolsListView",
 ]

@@ -2,7 +2,6 @@ import logging
 
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
@@ -15,8 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class LogoutView(APIView):
-    permission_classes = (IsAuthenticated,)
-
     @swagger_auto_schema(**logout_schema)
     def post(self, request):
         serializer = LogoutSerializer(data=request.data)

@@ -1,13 +1,11 @@
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
 
 from aevora.accounts.api.v1.docs.me import me_get_schema, me_patch_schema
 from aevora.accounts.api.v1.serializers.me import UserMeSerializer
 
 
 class MeView(generics.RetrieveUpdateAPIView):
-    permission_classes = (IsAuthenticated,)
     serializer_class = UserMeSerializer
 
     def get_object(self):
