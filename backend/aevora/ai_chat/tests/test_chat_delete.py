@@ -82,12 +82,38 @@ class ChatSessionApiTestCase(APITestCase):
         self.assertEqual(no_match_resp.json()["count"], 0)
 
     @patch("aevora.ai_chat.api.v1.views.stream._gemini_stream")
-    def test_stream_creates_session_for_local_id(self, mock_stream):
+    def test_stream_creates_session_when_session_id_omitted(self, mock_stream):
         mock_stream.return_value = iter([])
         self.client.force_authenticate(user=self.user)
-        url = reverse("ai_chat:chat_stream", kwargs={"session_id": "local-12345"})
-        response = self.client.post(url, {"prompt": "Hello new session"})
+        url = reverse("ai_chat:stream")
+        response = self.client.post(url, {"prompt": "First message in brand new chat"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(
-            ChatSession.objects.filter(user=self.user, title="Hello new session").exists()
+            ChatSession.objects.filter(
+                user=self.user, title="First message in brand new chat"
+            ).exists()
         )
+        mock_stream.assert_called_once()
+        self.assertTrue(mock_stream.call_args.kwargs.get("is_new"))
+
+    @patch("aevora.ai_chat.api.v1.views.stream._gemini_stream")
+    def test_stream_uses_existing_session_from_query_param(self, mock_stream):
+        mock_stream.return_value = iter([])
+        self.client.force_authenticate(user=self.user)
+        url = f"{reverse('ai_chat:stream')}?session_id={self.session.id}"
+        response = self.client.post(url, {"prompt": "Follow-up question"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_stream.assert_called_once()
+        self.assertFalse(mock_stream.call_args.kwargs.get("is_new"))
+        self.assertEqual(mock_stream.call_args.args[0].id, self.session.id)
+
+    def test_stream_returns_404_for_nonexistent_or_invalid_session_id(self):
+        self.client.force_authenticate(user=self.user)
+        url = f"{reverse('ai_chat:stream')}?session_id=00000000-0000-0000-0000-000000000000"
+        response = self.client.post(url, {"prompt": "Hello"})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Also non-UUID string format
+        invalid_url = f"{reverse('ai_chat:stream')}?session_id=not-a-valid-uuid"
+        response = self.client.post(invalid_url, {"prompt": "Hello"})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

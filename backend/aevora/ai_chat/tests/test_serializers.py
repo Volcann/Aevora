@@ -1,18 +1,15 @@
-import warnings
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 
-from aevora.ai_chat.api.v1.serializers import (
-    ChatSessionSerializer,
-)
+from aevora.ai_chat.api.v1.serializers import ChatSessionSerializer
 from aevora.ai_chat.choices import MessageRole
 from aevora.ai_chat.models import ChatSession, Message
 
 User = get_user_model()
 
 
-class ChatSessionSerializerBackwardCompatibilityTestCase(APITestCase):
+class ChatSessionSerializerTestCase(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username="serializertestuser",
@@ -26,7 +23,7 @@ class ChatSessionSerializerBackwardCompatibilityTestCase(APITestCase):
             content="Hello from test",
         )
 
-    def test_direct_session_serializer(self):
+    def test_chat_session_serializer(self):
         serializer = ChatSessionSerializer(self.session)
         data = serializer.data
         assert data["id"] == str(self.session.id)
@@ -34,43 +31,20 @@ class ChatSessionSerializerBackwardCompatibilityTestCase(APITestCase):
         assert len(data["messages"]) == 1
         assert data["messages"][0]["content"] == "Hello from test"
 
-    def test_backward_compatibility_import_from_session_module(self):
-        with warnings.catch_warnings(record=True) as recorded_warnings:
-            warnings.simplefilter("always")
-            from aevora.ai_chat.api.v1.serializers.session import ChatSessionDetailSerializer
-
-            assert ChatSessionDetailSerializer is ChatSessionSerializer
-            assert any(
-                issubclass(w.category, DeprecationWarning)
-                and "ChatSessionDetailSerializer" in str(w.message)
-                for w in recorded_warnings
+    def test_chat_session_detail_serializer_removed(self):
+        with pytest.raises(ImportError):
+            from aevora.ai_chat.api.v1.serializers.session import (  # noqa: F401
+                ChatSessionDetailSerializer,
             )
 
-            # Check that it functions identically
-            detail_serializer = ChatSessionDetailSerializer(self.session)
-            assert detail_serializer.data == ChatSessionSerializer(self.session).data
-
-    def test_backward_compatibility_import_from_package(self):
-        with warnings.catch_warnings(record=True) as recorded_warnings:
-            warnings.simplefilter("always")
-            from aevora.ai_chat.api.v1.serializers import ChatSessionDetailSerializer
-
-            assert ChatSessionDetailSerializer is ChatSessionSerializer
-            assert any(
-                issubclass(w.category, DeprecationWarning)
-                and "ChatSessionDetailSerializer" in str(w.message)
-                for w in recorded_warnings
+        with pytest.raises(ImportError):
+            from aevora.ai_chat.api.v1.serializers import (  # noqa: F401
+                ChatSessionDetailSerializer,
             )
 
-    def test_dir_and_attribute_errors(self):
         import aevora.ai_chat.api.v1.serializers as serializers_pkg
         from aevora.ai_chat.api.v1.serializers import session as session_module
 
-        assert "ChatSessionDetailSerializer" in dir(session_module)
-        assert "ChatSessionDetailSerializer" in dir(serializers_pkg)
+        assert "ChatSessionDetailSerializer" not in dir(session_module)
+        assert "ChatSessionDetailSerializer" not in dir(serializers_pkg)
 
-        with pytest.raises(AttributeError):
-            _ = session_module.NonExistentAttribute
-
-        with pytest.raises(AttributeError):
-            _ = serializers_pkg.NonExistentAttribute
