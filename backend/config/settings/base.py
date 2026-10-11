@@ -190,7 +190,7 @@ CONSTANCE_REDIS_CONNECTION = {
 MAIN_DOMAIN = env("MAIN_DOMAIN", default="localhost")
 
 GEMINI_API_KEY = env("GEMINI_API_KEY")
-GEMINI_MODEL = env("GEMINI_MODEL", default="gemini-3.5-flash")
+GEMINI_MODEL = env("GEMINI_MODEL", default="gemini-3.5-flash-lite")
 
 FIREBASE_SERVICE_ACCOUNT_FILE = BASE_DIR / env(
     "FIREBASE_SERVICE_ACCOUNT_FILE",

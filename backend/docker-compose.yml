@@ -8,6 +8,13 @@ x-common: &common
     - "host.docker.internal:host-gateway"
   env_file:
     - .env
+  environment:
+    - REDIS_HOST=redis
+    - REDIS_PORT=6382
+    - REDIS_URL=redis://redis:6382/0
+    - CELERY_BROKER_URL=redis://redis:6382/0
+    - CELERY_RESULT_BACKEND=redis://redis:6382/0
+    - AEVORA_WHISPER_CACHE=/app/media/whisper
 
 x-django-build: &django-build
   build:

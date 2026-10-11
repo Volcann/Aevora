@@ -1,44 +1,39 @@
-#!/bin/bash
-set -e
-
-# Log output for debugging
-exec > >(tee -a /tmp/aevora_autostart.log) 2>&1
-echo "=== Aevora Stack Autostart [$(date)] ==="
-
-export PATH=$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH
-
+#!/usr/bin/env bash
+set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+export PATH="${HOME}/.local/bin:${HOME}/.cargo/bin:${PATH}"
 
-# 1. Start MCP Gateway on host (:8001) if not running
-if ! curl -sf http://127.0.0.1:8001/mcp > /dev/null 2>&1 && ! curl -sf http://127.0.0.1:8001 > /dev/null 2>&1; then
-    echo "[1/4] Starting MCP Gateway on :8001..."
-    cd /home/folium/Documents/utils
-    nohup /home/folium/.local/bin/uv run --package mcp-gateway gateway > /tmp/mcp-gateway.log 2>&1 &
-    sleep 2
-else
-    echo "[1/4] MCP Gateway already active on :8001."
+# A manually managed/local backend can be used without Docker.
+if command -v curl >/dev/null 2>&1 && curl --max-time 2 -fsS http://127.0.0.1:8002/api/v1/health/ >/dev/null 2>&1; then
+  echo "Using the existing healthy Aevora backend on port 8002."
+  exit 0
 fi
-
-# 2. Start Aevora Backend inside Colima (:8002)
-echo "[2/4] Starting backend containers in Colima..."
+if ! command -v curl >/dev/null 2>&1; then
+  echo "Install curl for the backend readiness check." >&2
+  exit 1
+fi
+if ! command -v docker >/dev/null 2>&1; then
+  echo "Docker is required by this launcher. Start Django manually or install Docker Compose." >&2
+  exit 1
+fi
+if [[ ! -f "${SCRIPT_DIR}/.env" ]]; then
+  echo "Missing backend/.env. Copy backend/.env.example to backend/.env and configure it first." >&2
+  exit 1
+fi
+# The optional tool project is not necessary for microphone capture or speech.
+if [[ -n "${AEVORA_TOOLS_DIR:-}" && -d "${AEVORA_TOOLS_DIR}" ]] && command -v uv >/dev/null 2>&1; then
+  echo "Optional tools are configured; the Tauri launcher starts their worker."
+fi
 cd "${SCRIPT_DIR}"
 docker compose up -d
-
-# 3. Wait for Django backend to be ready on :8002
-echo "[3/4] Waiting for backend health check on :8002..."
-for i in $(seq 1 30); do
-    if curl -sf http://127.0.0.1:8002/api/v1/health/ > /dev/null 2>&1; then
-        echo "      Aevora backend is healthy!"
-        break
-    fi
-    sleep 1
+healthy=false
+for _ in $(seq 1 30); do
+  if curl --max-time 2 -fsS http://127.0.0.1:8002/api/v1/health/ >/dev/null 2>&1; then healthy=true; break; fi
+  sleep 1
 done
-
-# 4. Sync and cache MCP tools
-echo "[4/4] Syncing MCP tools with backend..."
-docker exec aevora_django python manage.py reboot_tools || true
-
-echo "=== Aevora Stack Ready ==="
-echo "Django Backend: http://127.0.0.1:8002"
-echo "MCP Gateway:    http://127.0.0.1:8001"
+if [[ "$healthy" != true ]]; then
+  echo "Backend is not healthy. Inspect: cd backend && docker compose logs --tail=100 django" >&2
+  exit 1
+fi
+docker compose exec -T django python manage.py reboot_tools || echo "Optional tools sync failed; chat and voice can still run."
+echo "Aevora backend is ready on http://127.0.0.1:8002"

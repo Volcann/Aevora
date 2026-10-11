@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=ghcr.io/astral-sh/uv:0.9.24 /uv /uvx /bin/
 
 
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock requirements-voice.txt ./
 RUN uv venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
@@ -33,6 +33,8 @@ RUN \
     uv sync --frozen --no-dev; \
   fi
 
+
+RUN uv pip install --python /opt/venv/bin/python -r requirements-voice.txt
 
 # ------------------------------
 # Stage 2: Run the application
@@ -48,6 +50,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     libpq-dev \
+    libgomp1 \
     git \
     && rm -rf /var/lib/apt/lists/*
 
