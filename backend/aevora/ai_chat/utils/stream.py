@@ -12,7 +12,15 @@ def _sse(data):
     return f"data: {json.dumps(data)}\n\n"
 
 
-def _gemini_stream(session, prompt, is_new=False):  # noqa: FBT002
+VOICE_SYSTEM_INSTRUCTION = (
+    "You are Aevora Orb in voice mode. The user is listening to your spoken response. "
+    "You MUST speak less: provide extremely concise, natural, spoken answers in 1 to 2 short sentences "
+    "(maximum 30 words). Never use markdown, bullet points, numbered lists, asterisks, headers, or code blocks. "
+    "Speak conversationally as a voice assistant."
+)
+
+
+def _gemini_stream(session, prompt, is_new=False, voice_mode=False):  # noqa: FBT002
     try:
         if is_new:
             yield _sse(
@@ -39,11 +47,23 @@ def _gemini_stream(session, prompt, is_new=False):  # noqa: FBT002
             history.pop(0)
 
         gemini_tools, tool_router = select_tools_for_prompt(prompt)
-        model = genai.GenerativeModel(
-            model_name=getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite"),
-            tools=gemini_tools,
-        )
-        chat = model.start_chat(history=history)
+        primary_model = getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite")
+        model_kwargs = {"tools": gemini_tools}
+        if voice_mode:
+            model_kwargs["system_instruction"] = VOICE_SYSTEM_INSTRUCTION
+
+        try:
+            model = genai.GenerativeModel(
+                model_name=primary_model,
+                **model_kwargs,
+            )
+            chat = model.start_chat(history=history)
+        except Exception:  # noqa: BLE001
+            model = genai.GenerativeModel(
+                model_name="gemini-3.5-flash-lite",
+                **model_kwargs,
+            )
+            chat = model.start_chat(history=history)
 
         full_text = []
         user_input = prompt

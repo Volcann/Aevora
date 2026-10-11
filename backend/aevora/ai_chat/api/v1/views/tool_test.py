@@ -19,7 +19,7 @@ class ToolTestView(APIView):
         client = CeleryToolClient()
         try:
             job = client.call_tool_async(tool_name, arguments)
-            result = job.get(timeout=60)
+            result = job.get(timeout=180)
             return Response({"result": result, "status": "SUCCESS"}, status=status.HTTP_200_OK)
         except Exception as exc:  # noqa: BLE001
             return Response({"error": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

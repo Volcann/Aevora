@@ -19,8 +19,15 @@ class ChatStreamView(APIView):
                 request.POST.get("prompt", "").strip()
                 or str(request.data.get("prompt", "")).strip()
             )
+            voice_mode = request.POST.get("voice_mode") in [True, "true", "1"] or request.data.get(
+                "voice_mode"
+            ) in [True, "true", "1"]
         else:
             prompt = serializer.validated_data["prompt"]
+            voice_mode = bool(serializer.validated_data.get("voice_mode", False))
+
+        if not voice_mode:
+            voice_mode = request.query_params.get("voice_mode") in ["true", "1", "True"]
 
         if not prompt:
             return StreamingHttpResponse(
@@ -42,7 +49,7 @@ class ChatStreamView(APIView):
             is_new = True
 
         return StreamingHttpResponse(
-            _gemini_stream(session, prompt, is_new=is_new),
+            _gemini_stream(session, prompt, is_new=is_new, voice_mode=voice_mode),
             content_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )

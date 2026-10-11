@@ -33,7 +33,7 @@ class ChatSessionSerializerTestCase(APITestCase):
 
     def test_chat_session_detail_serializer_removed(self):
         with pytest.raises(ImportError):
-            from aevora.ai_chat.api.v1.serializers.session import (  # noqa: F401
+            from aevora.ai_chat.api.v1.serializers.session import (
                 ChatSessionDetailSerializer,
             )
 
@@ -47,4 +47,3 @@ class ChatSessionSerializerTestCase(APITestCase):
 
         assert "ChatSessionDetailSerializer" not in dir(session_module)
         assert "ChatSessionDetailSerializer" not in dir(serializers_pkg)
-
