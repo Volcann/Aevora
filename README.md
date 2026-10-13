@@ -1,12 +1,20 @@
+<p align="center">
+  <img src="frontend/apps/web/public/icon.png" alt="Aevora Logo" width="128" height="128" />
+</p>
+
 # Aevora
 
-**Authenticated AI chat with Celery-powered tools.**
+**Authenticated AI chat with Celery-powered tools and interactive 3D desktop companion.**
 
-_Connect a tool once. Let the team use it from the browser._
+_Connect a tool once. Let the team use it from the browser or desktop._
+
+<p align="center">
+  <img src="frontend/docs/verification/chat-desktop.png" alt="Aevora AI Chat & Tool Automation Interface" width="100%" />
+</p>
 
 Aevora combines a Django API, a Next.js frontend, and Gemini-powered chat. The backend discovers tools from a separate Celery worker, selects relevant tools for a prompt, dispatches tool calls through Redis, and streams response events to the client. The tool worker lives in the companion [utils repository](https://github.com/Volcann/utils); it is not started by Aevora's Docker Compose stack.
 
-[The Problem](#the-problem) · [The Solution](#the-solution) · [The Impact](#the-impact) · [Quick Start](#quick-start) · [Architecture and Boundaries](#architecture-and-boundaries)
+[The Problem](#the-problem) · [The Solution](#the-solution) · [User Experience](#user-experience) · [The Impact](#the-impact) · [Quick Start](#quick-start) · [Architecture and Boundaries](#architecture-and-boundaries)
 
 ---
 
@@ -68,6 +76,20 @@ The current companion worker registers three tools:
 For example, a user can ask Aevora to review PR 42. The backend can select `review_pr`, dispatch `tools.review_pr` with that PR number, and stream the result as Gemini prepares its answer.
 
 If the companion worker is unavailable, chat can still run without tools; the tool list will be empty until the worker is started and the cache is refreshed.
+
+---
+
+## User Experience
+
+Aevora provides a full web interface alongside a standalone desktop client featuring interactive 3D WebGL visualizations and floating companion modes:
+
+| AI Chat & Tool Automation | Interactive 3D Voice Experience |
+| :---: | :---: |
+| ![Aevora AI Chat & Tools](frontend/docs/verification/chat-desktop.png) | ![Aevora 3D Voice Mode](frontend/docs/verification/voice-call-desktop.png) |
+
+| Desktop Companion (Expanded) | Companion Orb (Compact) | Mobile Responsive Chat | Mobile Voice Experience |
+| :---: | :---: | :---: | :---: |
+| <img src="frontend/docs/verification/companion-expanded.png" alt="Desktop Companion Expanded" width="220" /> | <img src="frontend/docs/verification/companion-compact.png" alt="Companion Compact Orb" width="140" /> | <img src="frontend/docs/verification/chat-mobile.png" alt="Mobile Chat" width="180" /> | <img src="frontend/docs/verification/voice-call-mobile.png" alt="Mobile Voice Experience" width="180" /> |
 
 ---
 
@@ -192,13 +214,14 @@ Run `make worker` from the sibling `utils` repository to start the companion too
 
 ```text
 Aevora/
-├── backend/
+├── backend/                 # Django API, Celery worker, Redis, and PostgreSQL
 │   ├── aevora/ai_chat/      # Chat API, tool selection, and SSE streaming
 │   ├── aevora/accounts/     # Authentication and user accounts
 │   ├── config/              # Django settings and API routes
 │   ├── docker-compose.yml   # Django, PostgreSQL, Redis, Celery, and Flower
 │   └── .env.example         # Local configuration template
-└── frontend/                # Next.js application and shared packages
+├── frontend/                # Next.js web application and shared Turborepo packages
+└── electron/                # (Submodule) Standalone Electron desktop client & companion
 ```
 
 ## The Idea in One Sentence
