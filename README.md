@@ -1,604 +1,206 @@
 # Aevora
 
-**Enterprise MCP Agent Hub - Gemini AI + centralized Model Context Protocol tools.**
-_Connect your tools once. Everyone in the company can use them from the browser._
+**Authenticated AI chat with Celery-powered tools.**
 
-[Quick Start](#quick-start) · [The Problem](#the-problem) · [What Aevora Does](#what-aevora-does) · [Key Features](#key-features) · [Architecture](#architecture) · [Security & Governance](#security--governance) · [Makefile Reference](#makefile-reference)
+_Connect a tool once. Let the team use it from the browser._
+
+Aevora combines a Django API, a Next.js frontend, and Gemini-powered chat. The backend discovers tools from a separate Celery worker, selects relevant tools for a prompt, dispatches tool calls through Redis, and streams response events to the client. The tool worker lives in the companion [utils repository](https://github.com/Volcann/utils); it is not started by Aevora's Docker Compose stack.
+
+[The Problem](#the-problem) · [The Solution](#the-solution) · [The Impact](#the-impact) · [Quick Start](#quick-start) · [Architecture and Boundaries](#architecture-and-boundaries)
 
 ---
 
 ## The Problem
 
-MCP makes it possible for AI assistants to use real company tools - databases, GitHub, Jira, internal APIs, CRM systems, and more.
+AI chat can help people use development tools, but giving every person a separate local setup creates repetitive engineering work. Each machine needs the right dependencies, configuration, and credentials. When a tool changes, someone has to update or troubleshoot those setups again.
 
-The problem is that **setting all of that up on every employee's computer doesn't scale.**
+### The developer time problem
 
-Imagine 100 employees using an MCP-based AI assistant.
+```text
+Without a shared tool worker
 
-With a desktop setup, every employee may need to:
+Developer
+   ├── Set up tools for user A
+   ├── Set up tools for user B
+   ├── Update both when a tool changes
+   └── Troubleshoot each local environment
+```
 
-- Install the required software
-- Configure MCP servers
-- Edit JSON configuration files
-- Add API keys or other credentials
-- Keep their local configuration up to date
-- Troubleshoot things when a tool stops working
-
-And when something changes?
-
-Your developers may have to help those employees fix their setups one machine at a time.
-
-That is a huge amount of repetitive work.
-
-### Why existing approaches become painful
-
-**Claude Desktop** is excellent for developers experimenting with MCP locally. But it assumes the user is comfortable managing the configuration themselves.
-
-You can't realistically ask 100 non-technical employees to find a configuration file, edit JSON correctly, add the right server, and troubleshoot it whenever something changes.
-
-**Cursor, Codex, Gemini CLI and similar tools** are great for developers, but most employees don't work inside terminals or IDEs.
-
-**Giving every employee API keys and database credentials** creates another problem. Credentials end up distributed across many machines and become much harder to control or revoke.
-
-**Running tools directly from employee laptops** also makes access to internal services harder. Your database or private VPC should not need to be exposed just so someone's laptop can access it.
-
-And finally, local setups make centralized permissions difficult.
-
-You may want one employee to be able to **view** customer information while another can **update** it. A local configuration doesn't give you a simple central place to enforce that.
-
-> **The problem isn't MCP itself. The problem is managing MCP separately on 100 different computers.**
+People who only need to ask for a PR review or a status report should not have to run the underlying scripts themselves. Developers should not have to maintain a separate copy of the same integration on every user's machine.
 
 ---
 
-## The Developer Time Problem
+## The Solution
 
-This is one of the biggest reasons Aevora exists.
+Aevora puts the chat interface in front of a shared Celery tools worker. Users send requests through an authenticated client. Django asks Gemini to respond, offers the tools relevant to the prompt, and sends selected work to the worker through Redis. The worker runs the task and returns its result; Django streams the response back to the client.
 
-Without a centralized hub:
-
-```text
-Developer
-   │
-   ├── Configure employee #1
-   ├── Configure employee #2
-   ├── Configure employee #3
-   ├── Fix employee #17's broken JSON
-   ├── Update employee #31's MCP server
-   ├── Rotate credentials on employee #45
-   ├── Fix employee #62's network issue
-   └── Repeat...
-```
-
-With Aevora:
+### How a request moves through Aevora
 
 ```text
-Developer
-   │
-   └── Configure MCP server once
-              │
-              ▼
-         Aevora Hub
-              │
-       ┌──────┼──────┐
-       ▼      ▼      ▼
-     User    User   User
-       │      │      │
-       └── Browser ──┘
+Browser / API client
+        |
+        v
+Django chat API <--> Gemini
+        |
+        v
+Redis (Celery broker and results) <--> tools worker (utils repository)
+        |
+        v
+Django streams answer and tool events via SSE -> client
 ```
 
-Developers configure the tools **once on the backend**.
+1. An authenticated user sends a prompt to the chat API.
+2. Django asks the worker for its `tools.list_tools` registry and caches the returned tool descriptions.
+3. The prompt-based selector offers Gemini up to two matching tools.
+4. When Gemini calls a tool, Django sends a `tools.<name>` task to the `laptop.tools` Celery queue. Redis provides the broker and result backend.
+5. Django streams text, tool status, and completion events over Server-Sent Events (SSE). Chat messages and sessions are stored in PostgreSQL.
 
-Employees simply open the application in their browser.
+### Tools currently available
 
-That means developers spend less time supporting local setups and more time building actual features.
+The current companion worker registers three tools:
+
+| Tool | Purpose |
+| --- | --- |
+| `setup_project` | Set up a project workspace. |
+| `review_pr` | Run the PR review utility for a pull request number. |
+| `report_status` | Generate a daily engineering status report. |
+
+For example, a user can ask Aevora to review PR 42. The backend can select `review_pr`, dispatch `tools.review_pr` with that PR number, and stream the result as Gemini prepares its answer.
+
+If the companion worker is unavailable, chat can still run without tools; the tool list will be empty until the worker is started and the cache is refreshed.
 
 ---
 
-## What Aevora Does
-
-Aevora provides a centralized **MCP Agent Hub** inside your organization's infrastructure.
-
-Instead of installing and configuring MCP tools on every employee machine, the MCP servers are connected to Aevora once.
-
-Aevora then:
-
-1. Discovers the available MCP tools.
-2. Registers and caches them.
-3. Selects the relevant tools for each request.
-4. Executes those tools from the backend.
-5. Streams the response back to the employee's browser.
-6. Records the tool activity for auditing.
-
-The employee doesn't need to know how any of this works.
-
-They just open the browser and start using the tools.
-
-### The main idea
-
-> **Connect once on the backend. Use everywhere from the browser.**
-
-For example, imagine a company with 100 employees.
-
-The developer connects the GitHub, PostgreSQL, Jira, and CRM MCP servers to Aevora once.
-
-After that:
+## The Impact
 
 ```text
-Employee 1  ──┐
-Employee 2  ──┤
-Employee 3  ──┤
-Employee 4  ──┤
-Employee 5  ──┤
-...           ├──> Aevora ──> MCP Servers
-Employee 100 ─┘
+Before:  each user -> local tool setup and updates
+After:   users -> Aevora -> one shared tools worker
 ```
 
-No 100 individual MCP configurations.
+- **Less repeated setup:** Tool code and dependencies are installed with the companion worker rather than on every user's machine.
+- **One place to update tools:** Developers can change the worker's registered tasks and refresh Aevora's tool registry once.
+- **Simpler access for users:** People use the browser instead of running the utilities from a terminal.
+- **Visible progress:** Celery performs tool work while the chat API streams text and task status to the client.
 
-No 100 JSON files.
-
-No 100 local installations.
-
-No repeating the same setup every time a tool changes.
-
----
-
-## Key Features
-
-### Centralized Tool Setup
-
-Connect an MCP server once instead of configuring it separately for every employee.
-
-This is the biggest developer-time saving in Aevora.
-
-A change to an MCP server can be handled centrally instead of requiring developers to update dozens or hundreds of machines.
-
-### Zero Client Setup
-
-Employees only need a browser.
-
-They don't need:
-
-- Node.js
-- Python
-- Docker
-- Local MCP servers
-- Configuration files
-- API keys
-
-Open the browser and use the application.
-
-### Saves Developer Time
-
-Developers no longer become the help desk for everyone's MCP configuration.
-
-Instead of spending hours fixing:
-
-```text
-"My MCP server isn't showing up."
-
-"Where is claude_desktop_config.json?"
-
-"Why is this JSON invalid?"
-
-"My tool stopped working after the update."
-
-"Which API key am I supposed to use?"
-```
-
-the developer manages one centralized system.
-
-That makes Aevora more than an MCP interface - it reduces the amount of repetitive infrastructure work your engineering team has to maintain.
-
-### Centralized Access to Internal Tools
-
-Aevora can run inside your Docker network, private infrastructure, or VPC.
-
-That means MCP servers can communicate with internal systems without exposing those systems directly to employee laptops.
-
-### Centralized Permissions
-
-Access can be controlled from the server instead of relying on whatever configuration happens to exist on someone's computer.
-
-For example:
-
-```text
-Support Agent
-    └── customer_lookup
-    └── ticket_search
-
-Developer
-    └── customer_lookup
-    └── GitHub
-    └── staging_database
-
-Admin
-    └── all approved tools
-```
-
-This makes it easier to control who can perform sensitive operations.
-
-### Context-Aware Tool Selection
-
-Aevora doesn't need to send every available MCP tool to Gemini for every request.
-
-It can select the tools that are most relevant to the user's question.
-
-For example:
-
-```text
-User:
-"Show me the open GitHub PRs for the payments service."
-
-                  │
-                  ▼
-
-        Tool Selection / Routing
-
-                  │
-                  ▼
-
-       github_list_pull_requests
-```
-
-Instead of loading a large collection of unrelated tools into every request.
-
-### Centralized Audit Logs
-
-Tool executions are recorded in PostgreSQL.
-
-This provides a central place to inspect:
-
-- Who ran a tool
-- Which tool was used
-- When it was used
-- What arguments were supplied
-- How long it took
-- Whether it succeeded or failed
-
-### Always-On Backend
-
-The tools don't depend on an employee keeping their laptop running.
-
-Aevora runs the MCP connections and AI workflow on the server side.
-
-This makes it suitable for background jobs, scheduled tasks, and long-running operations.
-
-### Real-Time Streaming
-
-AI responses are streamed back to the browser using Server-Sent Events (SSE).
-
-Users can see the response being generated instead of waiting for the entire request to finish.
-
-Tool activity can also be shown as it happens:
-
-```text
-Thinking...
-
-✓ Selected GitHub tool
-✓ Fetching pull requests
-✓ Found 4 open PRs
-
-Here are the open PRs...
-```
-
-### Local Voice Processing
-
-Aevora can use a local Kokoro-ONNX based voice engine for text-to-speech without sending generated audio data to an external speech service.
+Developers can maintain a shared integration instead of repeating the same setup and support work for each user.
 
 ---
 
 ## Quick Start
 
-### 1. Clone the Repository
+### Prerequisites
+
+- Docker and Docker Compose for the backend services.
+- Python and `uv` for the separate tools worker.
+- Node.js and npm if you want to run the frontend locally.
+- A Gemini API key.
+
+Keep the Aevora and `utils` repositories beside each other for the paths below:
 
 ```bash
 git clone https://github.com/Volcann/Aevora.git
-cd aevora/backend
+git clone https://github.com/Volcann/utils.git
 ```
 
-### 2. Configure Environment
+### 1. Start the backend
 
 ```bash
+cd Aevora/backend
 cp .env.example .env
 ```
 
-Add your required secrets such as:
-
-```env
-GEMINI_API_KEY=your-key-here
-```
-
-### 3. Start Aevora
+Set `GEMINI_API_KEY` and replace the example application and database secrets in `backend/.env`. Then start the services and apply migrations:
 
 ```bash
-make up.d
+docker compose up -d --build
+docker compose exec -T django python manage.py migrate
 ```
 
-This starts the required services and initializes the MCP tool cache.
+Docker Compose starts Django, PostgreSQL, Redis, a Celery worker, Celery Beat, and Flower. The Django API is available at `http://127.0.0.1:8002`; check `http://127.0.0.1:8002/api/v1/health/` for readiness. The Compose worker handles Aevora's own tasks; the companion worker below handles the `laptop.tools` queue.
 
-### 4. Open the Browser
+### 2. Start the companion tools worker
 
-Open:
-
-```text
-http://localhost:8000
-```
-
-Authenticated users can then access the available MCP tools through the web interface.
-
-The important difference is that **users don't need to configure MCP themselves.**
-
----
-
-## What Startup Looks Like
-
-```text
-$ make up.d
-
-================================================================
-AEVORA - Enterprise MCP Agent Hub
-================================================================
-
-[+] Running 4/4
- ✔ Network aevora_default           Created
- ✔ Container aevora-postgres-1      Started
- ✔ Container aevora-redis-1         Started
- ✔ Container aevora-django-1        Started
-
-================================================================
-Registering MCP Gateway...
-================================================================
-
-Created ServerConfig 'local_mcp'
-
-Successfully cached 18 tool(s):
-
-  - postgres_query_readonly
-  - github_list_pull_requests
-  - customer_crm_lookup
-  - jira_create_issue
-  - server_health_check
-  ...
-
-================================================================
-Web Hub Ready: http://localhost:8000
-================================================================
-```
-
-Once the backend is running, employees don't have to repeat this setup.
-
-They just open the browser.
-
----
-
-## Example
-
-An employee asks:
-
-```text
-Check the overdue invoices for Acme Corp
-and tell the account manager.
-```
-
-Aevora can handle the workflow centrally:
-
-```text
-Browser
-   │
-   ▼
-Aevora
-   │
-   ├── Select relevant MCP tools
-   │
-   ├── Send request to Gemini
-   │
-   ├── Execute MCP tool
-   │
-   ├── Record audit information
-   │
-   └── Stream result
-            │
-            ▼
-        Browser
-```
-
-The employee sees the result.
-
-The employee does not need to know:
-
-- Where the MCP server is running
-- Where the database is located
-- Which credentials are being used
-- How the MCP configuration works
-- How the tool is connected
-
-That complexity stays on the backend.
-
----
-
-## Prerequisites
-
-| Requirement    | Supported Version | Notes                                |
-| -------------- | ----------------- | ------------------------------------ |
-| Python         | `>= 3.12`         | Managed with `uv`                    |
-| Docker         | Modern            | Runs the application services        |
-| Docker Compose | Modern            | Used for local deployment            |
-| Gemini API Key | Gemini API        | Powers AI reasoning and tool calling |
-| MCP Servers    | Standard MCP      | SSE or streamable HTTP               |
-
----
-
-## Architecture
-
-Aevora keeps the employee experience simple while moving MCP infrastructure to the backend.
-
-```text
-                    Employees
-               ┌──────┼──────┐
-               │      │      │
-             Browser Browser Browser
-               │      │      │
-               └──────┼──────┘
-                      HTTPS
-                        │
-                        ▼
-              ┌───────────────────┐
-              │    Aevora Hub     │
-              │                   │
-              │ Django            │
-              │ Gemini            │
-              │ Tool Routing      │
-              │ Authentication    │
-              │ Audit Logging     │
-              └─────────┬─────────┘
-                        │
-               Internal network
-                        │
-          ┌─────────────┼─────────────┐
-          ▼             ▼             ▼
-      PostgreSQL      GitHub         Jira
-         MCP           MCP            MCP
-          │             │             │
-          └─────────────┼─────────────┘
-                        ▼
-                 Other internal
-                    MCP tools
-```
-
-### Main Components
-
-`server_config.py`
-
-Stores information about connected MCP servers.
-
-`tool_call.py`
-
-Stores the audit record of tool executions.
-
-`mcp_manager.py`
-
-Handles communication with MCP servers, including tool discovery and execution.
-
-`selection.py`
-
-Selects the most relevant tools for the user's request.
-
-`stream.py`
-
-Streams AI and tool events back to the browser.
-
----
-
-## Security & Governance
-
-### No MCP Configuration on Employee Machines
-
-Employees don't need local MCP configuration files.
-
-This reduces configuration mistakes and prevents the same credentials and settings from being copied across many machines.
-
-### No Raw Credentials on Workstations
-
-Database credentials, MCP credentials, and AI provider keys can stay on the backend rather than being distributed to employees.
-
-### Private Network Access
-
-Aevora can communicate with internal services from inside the private network.
-
-Instead of this:
-
-```text
-Employee Laptop
-      │
-      └──> Public/Exposed Database
-```
-
-you can have:
-
-```text
-Employee Browser
-      │
-      ▼
-   Aevora
-      │
-      ▼
- Private Database
-```
-
-### Centralized Revocation
-
-When an employee leaves the organization, access can be revoked centrally.
-
-There is no need to hunt through their laptop for old MCP configurations and credentials.
-
-### Centralized Logging
-
-Tool activity is recorded centrally, making it easier to understand what happened and who performed an operation.
-
----
-
-## The Developer-Time Advantage
-
-The real value of Aevora isn't just that it provides a web UI.
-
-It's that it changes **where MCP configuration lives**.
-
-### Without Aevora
-
-```text
-100 Employees
-      │
-      ├── 100 MCP configurations
-      ├── 100 local environments
-      ├── 100 sets of updates
-      └── potentially hundreds of support problems
-```
-
-### With Aevora
-
-```text
-100 Employees
-      │
-      ▼
-   One Hub
-      │
-      └── Central MCP configuration
-```
-
-A developer can make a change once and have it available to everyone.
-
-That means fewer repetitive support requests, fewer broken local configurations, and less engineering time spent maintaining developer tooling on non-developer machines.
-
-> **Aevora lets your developers build the integration once instead of maintaining the same integration 100 times.**
-
----
-
-## Makefile Reference
+In another terminal, from the directory that contains both repositories:
 
 ```bash
-make up            # Start all containers in the foreground
-make up.d          # Start containers in the background and initialize MCP tools
-make down          # Stop containers and remove orphan networks
-make tools         # Start the host-level MCP gateway
-make reboot_tools  # Sync MCP servers and rebuild the tool cache
-
-make test          # Run the test suite
-make lint          # Run linting and formatting checks
-make ci            # Run the full CI pipeline
-
-make dcshell       # Open a shell inside the Django container
-make psql          # Open a PostgreSQL shell
+cd utils
+make setup
+make worker
 ```
 
----
+The worker connects to Redis on `127.0.0.1:6382` and listens to the `laptop.tools` queue. Leave it running while using tool-assisted chat.
+
+### 3. Refresh the tool registry
+
+From `Aevora/backend`, after the companion worker is ready:
+
+```bash
+docker compose exec -T django python manage.py reboot_tools
+```
+
+This command clears the cached tool registry and loads the tools currently advertised by the worker. Run it again after changing the worker's registered tools.
+
+### 4. Run the frontend (optional)
+
+In another terminal:
+
+```bash
+cd Aevora/frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000` for the local frontend. The backend API documentation is at `http://127.0.0.1:8002/api/docs/`.
+
+## Configuration and services
+
+The backend configuration template is [`backend/.env.example`](backend/.env.example). The settings most relevant to this flow are:
+
+| Setting | Use |
+| --- | --- |
+| `GEMINI_API_KEY` | Gemini chat and function calling. |
+| `DATABASE_URL` | PostgreSQL connection for application data. |
+| `REDIS_URL` | Redis connection used by Django, Celery, and the task results. |
+| `SECRET_KEY`, `JWT_SECRET_KEY` | Application and token signing secrets. |
+
+Docker Compose publishes the backend on `127.0.0.1:8002`, Redis on `127.0.0.1:6382`, and Flower on `127.0.0.1:5557` for local development. The companion worker uses the same Redis instance from the host.
+
+## Architecture and Boundaries
+
+- Chat and tool-list API endpoints require authentication through the Django REST Framework defaults.
+- The backend selects tools by matching words in the prompt against tool names and descriptions. This is a routing heuristic, not a per-tool permission system.
+- The repository defines a `ToolCall` model, but the current chat execution path does not create per-call audit records. Do not treat that model as an active audit trail.
+- The tools worker is a separate process. Starting the Aevora containers alone does not start the worker that serves `laptop.tools`.
+
+The browser does not need the worker's dependencies or credentials. The worker still needs to be running and connected to Redis for tool-assisted chat.
+
+## Useful commands
+
+Run these from `Aevora/backend`:
+
+```bash
+docker compose up -d                 # Start backend services
+docker compose logs -f django celery # Follow backend and local worker logs
+docker compose exec -T django python manage.py reboot_tools # Reload the tool registry
+docker compose down                  # Stop backend services
+```
+
+Run `make worker` from the sibling `utils` repository to start the companion tools worker.
+
+## Repository layout
+
+```text
+Aevora/
+├── backend/
+│   ├── aevora/ai_chat/      # Chat API, tool selection, and SSE streaming
+│   ├── aevora/accounts/     # Authentication and user accounts
+│   ├── config/              # Django settings and API routes
+│   ├── docker-compose.yml   # Django, PostgreSQL, Redis, Celery, and Flower
+│   └── .env.example         # Local configuration template
+└── frontend/                # Next.js application and shared packages
+```
 
 ## The Idea in One Sentence
 
-> **Aevora turns MCP from something every developer has to configure locally into a centralized service that the whole company can use from a browser - saving developers from configuring and troubleshooting the same setup over and over again.**
-
----
-
-## License
-
-MIT. Built for teams that want to use AI agents with internal tools without turning their developers into full-time MCP support staff.
+> Aevora lets users request shared development tools through chat while Django routes the work to a Celery worker and streams the results back.

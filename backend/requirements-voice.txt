@@ -1,3 +1,0 @@
-# Optional voice extension. Kept separate so the original uv.lock stays valid.
-# Install into the SAME virtual environment as Django.
-faster-whisper==1.2.1
