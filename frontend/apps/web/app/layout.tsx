@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Aevora Agent Hub",
-  description: "Enterprise MCP Agent Hub",
+  description: "Enterprise AI Agent Hub - Gemini AI & Distributed Tool Automation",
 };
 
 export default function RootLayout({

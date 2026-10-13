@@ -1,0 +1,133 @@
+{
+  "reactVersion": "18.2.0",
+  "environment": "Isolated compatibility fixture; real DOM/WebGL/WebAudio; mocked API, speech services and native IPC",
+  "checks": [
+    {
+      "name": "original WebGL shader compiles and renders",
+      "status": "passed"
+    },
+    {
+      "name": "main chat mounts without acquiring microphone",
+      "status": "passed"
+    },
+    {
+      "name": "desktop chat is within viewport",
+      "status": "passed"
+    },
+    {
+      "name": "keyboard opens call dialog without automatic recording",
+      "status": "passed"
+    },
+    {
+      "name": "all five original themes switch without recreating GPU programs",
+      "status": "passed"
+    },
+    {
+      "name": "orb animation does not rerender React at frame rate",
+      "status": "passed"
+    },
+    {
+      "name": "explicit call action starts capture and live listening state",
+      "status": "passed"
+    },
+    {
+      "name": "microphone mute releases capture; unmute resumes without sending partial text",
+      "status": "passed"
+    },
+    {
+      "name": "captions track the turn; speaking starts only on actual playback event",
+      "status": "passed"
+    },
+    {
+      "name": "tap-to-interrupt cancels output and starts a new listening turn",
+      "status": "passed"
+    },
+    {
+      "name": "hang-up closes call and cannot restart microphone",
+      "status": "passed"
+    },
+    {
+      "name": "stop cancels main chat and rejects late callbacks while preserving draft",
+      "status": "passed"
+    },
+    {
+      "name": "tool picker does not invent unavailable backend tools",
+      "status": "passed"
+    },
+    {
+      "name": "IME Enter does not accidentally submit a message",
+      "status": "passed"
+    },
+    {
+      "name": "closing pending microphone permission releases the eventual stream",
+      "status": "passed"
+    },
+    {
+      "name": "mobile chat keeps composer on screen without horizontal overflow",
+      "status": "passed"
+    },
+    {
+      "name": "mobile call controls remain reachable with transcript open",
+      "status": "passed"
+    },
+    {
+      "name": "Escape closes native dialog and restores focus",
+      "status": "passed"
+    },
+    {
+      "name": "reduced motion freezes animation while preserving theme updates",
+      "status": "passed"
+    },
+    {
+      "name": "hidden tabs pause the graphics loop",
+      "status": "passed"
+    },
+    {
+      "name": "WebGL context loss shows fallback and restores original shader",
+      "status": "passed"
+    },
+    {
+      "name": "unmount releases all created WebGL programs",
+      "status": "passed"
+    },
+    {
+      "name": "WebGL unavailable retains visible keyboard-operable fallback",
+      "status": "passed"
+    },
+    {
+      "name": "native companion starts compact with transparent background",
+      "status": "passed"
+    },
+    {
+      "name": "companion expands through typed native resize command",
+      "status": "passed"
+    },
+    {
+      "name": "pin, focus-main, drag and keyboard movement invoke native controls",
+      "status": "passed"
+    },
+    {
+      "name": "native hidden-window notification ends call and releases microphone",
+      "status": "passed"
+    },
+    {
+      "name": "compact close invokes native hide instead of destroying state",
+      "status": "passed"
+    },
+    {
+      "name": "unsupported native recognition is honest and text chat still works",
+      "status": "passed"
+    },
+    {
+      "name": "real WebAudio energy drives vibration; silence settles without React frame updates",
+      "status": "passed"
+    },
+    {
+      "name": "no uncaught browser exceptions across tested screens",
+      "status": "passed"
+    }
+  ],
+  "browserErrors": [],
+  "passed": 31,
+  "failed": 0
+}

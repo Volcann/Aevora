@@ -1,0 +1,207 @@
+[
+  {
+    "file": "frontend/.gitignore",
+    "status": "modified",
+    "sha256": "f1723555be38fa2571af8501271cadb33e2d14a8c12700791dd1a31e2e8b9b81"
+  },
+  {
+    "file": "frontend/apps/web/app/globals.css",
+    "status": "modified",
+    "sha256": "c5401551b43316a57ecafb8eee570eaad70c6b20e8ccccdbe83a7992202514b0"
+  },
+  {
+    "file": "frontend/apps/web/app/page.tsx",
+    "status": "modified",
+    "sha256": "cacd44aa55c05b0459a6c82e22d92b1ac5825cfd4c3d4cb8419b4da07041927d"
+  },
+  {
+    "file": "frontend/apps/web/app/pet/page.tsx",
+    "status": "modified",
+    "sha256": "e2d5f90457958d5c0f99b5de0a3d90ab70b4102faef3109e4d85a64883b4435e"
+  },
+  {
+    "file": "frontend/apps/web/components/chat/Chat.module.css",
+    "status": "added",
+    "sha256": "852bff690077c27ba0f54909c2e1a74a36dd7359504ef2106f26c9233672baab"
+  },
+  {
+    "file": "frontend/apps/web/components/chat/ChatInput.tsx",
+    "status": "modified",
+    "sha256": "b7793986f1553a3455a30d10d38f3f76fe40f55b96d69df37c859de615acfc97"
+  },
+  {
+    "file": "frontend/apps/web/components/chat/ChatMessageList.tsx",
+    "status": "modified",
+    "sha256": "fa4e80bbe412d07f07c9523d743834cb8efb1647b7bdb7e1ba5ac5f1d6ef37be"
+  },
+  {
+    "file": "frontend/apps/web/components/chat/ChatSidebar.tsx",
+    "status": "modified",
+    "sha256": "6aa9889789445ab9394abc1db718ce5179a41a2b81ee0f6eecf941ef7acfb2b4"
+  },
+  {
+    "file": "frontend/apps/web/components/nav/TopNavSwitcher.tsx",
+    "status": "modified",
+    "sha256": "19c90adf769b46359e4aa05c0129aedadfcc5327f53b9e9ed8122967d44c50eb"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/CodexPetOrb.tsx",
+    "status": "modified",
+    "sha256": "d7a899e61be8f3b745aa5ec91c1a4834e1858fb551c146fb64288a7c6db0a4e7"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/DesktopPet.module.css",
+    "status": "added",
+    "sha256": "18a4e72adde54351d88edb25d15ada1802c3036b674da649750649c81315cb39"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/Orb.module.css",
+    "status": "added",
+    "sha256": "2ca3eee0fd1d0ad48fe8d334d3eff2f11d7db8986d73ab39b90d7d2426421b7c"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/OrbCanvas.tsx",
+    "status": "modified",
+    "sha256": "2e61b268812864231246db88f03042bde07a53814cbb4b8b80c00a07f18db7de"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/OrbVisual.tsx",
+    "status": "added",
+    "sha256": "ec7a99a73b82902dfe489b9798ab34c9504686576abde61585e2685eef95e3a7"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/OrbVoiceExperience.tsx",
+    "status": "added",
+    "sha256": "b4fcdf991490ddd7e183cdd50f500a9f55d7fd3b505cabd6679593c281c2a2b6"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/SiriVoiceModal.tsx",
+    "status": "modified",
+    "sha256": "3cce49f84be3de89495b883cf363b5293ded90e1127508fa2e70914c32166586"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/VoiceModeView.tsx",
+    "status": "modified",
+    "sha256": "8fa71acf6cf5d2ec818d97ff05b9ae2644954c12e0df83a1483362788b57f18d"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/core/orb-model.ts",
+    "status": "added",
+    "sha256": "627fe6272b10f50788cc964f2e42f71bee338e49ccde9c37996d914b210142b9"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/core/orb-renderer.ts",
+    "status": "added",
+    "sha256": "c08fd1c8e0f537208a33c5da59717359fb34f469e4a6c1f41abdc028ad108ffa"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/core/orb-shaders.ts",
+    "status": "added",
+    "sha256": "ca8e9fbcd2a68f5ea2a0a1e66426c5e8506a260f38ad23e5c70ece82c893ccb5"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/core/voice-session.ts",
+    "status": "added",
+    "sha256": "080c814b319d3f713141890b42012d22d1f4bcbadc3fd001d789b3a47c24c0a5"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/hooks/useOrbTheme.ts",
+    "status": "added",
+    "sha256": "ed43483dd602f2a3cb07445d2053f391d9d03b5c93e4b18bb53614a8aaa2d64e"
+  },
+  {
+    "file": "frontend/apps/web/components/orb/hooks/useOrbVoice.ts",
+    "status": "added",
+    "sha256": "b79541a0e99843b097955a143f5fa641a63965707f5a4b853922e0aae922349c"
+  },
+  {
+    "file": "frontend/apps/web/lib/desktopPet.ts",
+    "status": "modified",
+    "sha256": "11fc69aec4591adc8eb5a7c561446d12cacfc85d9dfb917ae16f9d8d68336dab"
+  },
+  {
+    "file": "frontend/apps/web/lib/orbTheme.ts",
+    "status": "modified",
+    "sha256": "6b9c1167430552c413f816ac77795583371268f00d74351cbe643aac04643b06"
+  },
+  {
+    "file": "frontend/apps/web/lib/speech.ts",
+    "status": "modified",
+    "sha256": "d84b0f86ba6a4f4f90a04b45d6c3ba46c7c81428816bf4ba7aafb25b5b92e050"
+  },
+  {
+    "file": "frontend/apps/web/next.config.ts",
+    "status": "modified",
+    "sha256": "467d5c0b4e8cddae5f04e800d7c0be3e614f54f00e1cfbc0ab27b925580d1d75"
+  },
+  {
+    "file": "frontend/package.json",
+    "status": "modified",
+    "sha256": "bedcd1fc8d35dd2d0ca759d2ca4769a03afba5f6774da66fd58b1fb3c5d35865"
+  },
+  {
+    "file": "frontend/scripts/build-desktop.mjs",
+    "status": "added",
+    "sha256": "d39b66bb7be5d96db74abd66db66410de4231da769b98eeaa56f65cc2ebfc9a7"
+  },
+  {
+    "file": "frontend/scripts/build-orb-harness.mjs",
+    "status": "added",
+    "sha256": "d991865ba1900bf80a8d8896269965c863e79942c68849b7e80760cbe0ac908c"
+  },
+  {
+    "file": "frontend/scripts/test-orb.mjs",
+    "status": "added",
+    "sha256": "3cd26836d2ce88870be901dfd6bf7127dab2131c6edb9d7a0016ee409c47f120"
+  },
+  {
+    "file": "frontend/tests/orb/README.md",
+    "status": "added",
+    "sha256": "17dd6a619b071684b61937d03c64e8906207c7fcb602eb260810a4e8727bed8c"
+  },
+  {
+    "file": "frontend/tests/orb/browser-fixture.js",
+    "status": "added",
+    "sha256": "51486879047fd5272e03892a8678776161753157602b95eabee5cbe89b4febd8"
+  },
+  {
+    "file": "frontend/tests/orb/browser_smoke.py",
+    "status": "added",
+    "sha256": "7d4846ef855d3cc48fbe924fbad62ca002875b980b3436bb1aeb954c12bac836"
+  },
+  {
+    "file": "frontend/tests/orb/core.test.mjs",
+    "status": "added",
+    "sha256": "3926ef05d1c533aa24262f7903ecbaa117d45118133c809ef29c03d8e32d638c"
+  },
+  {
+    "file": "frontend/tests/orb/icon-fixture.cjs",
+    "status": "added",
+    "sha256": "3aa91014fb4f7f82b4ee063716cc5e1573363c3892085e7c0086a50bb8f0a6f8"
+  },
+  {
+    "file": "src-tauri/README_COMPANION.md",
+    "status": "added",
+    "sha256": "988243875e372cfe9040c4b395e28b9b2ddf48ba70783ac4aa8dd6385f50ec4d"
+  },
+  {
+    "file": "src-tauri/capabilities/default.json",
+    "status": "modified",
+    "sha256": "661465c4b6a7b674ab07b54e28fdd1fd64598915d6213de6448c84bfbfe9c28b"
+  },
+  {
+    "file": "src-tauri/src/lib.rs",
+    "status": "modified",
+    "sha256": "40eb84c2c5becca8c7e5e08e9c829f9d3bb9be0527078a97f9d9d9d89cfb48b0"
+  },
+  {
+    "file": "src-tauri/src/pet.rs",
+    "status": "added",
+    "sha256": "2290e5e4f93b4c1ff0576ddfe2c9ad7dc561d541a32e9d99fbb93fc45e84e5d7"
+  },
+  {
+    "file": "src-tauri/tauri.conf.json",
+    "status": "modified",
+    "sha256": "575b4242b185d51c5285c13b303ac0bbbcd17fd425e7fef26b6e1fe79564eefe"
+  }
+]

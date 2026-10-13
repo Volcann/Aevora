@@ -1,0 +1,119 @@
+{
+  "originalShaders": {
+    "VERTEX_SHADER": {
+      "unchanged": true,
+      "sha256": "dffcc5cd2e24f3fe59e92c60fdb6a52e1e8375c4bc232ca48b4cd5a73709c5c9"
+    },
+    "FRAGMENT_SHADER": {
+      "unchanged": true,
+      "sha256": "eea0ad1eba6208f55995a29df750cb9175ca5e14273475ef46c85861d4137698"
+    }
+  },
+  "unchangedProtectedFiles": [
+    {
+      "file": "frontend/apps/web/lib/api.ts",
+      "unchanged": true,
+      "sha256": "74e255b40f64adbe87ed84a8be7e8a3c3ec6daf6adab380802d4f9481104e154"
+    },
+    {
+      "file": "frontend/apps/web/proxy.ts",
+      "unchanged": true,
+      "sha256": "591575b7cdc710db4c299d074ca9b707466d7065715ebbdd0c2fdc572fb6505c"
+    },
+    {
+      "file": "frontend/package-lock.json",
+      "unchanged": true,
+      "sha256": "13f1ef6ec3192e2f411998b57e7c6fec8b282b38f36baabc2689766ff8cb95e8"
+    },
+    {
+      "file": "frontend/apps/web/package.json",
+      "unchanged": true,
+      "sha256": "8344e162d38db202fe7e4e421894603b331a5b8fb814bc9ea3a6b3f9c1d65c96"
+    },
+    {
+      "file": "src-tauri/src/launcher.rs",
+      "unchanged": true,
+      "sha256": "79d5fe33c73876b568312dc4385d22b3d7ff376aa7c1e136c920e2f2d6f05693"
+    },
+    {
+      "file": "src-tauri/Cargo.toml",
+      "unchanged": true,
+      "sha256": "1be9ba63728fa54b921a52158a83b5b03addb2353be63e9dbdbeb876d117f362"
+    },
+    {
+      "file": "src-tauri/Cargo.lock",
+      "unchanged": true,
+      "sha256": "92226ae75157a5b725b8e7a63f470da07f8f931b82d9cb184ebe84194849c223"
+    },
+    {
+      "file": "frontend/packages/store/tsconfig.json",
+      "unchanged": true,
+      "sha256": "d6ed012dbb7ba814d3ad10969827e9e91ca33dc1c5a292550967032d367dca1a"
+    },
+    {
+      "file": "frontend/packages/store/package.json",
+      "unchanged": true,
+      "sha256": "f0f4a03088537638e4b299ca9ecbeefed54b55cec480680eea489a56698718a4"
+    },
+    {
+      "file": "frontend/packages/store/src/index.ts",
+      "unchanged": true,
+      "sha256": "e06009efcea4f063256fa075a0ab8c385e2cf5b16f79bd36397d46848aa10529"
+    },
+    {
+      "file": "frontend/packages/store/src/services/index.ts",
+      "unchanged": true,
+      "sha256": "9a2a68ac70737c208321c446d2fc0dbab4be1c6cf4c72002a179d978584d315b"
+    },
+    {
+      "file": "frontend/packages/store/src/services/baseQuery.ts",
+      "unchanged": true,
+      "sha256": "ea35135b3f4f2ee0022da006c3c7ba2136e874aa09255187c9283cb567023aa9"
+    },
+    {
+      "file": "frontend/packages/store/src/utils/cookie.ts",
+      "unchanged": true,
+      "sha256": "2ee833514594c50d876bfcea94a4e0743b5384900cf8c5073dbc7f646fa02040"
+    },
+    {
+      "file": "frontend/packages/store/src/utils/index.ts",
+      "unchanged": true,
+      "sha256": "07259bb4811e0bdd97fb46f1709b45b6c30edbb1fcb3eac51d89362d3e5296f4"
+    },
+    {
+      "file": "frontend/packages/store/src/constants/index.ts",
+      "unchanged": true,
+      "sha256": "d651291faac52f7a9efd2e9fb89ec44541a4ae5089513c8b5bd3d6c0a94e29e2"
+    },
+    {
+      "file": "frontend/packages/store/src/services/auth/types.ts",
+      "unchanged": true,
+      "sha256": "28e1c00ee3dede6fdf610d66cf7e0f6f317a65c30a69f93d44dccb4af145d0e9"
+    },
+    {
+      "file": "frontend/packages/store/src/services/shared/types.ts",
+      "unchanged": true,
+      "sha256": "6d7db47b7472cc412d66bfda07b2530eda6b798dd096ba55e014985bbf069c25"
+    },
+    {
+      "file": "frontend/packages/store/src/services/shared/baseApi.ts",
+      "unchanged": true,
+      "sha256": "be11ac77958e98c177a2c3414b0575291f2a0a2f541b7d0a3fc39c3be1b2d556"
+    },
+    {
+      "file": "frontend/apps/web/components/auth/AuthModal.tsx",
+      "unchanged": true,
+      "sha256": "261ebb9a3efc1ae16fcea3663d2e7693fa609fd174be49238ff68184de5c6385"
+    },
+    {
+      "file": "frontend/apps/web/components/auth/AuthViews.tsx",
+      "unchanged": true,
+      "sha256": "6027f1cb3fbacac6515daabb22e6b2fe953fdfaee652b28884fde7f62b303ab5"
+    }
+  ],
+  "backendFilesVerifiedAgainstInputZip": 388,
+  "backendIncluded": false,
+  "nativeBackendHealthAndQuitFunctionsUnchanged": true,
+  "nativeLauncherStartupAndShutdownCallsRetained": true,
+  "fiveOriginalPalettesUnchanged": true
+}

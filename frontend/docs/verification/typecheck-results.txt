@@ -1,0 +1,11 @@
+PASS — strict TypeScript for the speech adapter, theme utilities, desktop bridge,
+and all orb core modules. Exit code: 0.
+
+Command, run from frontend:
+  tsc --noEmit --strict --target ES2022 --module ESNext \
+      --moduleResolution bundler --lib ES2022,DOM \
+      apps/web/lib/speech.ts apps/web/lib/orbTheme.ts \
+      apps/web/lib/desktopPet.ts apps/web/components/orb/core/*.ts
+
+This is NOT a full React/Next dependency-aware production typecheck.
+All 55 .ts/.tsx source files additionally passed TypeScript syntax parsing.

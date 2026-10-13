@@ -1,0 +1,5 @@
+{
+  "kind": "TypeScript/TSX syntax parsing only (not full dependency-aware typecheck)",
+  "files": 55,
+  "errors": []
+}
