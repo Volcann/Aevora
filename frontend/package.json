@@ -4,9 +4,17 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:all": "bash ../backend/start_aevora.sh && turbo run dev",
+    "stack:up": "bash ../backend/start_aevora.sh",
+    "electron": "npm --prefix ../electron start",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "build:desktop": "node scripts/build-desktop.mjs",
+    "test:orb": "node scripts/test-orb.mjs",
+    "test:orb:fixture": "node scripts/build-orb-harness.mjs",
+    "test:orb:browser": "python tests/orb/browser_smoke.py",
+    "test:voice": "node --no-warnings --experimental-strip-types --test tests/voice/voice.test.mjs"
   },
   "devDependencies": {
     "prettier": "^3.6.0",
