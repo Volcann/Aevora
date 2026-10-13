@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const PUBLIC_ROUTES = [
   RouteEnum.HOME,
   RouteEnum.LOGIN,
+  "/pet",
 ] as const;
 
 function isPublicRoute(pathname: string) {

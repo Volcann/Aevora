@@ -36,7 +36,11 @@ function redirectToLogin() {
 }
 
 export const getBaseUrl = () => {
-  const defaultBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8002";
+  if (typeof window !== "undefined") {
+    const custom = localStorage.getItem("aevora_api_base_url");
+    if (custom) return custom;
+  }
+  const defaultBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8002";
 
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;

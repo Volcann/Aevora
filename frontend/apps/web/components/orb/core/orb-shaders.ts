@@ -91,12 +91,20 @@ export const FRAGMENT_SHADER = `
       c3 = vec3(0.65, 0.0, 1.0);
       c4 = vec3(1.0, 0.9, 0.0);
       cCore = vec3(1.0, 1.0, 1.0);
-    } else {
+    } else if (theme == 4) {
       c1 = vec3(0.65, 0.3, 0.98);
       c2 = vec3(1.0, 0.3, 0.0);
       c3 = vec3(0.1, 0.7, 0.95);
       c4 = vec3(0.98, 0.15, 0.55);
       cCore = vec3(1.0, 0.95, 0.9);
+    } else {
+      // Dynamic RGB Chroma wave cycling through the full Red -> Green -> Blue spectrum
+      float t = u_time * 1.8;
+      c1 = 0.5 + 0.5 * cos(t + vec3(0.0, 2.0944, 4.1888));
+      c2 = 0.5 + 0.5 * cos(t + 1.5708 + vec3(0.0, 2.0944, 4.1888));
+      c3 = 0.5 + 0.5 * cos(t + 3.1416 + vec3(0.0, 2.0944, 4.1888));
+      c4 = 0.5 + 0.5 * cos(t + 4.7124 + vec3(0.0, 2.0944, 4.1888));
+      cCore = vec3(1.0, 1.0, 1.0);
     }
   }
 
