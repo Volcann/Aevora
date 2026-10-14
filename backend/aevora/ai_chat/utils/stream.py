@@ -4,7 +4,7 @@ import google.generativeai as genai
 from django.conf import settings
 
 from aevora.ai_chat.choices import MessageRole
-from aevora.ai_chat.models import Message
+from aevora.ai_chat.models import AIModel, Message
 from aevora.ai_chat.utils.selection import select_tools_for_prompt
 
 
@@ -12,15 +12,12 @@ def _sse(data):
     return f"data: {json.dumps(data)}\n\n"
 
 
-VOICE_SYSTEM_INSTRUCTION = (
-    "You are Aevora Orb in voice mode. The user is listening to your spoken response. "
-    "You MUST speak less: provide extremely concise, natural, spoken answers in 1 to 2 short sentences "
-    "(maximum 30 words). Never use markdown, bullet points, numbered lists, asterisks, headers, or code blocks. "
-    "Speak conversationally as a voice assistant."
-)
-
-
-def _gemini_stream(session, prompt, is_new=False, voice_mode=False):  # noqa: FBT002
+def _gemini_stream(
+    session,
+    prompt,
+    is_new=False,  # noqa: FBT002
+    model_identifier=None,
+):
     try:
         if is_new:
             yield _sse(
@@ -47,10 +44,27 @@ def _gemini_stream(session, prompt, is_new=False, voice_mode=False):  # noqa: FB
             history.pop(0)
 
         gemini_tools, tool_router = select_tools_for_prompt(prompt)
-        primary_model = getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite")
+
+        selected_aimodel = None
+        if model_identifier:
+            selected_aimodel = (
+                AIModel.objects.filter(name=str(model_identifier).strip()).first()
+                or AIModel.objects.filter(id=str(model_identifier).strip()).first()
+            )
+
+        if selected_aimodel:
+            primary_model = selected_aimodel.name
+        elif model_identifier and str(model_identifier).strip():
+            primary_model = str(model_identifier).strip()
+        else:
+            first_model = AIModel.objects.first()
+            primary_model = (
+                first_model.name
+                if first_model
+                else getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite")
+            )
+
         model_kwargs = {"tools": gemini_tools}
-        if voice_mode:
-            model_kwargs["system_instruction"] = VOICE_SYSTEM_INSTRUCTION
 
         try:
             model = genai.GenerativeModel(
@@ -139,11 +153,17 @@ def _gemini_stream(session, prompt, is_new=False, voice_mode=False):  # noqa: FB
 
             user_input = tool_parts
 
-        Message.objects.create(session=session, role=MessageRole.USER, content=prompt)
+        Message.objects.create(
+            session=session,
+            role=MessageRole.USER,
+            content=prompt,
+            model=selected_aimodel,
+        )
         Message.objects.create(
             session=session,
             role=MessageRole.MODEL,
             content="".join(full_text),
+            model=selected_aimodel,
         )
 
         if not session.title:

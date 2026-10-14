@@ -37,6 +37,9 @@ tools.d:
 reboot_tools:
 	@$(dc) exec django python manage.py reboot_tools
 
+seed_models:
+	@$(dc) exec django python manage.py seed_models
+
 dcshell:
 	@$(dc) exec django /bin/bash
 
