@@ -28,6 +28,8 @@ function collect(directory) {
 }
 collect(join(root, "apps/web/components"));
 collect(join(root, "apps/web/lib"));
+collect(join(root, "apps/web/hooks"));
+collect(join(root, "apps/web/voice"));
 for (const file of ["apps/web/app/page.tsx", "apps/web/app/pet/page.tsx"]) {
   modules[file.replace(/\.tsx$/, "")] = ts.transpileModule(readFileSync(join(root,file),"utf8"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop:true }, fileName:file }).outputText;
 }
@@ -45,11 +47,12 @@ if (process.env.ORB_REACT_VENDOR_DIR) {
 }
 modules["react/jsx-runtime"] = `const React=require('react');exports.Fragment=React.Fragment;exports.jsx=exports.jsxs=(type,props,key)=>React.createElement(type,{...props,...(key===undefined?{}:{key})});`;
 modules["lucide-react"] = readFileSync(join(root,"tests/orb/icon-fixture.cjs"),"utf8");
-modules["apps/web/lib/api"] = `exports.getSavedTokens=()=>window.fixture.auth?{access:'fixture-token'}:null;exports.quitApp=()=>{};exports.api={health:async()=>({status:'online'}),getMe:async()=>({username:'Alex',email:'alex@example.test'}),getTools:async()=>[],getSessions:async()=>window.fixture.sessions,getSession:async(id)=>({messages:window.fixture.savedMessages[id]||[]}),logout:async()=>{},deleteSession:async()=>{},streamChat:async(id,prompt,callbacks,signal)=>{const f=window.fixture;f.prompts.push(prompt);f.requests.push({id,prompt,callbacks,signal});f.stream=callbacks;return new Promise(resolve=>{f.resolveRequest=resolve;if(signal)signal.addEventListener('abort',()=>{f.aborts++;resolve();},{once:true});});}};`;
+modules["apps/web/lib/api"] = `exports.getSavedTokens=()=>window.fixture.auth?{access:'fixture-token'}:null;exports.quitApp=()=>{};exports.api={health:async()=>({status:'online'}),getMe:async()=>({username:'Alex',email:'alex@example.test'}),getTools:async()=>[],getModels:async()=>[],getSessions:async()=>window.fixture.sessions,getSession:async(id)=>({messages:window.fixture.savedMessages[id]||[]}),logout:async()=>{},deleteSession:async()=>{},streamChat:async(id,prompt,callbacks,signal)=>{const f=window.fixture;f.prompts.push(prompt);f.requests.push({id,prompt,callbacks,signal});f.stream=callbacks;return new Promise(resolve=>{f.resolveRequest=resolve;if(signal)signal.addEventListener('abort',()=>{f.aborts++;resolve();},{once:true});});}};`;
 // These unchanged screens are outside the scope of this UI regression fixture.
 modules["apps/web/components/auth/AuthViews"] = `exports.AuthViews=()=>require('react').createElement('p',null,'Sign in fixture');`;
 modules["apps/web/components/settings/SettingsModal"] = `exports.SettingsModal=()=>null;`;
 modules["apps/web/components/orb/OrbVisual"] = modules["apps/web/components/orb/OrbVisual"].replace("const safeTheme =", "window.fixture.visualRenders++; const safeTheme =");
+modules['next/dynamic'] = `const React=require('react');module.exports=(load)=>{const Lazy=React.lazy(()=>load().then(value=>({default:value.default||value})));return function Dynamic(props){return React.createElement(React.Suspense,{fallback:null},React.createElement(Lazy,props));};};`;
 const loader = `const modules=${JSON.stringify(modules)};const cssModules=${JSON.stringify(cssModules)};const cache={};function require(id,from=''){if(id.startsWith('.')){const p=from.split('/');p.pop();for(const part of id.split('/')){if(part==='..')p.pop();else if(part!=='.')p.push(part);}id=p.join('/');}if(id.endsWith('.css'))return cssModules[id]||{};if(cache[id])return cache[id].exports;if(!modules[id])throw new Error('Missing fixture module: '+id);const module={exports:{}};cache[id]=module;new Function('module','exports','require',modules[id])(module,module.exports,(next)=>require(next,id));return module.exports;}window.orbRequire=require;`;
 writeFileSync(join(output,"bundle.js"),loader+"\n"+readFileSync(join(root,"tests/orb/browser-fixture.js"),"utf8"));
 writeFileSync(join(output,"orb.css"),stylesheets.join("\n"));

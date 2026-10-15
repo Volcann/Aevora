@@ -64,8 +64,8 @@ test("visual input validation clamps invalid audio, states and themes", () => {
   assert.equal(clamp(2), 1);
   assert.equal(toOrbState(4), 0);
   assert.equal(toOrbState(3), 3);
-  for (const value of [NaN, 4.2, -1, 5, Infinity]) assert.equal(normalizeOrbTheme(value), 1);
-  assert.equal(normalizeOrbTheme(4), 4);
+  for (const value of [NaN, 4.2, -1, 6, Infinity]) assert.equal(normalizeOrbTheme(value), 5);
+  for (let theme = 0; theme < 6; theme++) assert.equal(normalizeOrbTheme(theme), theme);
   assert.equal(audioEnvelope(0), 0);
   assert.equal(audioEnvelope(0.9), 1);
 });
@@ -75,15 +75,25 @@ test("damping is independent of frame rate", () => {
 });
 test("theme persistence sanitizes malformed values and dispatches without storage", () => {
   const env = environment();
-  for (const saved of ["3junk", "", "  ", "Infinity", "-1", "5"]) {
+  env.store.set("aevora_orb_migrated_rgb", "true");
+  for (const saved of ["3junk", "", "  ", "Infinity", "-1", "6"]) {
     env.store.set("aevora-orb-theme", saved);
-    assert.equal(getSavedOrbTheme(), 1);
+    assert.equal(getSavedOrbTheme(), 5);
   }
   let detail;
   window.addEventListener("aevora-orb-theme-change", (event) => { detail = event.detail; });
   globalThis.localStorage.setItem = () => { throw new Error("Blocked"); };
   saveOrbTheme(4);
   assert.equal(detail.themeIndex, 4);
+});
+test("the supplied RGB default and one-time theme migration remain unchanged", () => {
+  const env = environment();
+  env.store.set("aevora-orb-theme", "2");
+  assert.equal(getSavedOrbTheme(), 5);
+  assert.equal(env.store.get("aevora_orb_migrated_rgb"), "true");
+  assert.equal(env.store.get("aevora-orb-theme"), "5");
+  saveOrbTheme(2);
+  assert.equal(getSavedOrbTheme(), 2);
 });
 test("cancel and beginStream never emit natural completion", () => {
   environment(); const synth = new GoogleSpeechSynthesizer(); let ended = 0;
