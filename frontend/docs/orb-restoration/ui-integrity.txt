@@ -1,0 +1,2 @@
+PASS: 31 protected source files are byte-identical to the supplied archive.
+PASS: all original rules/keyframes/transitions in 1 chat stylesheet(s) are unchanged.

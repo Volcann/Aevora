@@ -1,0 +1,73 @@
+{
+  "scope": "Real UI source; mocked API, storage, speech hardware and Electron bridge. Not a Next/Electron production build.",
+  "browser": "144.0.7559.96",
+  "orbHeaded": true,
+  "build": {
+    "sourceRoot": "/mnt/data/work/frontend",
+    "modules": 68,
+    "typescript": "5.8.3",
+    "compatibilityRuntime": true,
+    "react": "18.2.0",
+    "source": "MIT-licensed React/ReactDOM/Scheduler embedded in the installed JupyterLab distribution",
+    "icons": "test doubles preserving dimensions; not production Lucide artwork",
+    "tailwind": "4.1.10"
+  },
+  "results": [
+    {
+      "name": "responsive",
+      "status": "PASS"
+    },
+    {
+      "name": "input_keys",
+      "status": "PASS"
+    },
+    {
+      "name": "stream_complete",
+      "status": "PASS"
+    },
+    {
+      "name": "stable_history",
+      "status": "PASS"
+    },
+    {
+      "name": "selection_race",
+      "status": "PASS"
+    },
+    {
+      "name": "delete_and_logout",
+      "status": "PASS"
+    },
+    {
+      "name": "late_delete",
+      "status": "PASS"
+    },
+    {
+      "name": "settings",
+      "status": "PASS"
+    },
+    {
+      "name": "auth_layout",
+      "status": "PASS"
+    },
+    {
+      "name": "orb_retained",
+      "status": "PASS"
+    }
+  ],
+  "metrics": {
+    "stream_render_delta_20_chunks_6_saved_messages": {
+      "input": 0,
+      "sidebar": 0,
+      "nav": 0,
+      "history": 0,
+      "settings": 0,
+      "markdown": 20,
+      "savedMarkdown": 0
+    },
+    "orb": {
+      "themes_checked": 6,
+      "programs": 1,
+      "draws": 4
+    }
+  }
+}

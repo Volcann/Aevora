@@ -1,0 +1,88 @@
+
+> test:optimization
+> node scripts/verify-ui-integrity.mjs && node scripts/test-optimization.mjs
+
+PASS: 31 protected source files are byte-identical to the supplied archive.
+PASS: all original rules/keyframes/transitions in 1 chat stylesheet(s) are unchanged.
+TAP version 13
+# Subtest: preserves every original typewriter frame (boost)
+ok 1 - preserves every original typewriter frame (boost)
+  ---
+  duration_ms: 3.102842
+  type: 'test'
+  ...
+# Subtest: preserves every original typewriter frame (normal)
+ok 2 - preserves every original typewriter frame (normal)
+  ---
+  duration_ms: 1.544938
+  type: 'test'
+  ...
+# Subtest: transport completion drains the full backlog before resolving
+ok 3 - transport completion drains the full backlog before resolving
+  ---
+  duration_ms: 0.256493
+  type: 'test'
+  ...
+# Subtest: does not poll empty animation frames while awaiting another chunk
+ok 4 - does not poll empty animation frames while awaiting another chunk
+  ---
+  duration_ms: 0.114498
+  type: 'test'
+  ...
+# Subtest: bursts of network chunks share a single pending frame
+ok 5 - bursts of network chunks share a single pending frame
+  ---
+  duration_ms: 0.113441
+  type: 'test'
+  ...
+# Subtest: cancellation before the first frame prevents all presentation
+ok 6 - cancellation before the first frame prevents all presentation
+  ---
+  duration_ms: 0.182097
+  type: 'test'
+  ...
+# Subtest: cancellation still works after the server finishes
+ok 7 - cancellation still works after the server finishes
+  ---
+  duration_ms: 0.179033
+  type: 'test'
+  ...
+# Subtest: late chunks and duplicate completion callbacks cannot revive cancellation
+ok 8 - late chunks and duplicate completion callbacks cannot revive cancellation
+  ---
+  duration_ms: 0.087494
+  type: 'test'
+  ...
+# Subtest: empty replies finish once without an unnecessary frame
+ok 9 - empty replies finish once without an unnecessary frame
+  ---
+  duration_ms: 0.229871
+  type: 'test'
+  ...
+# Subtest: duplicate server completion during the backlog commits once
+ok 10 - duplicate server completion during the backlog commits once
+  ---
+  duration_ms: 0.368153
+  type: 'test'
+  ...
+# Subtest: a late callback from a cancelled frame is harmless
+ok 11 - a late callback from a cancelled frame is harmless
+  ---
+  duration_ms: 0.140903
+  type: 'test'
+  ...
+# Subtest: cancellation during onText cannot schedule another frame
+ok 12 - cancellation during onText cannot schedule another frame
+  ---
+  duration_ms: 0.248598
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 67.188425

@@ -1,0 +1,1 @@
+PASS: strict semantic TypeScript check of apps/web/lib/streaming-text.ts. Full workspace typecheck requires installed project dependencies.

@@ -1,0 +1,76 @@
+{
+  "original_archive": "frontend.zip",
+  "original_orb_files": 17,
+  "all_original_orb_files_byte_identical": true,
+  "unchanged_original_files": 164,
+  "changed_production_files": [
+    "apps/web/components/chat/Chat.module.css",
+    "apps/web/hooks/useDialogFocus.ts"
+  ],
+  "changed_verification_metadata": [
+    "docs/optimization/protected-source.json"
+  ],
+  "extra_orb_files": [],
+  "api_or_ipc_changes": [],
+  "all_original_chat_css_retained": true,
+  "tests": [
+    {
+      "project": "frontend",
+      "check": "ui-integrity",
+      "command": [
+        "node",
+        "scripts/verify-ui-integrity.mjs"
+      ],
+      "exit_code": 0,
+      "summary": [
+        "PASS: 31 protected source files are byte-identical to the supplied archive.",
+        "PASS: all original rules/keyframes/transitions in 1 chat stylesheet(s) are unchanged."
+      ]
+    },
+    {
+      "project": "frontend",
+      "check": "orb-unit",
+      "command": [
+        "node",
+        "scripts/test-orb.mjs"
+      ],
+      "exit_code": 0,
+      "summary": [
+        "# tests 40",
+        "# pass 40",
+        "# fail 0"
+      ]
+    },
+    {
+      "project": "frontend",
+      "check": "streaming-unit",
+      "command": [
+        "node",
+        "scripts/test-optimization.mjs"
+      ],
+      "exit_code": 0,
+      "summary": [
+        "# tests 12",
+        "# pass 12",
+        "# fail 0"
+      ]
+    },
+    {
+      "project": "frontend",
+      "check": "voice-unit",
+      "command": [
+        "node",
+        "--no-warnings",
+        "--experimental-strip-types",
+        "--test",
+        "tests/voice/voice.test.mjs"
+      ],
+      "exit_code": 0,
+      "summary": [
+        "# tests 6",
+        "# pass 6",
+        "# fail 0"
+      ]
+    }
+  ]
+}

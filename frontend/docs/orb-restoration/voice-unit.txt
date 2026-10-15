@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: ResponseSpeechBuffer: cleans Markdown, code blocks and URLs for spoken audio
+ok 1 - ResponseSpeechBuffer: cleans Markdown, code blocks and URLs for spoken audio
+  ---
+  duration_ms: 2.968548
+  type: 'test'
+  ...
+# Subtest: ResponseSpeechBuffer: partitions streamed tokens at sentence boundaries without waiting for full response
+ok 2 - ResponseSpeechBuffer: partitions streamed tokens at sentence boundaries without waiting for full response
+  ---
+  duration_ms: 1.077537
+  type: 'test'
+  ...
+# Subtest: ResponseSpeechBuffer: flushes trailing unpunctuated text on timeout or flush
+ok 3 - ResponseSpeechBuffer: flushes trailing unpunctuated text on timeout or flush
+  ---
+  duration_ms: 400.436781
+  type: 'test'
+  ...
+# Subtest: ResponseSpeechBuffer: rejects chunks from obsolete turns
+ok 4 - ResponseSpeechBuffer: rejects chunks from obsolete turns
+  ---
+  duration_ms: 0.600593
+  type: 'test'
+  ...
+# Subtest: PlaybackController & Barge-in Interruption semantics
+ok 5 - PlaybackController & Barge-in Interruption semantics
+  ---
+  duration_ms: 0.21865
+  type: 'test'
+  ...
+# Subtest: Single submission rule: deduplication and turn IDs
+ok 6 - Single submission rule: deduplication and turn IDs
+  ---
+  duration_ms: 0.183747
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 609.002382

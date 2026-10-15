@@ -1,0 +1,6 @@
+{
+  "scope": "TypeScript syntax/transpilation diagnostics only; not a dependency-aware workspace semantic typecheck.",
+  "typescript": "5.8.3",
+  "files": 70,
+  "errors": []
+}

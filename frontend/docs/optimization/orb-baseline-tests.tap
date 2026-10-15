@@ -1,0 +1,284 @@
+TAP version 13
+# (node:2369) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: visual input validation clamps invalid audio, states and themes
+not ok 1 - visual input validation clamps invalid audio, states and themes
+  ---
+  duration_ms: 2.37432
+  type: 'test'
+  location: '/mnt/data/baseline/frontend/tests/orb/core.test.mjs:62:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    5 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 5
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/baseline/frontend/tests/orb/core.test.mjs:67:59)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: damping is independent of frame rate
+ok 2 - damping is independent of frame rate
+  ---
+  duration_ms: 0.267283
+  type: 'test'
+  ...
+# Subtest: theme persistence sanitizes malformed values and dispatches without storage
+not ok 3 - theme persistence sanitizes malformed values and dispatches without storage
+  ---
+  duration_ms: 0.418854
+  type: 'test'
+  location: '/mnt/data/baseline/frontend/tests/orb/core.test.mjs:76:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    5 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 5
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///mnt/data/baseline/frontend/tests/orb/core.test.mjs:80:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: cancel and beginStream never emit natural completion
+ok 4 - cancel and beginStream never emit natural completion
+  ---
+  duration_ms: 0.432563
+  type: 'test'
+  ...
+# Subtest: disposing a silent orb does not cancel another orb's playback
+ok 5 - disposing a silent orb does not cancel another orb's playback
+  ---
+  duration_ms: 0.168788
+  type: 'test'
+  ...
+# Subtest: late canceled utterances cannot complete or start another turn
+ok 6 - late canceled utterances cannot complete or start another turn
+  ---
+  duration_ms: 1.114036
+  type: 'test'
+  ...
+# Subtest: voice subscriptions do not overwrite browser event properties
+ok 7 - voice subscriptions do not overwrite browser event properties
+  ---
+  duration_ms: 0.248088
+  type: 'test'
+  ...
+# Subtest: spoken replies include every sentence, without the old two-sentence cutoff
+ok 8 - spoken replies include every sentence, without the old two-sentence cutoff
+  ---
+  duration_ms: 0.418303
+  type: 'test'
+  ...
+# Subtest: speech playback errors are reported without restarting microphone
+ok 9 - speech playback errors are reported without restarting microphone
+  ---
+  duration_ms: 0.520965
+  type: 'test'
+  ...
+# Subtest: closing during microphone permission releases the eventual media stream
+ok 10 - closing during microphone permission releases the eventual media stream
+  ---
+  duration_ms: 0.575531
+  type: 'test'
+  ...
+# Subtest: stopping microphone releases all tracks and the captured transcript
+ok 11 - stopping microphone releases all tracks and the captured transcript
+  ---
+  duration_ms: 0.582811
+  type: 'test'
+  ...
+# Subtest: auto-send preserves trailing interim words and sends only once
+ok 12 - auto-send preserves trailing interim words and sends only once
+  ---
+  duration_ms: 1.125864
+  type: 'test'
+  ...
+# Subtest: network recognition errors stop microphone and remain visible
+ok 13 - network recognition errors stop microphone and remain visible
+  ---
+  duration_ms: 0.222818
+  type: 'test'
+  ...
+# Subtest: unsupported speech recognition fails with a useful message
+ok 14 - unsupported speech recognition fails with a useful message
+  ---
+  duration_ms: 0.360345
+  type: 'test'
+  ...
+# Subtest: mounting a voice session does not request microphone access
+ok 15 - mounting a voice session does not request microphone access
+  ---
+  duration_ms: 0.810237
+  type: 'test'
+  ...
+# Subtest: microphone permission rejection becomes a visible error
+ok 16 - microphone permission rejection becomes a visible error
+  ---
+  duration_ms: 1.202816
+  type: 'test'
+  ...
+# Subtest: rapid repeated starts do not acquire multiple microphones
+ok 17 - rapid repeated starts do not acquire multiple microphones
+  ---
+  duration_ms: 0.472206
+  type: 'test'
+  ...
+# Subtest: stream chunks do not claim the orb is speaking before actual playback
+ok 18 - stream chunks do not claim the orb is speaking before actual playback
+  ---
+  duration_ms: 0.806455
+  type: 'test'
+  ...
+# Subtest: stopping cancels requests and ignores every late stream callback
+ok 19 - stopping cancels requests and ignores every late stream callback
+  ---
+  duration_ms: 0.455586
+  type: 'test'
+  ...
+# Subtest: a rejected prompt returns to idle with an actionable error
+ok 20 - a rejected prompt returns to idle with an actionable error
+  ---
+  duration_ms: 0.30048
+  type: 'test'
+  ...
+# Subtest: promise-based prompts finish even when onDone is omitted
+ok 21 - promise-based prompts finish even when onDone is omitted
+  ---
+  duration_ms: 0.34395
+  type: 'test'
+  ...
+# Subtest: callback-based void prompts stay active until onDone
+ok 22 - callback-based void prompts stay active until onDone
+  ---
+  duration_ms: 0.364693
+  type: 'test'
+  ...
+# Subtest: empty successful responses do not leave a thinking orb
+ok 23 - empty successful responses do not leave a thinking orb
+  ---
+  duration_ms: 0.356716
+  type: 'test'
+  ...
+# Subtest: continuous mode restarts once after natural speech, never after Stop
+ok 24 - continuous mode restarts once after natural speech, never after Stop
+  ---
+  duration_ms: 0.631116
+  type: 'test'
+  ...
+# Subtest: Stop clears a scheduled continuous restart
+ok 25 - Stop clears a scheduled continuous restart
+  ---
+  duration_ms: 0.536366
+  type: 'test'
+  ...
+# Subtest: updating parent callbacks cannot restart or cancel active speech
+ok 26 - updating parent callbacks cannot restart or cancel active speech
+  ---
+  duration_ms: 0.669475
+  type: 'test'
+  ...
+# Subtest: muted replies remain readable and return to idle without playback
+ok 27 - muted replies remain readable and return to idle without playback
+  ---
+  duration_ms: 0.383321
+  type: 'test'
+  ...
+# Subtest: detach invalidates callbacks and releases microphone tracks
+ok 28 - detach invalidates callbacks and releases microphone tracks
+  ---
+  duration_ms: 0.27145
+  type: 'test'
+  ...
+# Subtest: a call starts only after user action and records connection time
+ok 29 - a call starts only after user action and records connection time
+  ---
+  duration_ms: 0.251826
+  type: 'test'
+  ...
+# Subtest: microphone mute releases capture without sending partial speech
+ok 30 - microphone mute releases capture without sending partial speech
+  ---
+  duration_ms: 0.706855
+  type: 'test'
+  ...
+# Subtest: unmuting an active call reacquires capture exactly once
+ok 31 - unmuting an active call reacquires capture exactly once
+  ---
+  duration_ms: 0.370361
+  type: 'test'
+  ...
+# Subtest: speaker mute does not mute the microphone
+ok 32 - speaker mute does not mute the microphone
+  ---
+  duration_ms: 0.296607
+  type: 'test'
+  ...
+# Subtest: hanging up clears call state and pending resume
+ok 33 - hanging up clears call state and pending resume
+  ---
+  duration_ms: 0.572972
+  type: 'test'
+  ...
+# Subtest: native hidden-window fail-safe releases microphone and ends call
+ok 34 - native hidden-window fail-safe releases microphone and ends call
+  ---
+  duration_ms: 0.3174
+  type: 'test'
+  ...
+# Subtest: only one mounted voice session can own capture
+ok 35 - only one mounted voice session can own capture
+  ---
+  duration_ms: 0.599332
+  type: 'test'
+  ...
+# Subtest: StrictMode attach-detach-attach does not leak listeners or voice resources
+ok 36 - StrictMode attach-detach-attach does not leak listeners or voice resources
+  ---
+  duration_ms: 0.35327
+  type: 'test'
+  ...
+# Subtest: unsupported native recognition cannot leave a fake active call
+ok 37 - unsupported native recognition cannot leave a fake active call
+  ---
+  duration_ms: 0.256248
+  type: 'test'
+  ...
+# Subtest: call transcript retains user and assistant turns without raw response truncation
+ok 38 - call transcript retains user and assistant turns without raw response truncation
+  ---
+  duration_ms: 0.363818
+  type: 'test'
+  ...
+# Subtest: speech boundaries create a timed shared impulse without React audio updates
+ok 39 - speech boundaries create a timed shared impulse without React audio updates
+  ---
+  duration_ms: 0.521246
+  type: 'test'
+  ...
+1..39
+# tests 39
+# suites 0
+# pass 37
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 98.056229

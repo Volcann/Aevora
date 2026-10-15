@@ -1,0 +1,11 @@
+PASS responsive
+PASS input_keys
+PASS stream_complete
+PASS stable_history
+PASS selection_race
+PASS delete_and_logout
+PASS late_delete
+PASS settings
+PASS auth_layout
+PASS orb_retained
+10/10 UI scenario groups passed. Report: /mnt/data/work/frontend/docs/optimization/browser-results.json
