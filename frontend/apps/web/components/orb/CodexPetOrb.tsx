@@ -33,8 +33,13 @@ function VisiblePet({ onOpenFullVoiceModal, onSendPrompt, onStopStreaming, onDet
   const [prompt, setPrompt] = useState("");
   const [detachError, setDetachError] = useState<string | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const drag = useRef<{ x: number; y: number; origin: Position; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
+  const petHandleRef = useRef<HTMLDivElement>(null);
+  const flingRef = useRef<number | null>(null);
+  const dragVelocity = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
+  const recentMoves = useRef<Array<{ x: number; y: number; time: number }>>([]);
   const { session, snapshot } = useOrbVoice({ onPrompt: onSendPrompt, onStopStreaming });
   const { theme } = useOrbTheme();
   const state = snapshot.state || (isStreaming ? 2 : 0);
@@ -44,7 +49,6 @@ function VisiblePet({ onOpenFullVoiceModal, onSendPrompt, onStopStreaming, onDet
       const stored: unknown = JSON.parse(localStorage.getItem("aevora_pet_pos") ?? "null");
       if (stored && typeof stored === "object" && "x" in stored && "y" in stored && typeof stored.x === "number" && typeof stored.y === "number") initial = { x: stored.x, y: stored.y };
     } catch { /* Invalid or unavailable storage does not hide the pet. */ }
-    // Position belongs to the viewport, an external system.
     const resize = () => setPosition((previous) => constrain(previous ?? initial));
     resize();
     window.addEventListener("resize", resize);
@@ -52,11 +56,144 @@ function VisiblePet({ onOpenFullVoiceModal, onSendPrompt, onStopStreaming, onDet
     return () => {
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", resize);
+      if (flingRef.current) cancelAnimationFrame(flingRef.current);
     };
   }, []);
+  const lastDragPos = useRef<{ x: number; y: number } | null>(null);
+
+  const startFling = (startPos: Position, initialVx: number, initialVy: number) => {
+    let currX = startPos.x;
+    let currY = startPos.y;
+    let vx = initialVx * 1.05;
+    let vy = initialVy * 1.05;
+
+    const orbHost = petHandleRef.current?.querySelector("[data-renderer]");
+    orbHost?.dispatchEvent(new CustomEvent("orb:mood", { detail: { mood: "surprised", duration: 1800 } }));
+
+    const loop = () => {
+      currX += vx;
+      currY += vy;
+      vx *= 0.94;
+      vy *= 0.94;
+
+      const minX = 8;
+      const maxX = window.innerWidth - 88;
+      const minY = 8;
+      const maxY = window.innerHeight - 88;
+
+      let hitWall = false;
+      if (currX <= minX) {
+        currX = minX;
+        vx = -vx * 0.72;
+        hitWall = true;
+      } else if (currX >= maxX) {
+        currX = maxX;
+        vx = -vx * 0.72;
+        hitWall = true;
+      }
+
+      if (currY <= minY) {
+        currY = minY;
+        vy = -vy * 0.72;
+        hitWall = true;
+      } else if (currY >= maxY) {
+        currY = maxY;
+        vy = -vy * 0.72;
+        hitWall = true;
+      }
+
+      if (hitWall) {
+        orbHost?.dispatchEvent(new CustomEvent("orb:mood", { detail: { mood: "happy", duration: 1200 } }));
+        if (petHandleRef.current) {
+          petHandleRef.current.style.setProperty("--ball-squish-x", "1.22");
+          petHandleRef.current.style.setProperty("--ball-squish-y", "0.82");
+          setTimeout(() => {
+            if (petHandleRef.current) {
+              petHandleRef.current.style.setProperty("--ball-squish-x", "1");
+              petHandleRef.current.style.setProperty("--ball-squish-y", "1");
+            }
+          }, 140);
+        }
+      }
+
+      const nextPos = { x: currX, y: currY };
+      setPosition(nextPos);
+
+      if (Math.hypot(vx, vy) > 0.35) {
+        flingRef.current = requestAnimationFrame(loop);
+      } else {
+        try { localStorage.setItem("aevora_pet_pos", JSON.stringify(nextPos)); } catch {}
+        orbHost?.dispatchEvent(new CustomEvent("orb:mood", { detail: { mood: "happy", duration: 1500 } }));
+        flingRef.current = null;
+      }
+    };
+
+    if (flingRef.current) cancelAnimationFrame(flingRef.current);
+    flingRef.current = requestAnimationFrame(loop);
+  };
+
+  const handleTrick = (trick: "bounce" | "flip" | "pet" | "wink" | "dizzy") => {
+    const orbHost = petHandleRef.current?.querySelector("[data-renderer]");
+    if (trick === "bounce") {
+      orbHost?.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "bounce" } }));
+      if (petHandleRef.current) {
+        petHandleRef.current.style.setProperty("--ball-hop-y", "-24px");
+        petHandleRef.current.style.setProperty("--ball-squish-y", "1.16");
+        setTimeout(() => {
+          if (petHandleRef.current) {
+            petHandleRef.current.style.setProperty("--ball-hop-y", "0px");
+            petHandleRef.current.style.setProperty("--ball-squish-y", "0.86");
+            setTimeout(() => {
+              if (petHandleRef.current) {
+                petHandleRef.current.style.setProperty("--ball-hop-y", "-10px");
+                setTimeout(() => {
+                  if (petHandleRef.current) {
+                    petHandleRef.current.style.setProperty("--ball-hop-y", "0px");
+                    petHandleRef.current.style.setProperty("--ball-squish-y", "1");
+                  }
+                }, 130);
+              }
+            }, 140);
+          }
+        }, 160);
+      }
+    } else if (trick === "flip") {
+      orbHost?.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "flip" } }));
+      if (petHandleRef.current) {
+        petHandleRef.current.style.setProperty("--ball-rot", "360deg");
+        petHandleRef.current.style.setProperty("--ball-hop-y", "-28px");
+        setTimeout(() => {
+          if (petHandleRef.current) {
+            petHandleRef.current.style.setProperty("--ball-rot", "0deg");
+            petHandleRef.current.style.setProperty("--ball-hop-y", "0px");
+          }
+        }, 340);
+      }
+    } else if (trick === "pet") {
+      orbHost?.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "pet" } }));
+    } else if (trick === "wink") {
+      orbHost?.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "wink" } }));
+    } else if (trick === "dizzy") {
+      orbHost?.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "dizzy" } }));
+      if (petHandleRef.current) {
+        petHandleRef.current.style.setProperty("--ball-rot", "720deg");
+        setTimeout(() => {
+          if (petHandleRef.current) petHandleRef.current.style.setProperty("--ball-rot", "0deg");
+        }, 400);
+      }
+    }
+  };
+
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0 || !position) return;
+    if (flingRef.current) {
+      cancelAnimationFrame(flingRef.current);
+      flingRef.current = null;
+    }
     drag.current = { x: event.clientX, y: event.clientY, origin: position, moved: false };
+    lastDragPos.current = { x: event.clientX, y: event.clientY };
+    recentMoves.current = [{ x: event.clientX, y: event.clientY, time: performance.now() }];
+    dragVelocity.current = { vx: 0, vy: 0 };
     suppressClick.current = false;
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
@@ -70,17 +207,50 @@ function VisiblePet({ onOpenFullVoiceModal, onSendPrompt, onStopStreaming, onDet
     const dx = event.clientX - current.x;
     const dy = event.clientY - current.y;
     current.moved ||= Math.hypot(dx, dy) > 5;
-    if (current.moved) setPosition(constrain({ x: current.origin.x + dx, y: current.origin.y + dy }));
+    if (current.moved) {
+      if (!isDragging) setIsDragging(true);
+      setPosition(constrain({ x: current.origin.x + dx, y: current.origin.y + dy }));
+      const now = performance.now();
+      recentMoves.current.push({ x: event.clientX, y: event.clientY, time: now });
+      recentMoves.current = recentMoves.current.filter((m) => now - m.time < 110);
+      if (recentMoves.current.length >= 2) {
+        const oldest = recentMoves.current[0];
+        const dt = Math.max(10, now - oldest.time);
+        dragVelocity.current = {
+          vx: (event.clientX - oldest.x) / dt * 16,
+          vy: (event.clientY - oldest.y) / dt * 16,
+        };
+      }
+      const prev = lastDragPos.current;
+      if (prev) {
+        const stepX = event.clientX - prev.x;
+        const stepY = event.clientY - prev.y;
+        const orbHost = event.currentTarget.querySelector("[data-renderer]");
+        if (orbHost) {
+          orbHost.dispatchEvent(new CustomEvent("orb:spin", { detail: { dx: stepX, dy: stepY } }));
+          orbHost.dispatchEvent(new CustomEvent("orb:move", { detail: { dx: stepX, dy: stepY } }));
+        }
+      }
+      lastDragPos.current = { x: event.clientX, y: event.clientY };
+    }
   };
   const endDrag = (event?: PointerEvent<HTMLDivElement>) => {
+    setIsDragging(false);
+    lastDragPos.current = null;
     if (event && event.currentTarget?.hasPointerCapture?.(event.pointerId)) {
       try { event.currentTarget.releasePointerCapture(event.pointerId); } catch {}
     }
-    suppressClick.current = drag.current?.moved ?? false;
-    drag.current = null;
-    if (position) {
-      try { localStorage.setItem("aevora_pet_pos", JSON.stringify(position)); } catch { /* Optional persistence. */ }
+    const speed = Math.hypot(dragVelocity.current.vx, dragVelocity.current.vy);
+    if (drag.current?.moved && speed > 3.5 && position) {
+      suppressClick.current = true;
+      startFling(position, dragVelocity.current.vx, dragVelocity.current.vy);
+    } else {
+      suppressClick.current = drag.current?.moved ?? false;
+      if (position) {
+        try { localStorage.setItem("aevora_pet_pos", JSON.stringify(position)); } catch { /* Optional persistence. */ }
+      }
     }
+    drag.current = null;
   };
   const send = () => {
     if (!prompt.trim() || snapshot.streaming) return;
@@ -126,10 +296,26 @@ function VisiblePet({ onOpenFullVoiceModal, onSendPrompt, onStopStreaming, onDet
             {onOpenFullVoiceModal && <button type="button" className={styles.control} onClick={() => { session.stop(); setExpanded(false); onOpenFullVoiceModal(); }} aria-label="Open full voice mode"><Maximize2 size={16} aria-hidden="true" /></button>}
             <button type="button" className={styles.control} onClick={() => { void detach(); }} aria-label="Detach companion to desktop"><ExternalLink size={16} aria-hidden="true" /></button>
           </div>
+          <div className={styles.trickBar} role="toolbar" aria-label="Playful ball tricks">
+            <button type="button" className={styles.trickButton} onClick={() => handleTrick("bounce")} title="Bounce the ball">🏀 Bounce</button>
+            <button type="button" className={styles.trickButton} onClick={() => handleTrick("flip")} title="Do a backflip">🤸 Flip</button>
+            <button type="button" className={styles.trickButton} onClick={() => handleTrick("pet")} title="Pet the ball">💖 Love</button>
+            <button type="button" className={styles.trickButton} onClick={() => handleTrick("wink")} title="Wink">😉 Wink</button>
+            <button type="button" className={styles.trickButton} onClick={() => handleTrick("dizzy")} title="Spin dizzy">🌀 Dizzy</button>
+          </div>
         </section>
       )}
-      <div className={styles.petHandle} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>
-        <OrbVisual size={80} state={state} theme={theme} signal={session.signal} label={expanded ? "Minimize voice companion" : "Open voice companion"} onActivate={() => {
+      <div
+        ref={petHandleRef}
+        className={styles.petHandle}
+        onPointerDown={startDrag}
+        onPointerMove={moveDrag}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onDoubleClick={() => handleTrick("flip")}
+        title="Drag to fling · Double-click for flip · Click to poke"
+      >
+        <OrbVisual size={80} state={state} theme={theme} signal={session.signal} isMoving={isDragging} label={expanded ? "Minimize voice companion" : "Open voice companion"} onActivate={() => {
           if (!suppressClick.current) setExpanded((value) => !value);
           suppressClick.current = false;
         }} />

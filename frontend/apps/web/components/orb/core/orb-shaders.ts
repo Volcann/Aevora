@@ -16,6 +16,7 @@ export const FRAGMENT_SHADER = `
   uniform float u_shockwave;
   uniform float u_voice_sync;
   uniform float u_word_vibe;
+  uniform vec2 u_rotation;
 
   // Simplex Noise 3D
   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -137,17 +138,20 @@ export const FRAGMENT_SHADER = `
 
     float z = sqrt(max(R * R - dist * dist, 0.0));
     vec3 norm = normalize(vec3(uv, z));
-    vec3 lightDir = normalize(vec3(u_mouse.x * 0.8, -u_mouse.y * 0.8, 1.25));
+    vec3 lightDir = normalize(vec3(u_mouse.x * 0.8, u_mouse.y * 0.8, 1.25));
 
     float t = u_time * speed;
     vec3 p = norm;
-    float angleY = t * 0.35 + u_mouse.x * 0.55;
-    float cy = cos(angleY); float sy = sin(angleY);
-    p.xz = mat2(cy, -sy, sy, cy) * p.xz;
 
-    float angleX = t * 0.22;
+    // Yaw rotation around Y axis (horizontal spin: right rolls right, clockwise moves clockwise)
+    float angleY = u_rotation.y;
+    float cy = cos(angleY); float sy = sin(angleY);
+    p.xz = mat2(cy, sy, -sy, cy) * p.xz;
+
+    // Pitch rotation around X axis (vertical roll: up rolls up)
+    float angleX = u_rotation.x;
     float cx = cos(angleX); float sx = sin(angleX);
-    p.yz = mat2(cx, -sx, sx, cx) * p.yz;
+    p.yz = mat2(cx, sx, -sx, cx) * p.yz;
 
     float n1 = snoise(p * 2.15 * turb + vec3(0.0, 0.0, t * 0.4));
     float n2 = snoise(p * 3.45 * turb - vec3(0.0, t * 0.55, 0.0));

@@ -36,6 +36,14 @@ export function createOrbRenderer(
   let pointerY = 0;
   let targetX = 0;
   let targetY = 0;
+  let rotX = 0;
+  let rotY = 0;
+  let velX = 0;
+  let velY = 0;
+  let hasPointer = false;
+  let lastPointerX = 0;
+  let lastPointerY = 0;
+  let lastMoveTime = 0;
   const activity = [0, 0, 0];
   const media = window.matchMedia("(prefers-reduced-motion: reduce)");
   let reduced = media.matches;
@@ -102,7 +110,7 @@ export function createOrbRenderer(
       const position = gl.getAttribLocation(program, "a_position");
       gl.enableVertexAttribArray(position);
       gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-      for (const name of ["resolution", "time", "audio", "mouse", "state", "shockwave", "voice_sync", "word_vibe", "theme"]) {
+      for (const name of ["resolution", "time", "audio", "mouse", "state", "shockwave", "voice_sync", "word_vibe", "theme", "rotation"]) {
         uniforms[name] = gl.getUniformLocation(program, `u_${name}`);
       }
       gl.disable(gl.BLEND);
@@ -133,11 +141,47 @@ export function createOrbRenderer(
     for (let i = 0; i < 3; i++) activity[i] = damp(activity[i], options.state === i + 1 ? 1 : 0, 5, dt);
     pointerX = damp(pointerX, targetX, 5, dt);
     pointerY = damp(pointerY, targetY, 5, dt);
+
+    // Apply user rotational momentum & inertia
+    rotY += velY * dt;
+    rotX += velX * dt;
+
+    // Exponential friction slows down user-driven spin smoothly ("spins a little and settles")
+    const friction = Math.exp(-3.5 * dt);
+    velY *= friction;
+    velX *= friction;
+    if (Math.abs(velY) < 0.0005) velY = 0;
+    if (Math.abs(velX) < 0.0005) velX = 0;
+
+    // If cursor is stationary over the orb, damp velocity faster so it stops under your hand
+    const nowTime = typeof performance !== "undefined" ? performance.now() : Date.now();
+    if (hasPointer && lastMoveTime > 0 && nowTime - lastMoveTime > 75) {
+      const settleFriction = Math.exp(-8 * dt);
+      velY *= settleFriction;
+      velX *= settleFriction;
+    }
+
+    // Gentle ambient idle drift when user is not actively spinning it:
+    // In idle state (0), slow subtle organic breathing drift instead of frantic spinning.
+    // In active states (thinking 2, listening 1, speaking 3), more animated.
+    const idleYaw = options.state === 2 ? 0.35 : (options.state === 1 ? 0.16 : (options.state === 3 ? 0.20 : 0.05));
+    const idlePitch = options.state === 2 ? 0.12 : (options.state === 3 ? 0.08 : 0.02);
+    if (!reduced) {
+      rotY += idleYaw * dt;
+      rotX += idlePitch * dt;
+    }
+
+    // Keep rotation angles within [0, 2π) to prevent floating-point loss over time
+    const twoPi = Math.PI * 2;
+    rotY = ((rotY % twoPi) + twoPi) % twoPi;
+    rotX = ((rotX % twoPi) + twoPi) % twoPi;
+
     if (!reduced) time += dt;
     gl.useProgram(program);
     gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
     gl.uniform1f(uniforms.time, reduced ? 1.25 : time);
     gl.uniform1f(uniforms.audio, reduced ? 0 : audio);
+    gl.uniform2f(uniforms.rotation, reduced ? 0 : rotX, reduced ? 0 : rotY);
     // Native speech boundary events provide real timing; the subtle carrier is
     // animation only, not a claim to be measured speaker audio.
     const voice = options.state === 3 ? 0.12 + word * 0.72 : 0;
@@ -166,12 +210,53 @@ export function createOrbRenderer(
     if (!reduced) schedule();
   }
   const onPointer = (event: PointerEvent) => {
-    if (event.pointerType === "touch" || reduced) return;
+    if (reduced) return;
     const rect = host.getBoundingClientRect();
-    targetX = clamp((event.clientX - rect.left) / rect.width * 2 - 1, -1, 1);
-    targetY = -clamp((event.clientY - rect.top) / rect.height * 2 - 1, -1, 1);
+    const currentX = clamp((event.clientX - rect.left) / rect.width * 2 - 1, -1, 1);
+    const currentY = -clamp((event.clientY - rect.top) / rect.height * 2 - 1, -1, 1);
+    targetX = currentX;
+    targetY = currentY;
+
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+    if (hasPointer && lastMoveTime > 0) {
+      const dtPointer = clamp((now - lastMoveTime) / 1000, 0.005, 0.1);
+      const dx = currentX - lastPointerX;
+      const dy = currentY - lastPointerY;
+
+      // 1:1 direct tactile response:
+      // Moving right (dx > 0) rolls right (+rotY)
+      // Moving up (dy > 0) rolls up (+rotX)
+      rotY += dx * 1.6;
+      rotX += dy * 1.6;
+
+      // Impart rotational momentum
+      const instVelY = (dx / dtPointer) * 0.4;
+      const instVelX = (dy / dtPointer) * 0.4;
+      velY = damp(velY, clamp(instVelY, -14, 14), 16, dtPointer);
+      velX = damp(velX, clamp(instVelX, -14, 14), 16, dtPointer);
+    }
+    lastPointerX = currentX;
+    lastPointerY = currentY;
+    lastMoveTime = now;
+    hasPointer = true;
+    schedule();
   };
-  const onLeave = () => { targetX = 0; targetY = 0; };
+  const onLeave = () => {
+    hasPointer = false;
+    lastMoveTime = 0;
+    targetX = 0;
+    targetY = 0;
+  };
+  const onOrbSpin = (event: Event) => {
+    const custom = event as CustomEvent<{ dx: number; dy: number }>;
+    if (!custom.detail || reduced) return;
+    const { dx, dy } = custom.detail;
+    rotY += dx * 0.04;
+    rotX -= dy * 0.04;
+    velY = clamp(velY + dx * 0.35, -15, 15);
+    velX = clamp(velX - dy * 0.35, -15, 15);
+    schedule();
+  };
   const pause = () => { cancelAnimationFrame(frame); frame = 0; lastTime = 0; };
   const onVisibility = () => { if (document.hidden) pause(); else schedule(); };
   const onMotion = () => { reduced = media.matches; pause(); schedule(); };
@@ -193,6 +278,7 @@ export function createOrbRenderer(
   intersection?.observe(host);
   host.addEventListener("pointermove", onPointer);
   host.addEventListener("pointerleave", onLeave);
+  host.addEventListener("orb:spin", onOrbSpin);
   canvas.addEventListener("webglcontextlost", onLost);
   canvas.addEventListener("webglcontextrestored", onRestored);
   document.addEventListener("visibilitychange", onVisibility);
@@ -210,6 +296,7 @@ export function createOrbRenderer(
       intersection?.disconnect();
       host.removeEventListener("pointermove", onPointer);
       host.removeEventListener("pointerleave", onLeave);
+      host.removeEventListener("orb:spin", onOrbSpin);
       canvas.removeEventListener("webglcontextlost", onLost);
       canvas.removeEventListener("webglcontextrestored", onRestored);
       document.removeEventListener("visibilitychange", onVisibility);

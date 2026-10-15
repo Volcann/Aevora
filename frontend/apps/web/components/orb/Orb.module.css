@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: min(var(--orb-size, 280px), 100%);
+  width: var(--orb-size, 280px);
   max-width: 100%;
   margin-inline: auto;
 }
@@ -20,9 +20,21 @@
   border-radius: 50%;
   background: transparent;
   -webkit-tap-highlight-color: transparent;
+  transform: translate(var(--ball-offset-x, 0px), var(--ball-offset-y, 0px))
+             translateY(var(--ball-hop-y, 0px))
+             rotate(var(--ball-rot, 0deg))
+             scale(var(--ball-squish-x, 1), var(--ball-squish-y, 1));
+  transform-origin: 50% 50%;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
 }
-.orbButton { cursor: pointer; touch-action: manipulation; transition: transform 160ms ease; }
-.orbButton:active { transform: scale(0.98); }
+.orbButton { cursor: pointer; touch-action: manipulation; }
+.orbButton:active {
+  transform: translate(var(--ball-offset-x, 0px), var(--ball-offset-y, 0px))
+             translateY(var(--ball-hop-y, 0px))
+             rotate(var(--ball-rot, 0deg))
+             scale(calc(var(--ball-squish-x, 1) * 1.08), calc(var(--ball-squish-y, 1) * 0.9));
+}
 .orbButton:focus-visible { outline: 2px solid var(--orb-accent, #6bdcff); outline-offset: -8px; }
 .canvas { display: block; position: relative; width: 100%; height: 100%; pointer-events: none; }
 .fallbackSphere {
@@ -104,7 +116,7 @@
   .orbButton:active { transform: none; }
 }
 .pet { position: fixed; z-index: 2147483647; width: 80px; color: #e8edf6; }
-.petHandle { touch-action: none; user-select: none; cursor: grab; }
+.petHandle { touch-action: none; user-select: none; cursor: grab; width: 100%; }
 .petHandle .orbButton { touch-action: none; }
 .petPanel { position: absolute; bottom: 85px; width: min(320px, calc(100vw - 16px)); max-height: calc(100dvh - 108px); overflow-y: auto; padding: 14px; border-radius: 18px; border: 1px solid #9db2d533; background: #101621f5; box-shadow: 0 20px 50px #0006; backdrop-filter: blur(12px); }
 .petHeader { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
@@ -114,16 +126,57 @@
 .petForm input { width: 100%; min-width: 0; border: 1px solid #8ca4cb40; border-radius: 10px; background: #8ca4cb0a; padding: 10px; color: inherit; font-size: 12px; }
 .petForm input:focus-visible { outline: 2px solid #75d8f1; }
 .petControls { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.trickBar { display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid #8ca4cb22; }
+.trickButton { display: inline-flex; align-items: center; gap: 4px; background: #6b91c414; border: 1px solid #8ca4cb33; color: #e8edf6; border-radius: 99px; font-size: 10.5px; font-weight: 550; padding: 4px 9px; cursor: pointer; transition: all 140ms ease; }
+.trickButton:hover { background: #69caff26; border-color: #69caff80; transform: translateY(-1px); }
+.trickButton:active { transform: scale(0.95); }
 
 .dialog .experience { color: inherit; }
 
-/* The original plasma sphere, halo and crystalline reflection are retained. */
-.canvas,.fallbackSphere,.reflection,.ambient { transform:translate(var(--orb-vibration-x,0px),var(--orb-vibration-y,0px)) scale(var(--orb-breathe,1)); }
-.canvas { border-radius:50%; box-shadow:var(--orb-shadow); }
-.ambient { position:absolute; inset:-9%; border-radius:50%; background:var(--orb-ambient); filter:blur(24px); pointer-events:none; }
-.reflection { position:absolute; inset:0; border-radius:50%; pointer-events:none; box-shadow:inset 0 0 20px 2px #ffffff59; }
-.reflection::before {content:"";position:absolute;top:12%;left:20%;width:40%;height:26%;border-radius:50%;background:radial-gradient(ellipse,#ffffffd9, #ffffff33 50%,transparent 80%);transform:rotate(-25deg);filter:blur(1px);opacity:.8}
-.reflection::after {content:"";position:absolute;bottom:14%;right:22%;width:35%;height:20%;border-radius:50%;background:radial-gradient(ellipse,#ffffff80,transparent 75%);transform:rotate(35deg);filter:blur(2px);opacity:.4}
+/* The shader's baseR is 0.36 of the canvas, NOT 0.5. Keep the glass
+   shell on that sphere; mask the highlight, never the plasma interior. */
+.orbBody {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+  transform: translate(var(--orb-vibration-x, 0px), var(--orb-vibration-y, 0px)) scale(var(--orb-breathe, 1));
+  transform-origin: 50% 50%;
+}
+.glowViewport {
+  position: absolute;
+  inset: 0;
+  display: block;
+  /* Opaque through radius 43.5% (including corona); fade only the empty
+     outside. At radius 49% there is zero alpha, before the canvas boundary. */
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 87%, transparent 98%);
+  mask-image: radial-gradient(circle closest-side, #000 87%, transparent 98%);
+}
+.canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; box-shadow: none; transform: none; }
+.ambient { position: absolute; inset: 0; border-radius: 50%; background: var(--orb-ambient); filter: blur(calc(var(--orb-size) * .035)); pointer-events: none; transform: none; }
+.fallbackSphere {
+  inset: var(--orb-shell-inset, 14%);
+  overflow: hidden;
+  transform: none;
+  background-size: 135% 135%;
+  background-position: var(--orb-fallback-x, 50%) var(--orb-fallback-y, 50%);
+  /* Fixed-pixel 60/100px shadows made a 76px pet glow outside its window. */
+  box-shadow: inset -3px -4px 12px #050b2655, inset 0 0 1px #a8e9ff;
+}
+.reflection {
+  position: absolute;
+  inset: var(--orb-shell-inset, 14%);
+  border-radius: 50%;
+  pointer-events: none;
+  overflow: hidden;
+  clip-path: circle(50% at 50% 50%);
+  transform: none;
+  /* Scale the rim with the sphere. No detached, full-canvas white ring. */
+  box-shadow: inset 0 0 calc(var(--orb-size) * .025) #ffffff38, inset 0 0 1px #ffffff75;
+}
+.reflection::before { content: ""; position: absolute; top: 12%; left: 20%; width: 40%; height: 26%; border-radius: 50%; background: radial-gradient(ellipse, #ffffffd9, #ffffff33 50%, transparent 80%); transform: rotate(-25deg); filter: blur(calc(var(--orb-size) * .0035)); opacity: .8; }
+.reflection::after { content: ""; position: absolute; bottom: 14%; right: 22%; width: 35%; height: 20%; border-radius: 50%; background: radial-gradient(ellipse, #ffffff80, transparent 75%); transform: rotate(35deg); filter: blur(calc(var(--orb-size) * .007)); opacity: .4; }
+.visual[data-motion="off"] .orbBody { transform: none; }
 .waveform { margin-top:22px; height:26px; }
 .experience { max-width:none;gap:0;color:var(--text,#eeeeF4); }
 .dialog { padding:0;border:1px solid var(--border,#30313c);border-radius:28px;width:min(960px,calc(100vw - 36px));max-width:960px;max-height:calc(100dvh - 36px);background:var(--bg,#111215);color:var(--text,#f0f0f4);overflow:auto;box-shadow:0 40px 140px #0009;margin:auto; }

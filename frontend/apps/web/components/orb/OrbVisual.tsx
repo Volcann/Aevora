@@ -4,6 +4,7 @@ import { memo, useEffect, useRef, type CSSProperties } from "react";
 import { ORB_THEMES, normalizeOrbTheme } from "../../lib/orbTheme";
 import { createOrbRenderer, type OrbRenderer } from "./core/orb-renderer";
 import { clamp, type OrbSignal, type OrbState } from "./core/orb-model";
+import { OrbEyes } from "./OrbEyes";
 import styles from "./Orb.module.css";
 
 export interface OrbVisualProps {
@@ -15,12 +16,16 @@ export interface OrbVisualProps {
   label?: string;
   showWaveform?: boolean;
   className?: string;
+  hasEyes?: boolean;
+  isMoving?: boolean;
+  onDoubleClick?: () => void;
 }
 
 /** Presentation only: rendering never acquires a microphone or starts speech. */
 export const OrbVisual = memo(function OrbVisual({
-  size = 280, state = 0, theme = 1, signal, onActivate,
+  size = 280, state = 0, theme = 1, signal, onActivate, onDoubleClick,
   label = "Start voice conversation", showWaveform = false, className = "",
+  hasEyes = true, isMoving = false,
 }: OrbVisualProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -42,12 +47,15 @@ export const OrbVisual = memo(function OrbVisual({
 
   const palette = ORB_THEMES[safeTheme];
   const visual = (
-    <>
-      <span className={styles.ambient} aria-hidden="true" />
-      <span className={styles.fallbackSphere} aria-hidden="true" />
-      <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
-      <span className={styles.reflection} aria-hidden="true" />
-    </>
+    <span className={styles.orbBody} aria-hidden="true">
+      <span className={styles.glowViewport}>
+        <span className={styles.ambient} />
+        <canvas ref={canvasRef} className={styles.canvas} />
+      </span>
+      <span className={styles.fallbackSphere} />
+      <span className={styles.reflection} />
+      {hasEyes && <OrbEyes hostRef={hostRef} size={size} state={state} isMoving={isMoving} />}
+    </span>
   );
   return (
     <div
@@ -65,10 +73,10 @@ export const OrbVisual = memo(function OrbVisual({
       } as CSSProperties}
     >
       {onActivate ? (
-        <button type="button" className={styles.orbButton} onClick={onActivate} aria-label={label} title={label}>
+        <button type="button" className={styles.orbButton} onClick={onActivate} onDoubleClick={onDoubleClick} aria-label={label} title={label}>
           {visual}
         </button>
-      ) : <div className={styles.orbSurface} role="img" aria-label={label}>{visual}</div>}
+      ) : <div className={styles.orbSurface} role="img" aria-label={label} onDoubleClick={onDoubleClick}>{visual}</div>}
       {showWaveform && (
         <div ref={barsRef} className={styles.waveform} aria-hidden="true">
           {Array.from({ length: 32 }, (_, index) => <span key={index} />)}
