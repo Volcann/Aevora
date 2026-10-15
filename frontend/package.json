@@ -14,7 +14,11 @@
     "test:orb": "node scripts/test-orb.mjs",
     "test:orb:fixture": "node scripts/build-orb-harness.mjs",
     "test:orb:browser": "python tests/orb/browser_smoke.py",
-    "test:voice": "node --no-warnings --experimental-strip-types --test tests/voice/voice.test.mjs"
+    "test:voice": "node --no-warnings --experimental-strip-types --test tests/voice/voice.test.mjs",
+    "verify:ui": "node scripts/verify-ui-integrity.mjs",
+    "test:optimization": "node scripts/verify-ui-integrity.mjs && node scripts/test-optimization.mjs",
+    "test:ui:fixture": "node scripts/build-optimization-fixture.mjs",
+    "test:ui": "node scripts/build-optimization-fixture.mjs && python tests/optimization/browser_smoke.py"
   },
   "devDependencies": {
     "prettier": "^3.6.0",

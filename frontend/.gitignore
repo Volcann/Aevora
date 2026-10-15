@@ -37,3 +37,7 @@ dist/
 .desktop-build/
 .orb-test-build/
 test-results/
+
+# Local optimization UI fixtures
+.ui-test-build/
+__pycache__/
