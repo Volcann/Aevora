@@ -1,4 +1,5 @@
 "use client";
+import { memo } from "react";
 import { AudioLines, Monitor, PanelLeft, Settings } from "lucide-react";
 import type { UserProfile } from "../../lib/api";
 import styles from "../chat/Chat.module.css";
@@ -8,7 +9,6 @@ interface TopNavSwitcherProps {
   user: UserProfile | null;
   onViewChange: (view: ViewType) => void;
   onOpenSettings?: () => void;
-  onLogout?: () => void;
   currentSessionTitle?: string;
   apiStatus?: "checking" | "online" | "offline" | string;
   onToggleSidebar?: () => void;
@@ -16,7 +16,7 @@ interface TopNavSwitcherProps {
   onOpenVoice?: () => void;
   onOpenCompanion?: () => void;
 }
-export function TopNavSwitcher({ currentView, user, onViewChange, onOpenSettings, currentSessionTitle, apiStatus, onToggleSidebar, isSidebarOpen, onOpenVoice, onOpenCompanion }: TopNavSwitcherProps) {
+export const TopNavSwitcher = memo(function TopNavSwitcher({ currentView, user, onViewChange, onOpenSettings, currentSessionTitle, apiStatus, onToggleSidebar, isSidebarOpen, onOpenVoice, onOpenCompanion }: TopNavSwitcherProps) {
   return <nav className={styles.nav} aria-label="Application">
 
     {user && onToggleSidebar && <button
@@ -64,4 +64,4 @@ export function TopNavSwitcher({ currentView, user, onViewChange, onOpenSettings
     </div>
 
   </nav>;
-}
+});

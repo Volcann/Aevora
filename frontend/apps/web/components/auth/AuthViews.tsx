@@ -202,10 +202,10 @@ export function AuthViews({
   );
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto select-none">
+    <div className="flex-1 min-h-0 flex flex-col items-center p-4 overflow-y-auto select-none">
       {/* ==================== 1. SIGN IN VIEW ==================== */}
       {currentView === "login" && (
-        <div className="auth-view animate-in fade-in duration-200">
+        <div className="auth-view my-auto shrink-0 animate-in fade-in duration-200">
           <div className="login-container">
             {defaultAvatar}
             <h1 className="auth-title">Sign in to Aevora</h1>
@@ -282,7 +282,7 @@ export function AuthViews({
 
       {/* ==================== 2. REGISTER VIEW ==================== */}
       {currentView === "register" && (
-        <div className="auth-view animate-in fade-in duration-200">
+        <div className="auth-view my-auto shrink-0 animate-in fade-in duration-200">
           <div className="login-container">
             {defaultAvatar}
             <h1 className="auth-title">Create your Aevora Account</h1>
@@ -437,7 +437,7 @@ export function AuthViews({
 
       {/* ==================== 3. FORGOT PASSWORD VIEW ==================== */}
       {currentView === "forgot" && (
-        <div className="auth-view animate-in fade-in duration-200">
+        <div className="auth-view my-auto shrink-0 animate-in fade-in duration-200">
           <div className="login-container">
             {defaultAvatar}
             <h1 className="auth-title">Reset your password</h1>
@@ -512,7 +512,7 @@ export function AuthViews({
 
       {/* ==================== 4. RESET PASSWORD VIEW ==================== */}
       {currentView === "reset" && (
-        <div className="auth-view animate-in fade-in duration-200">
+        <div className="auth-view my-auto shrink-0 animate-in fade-in duration-200">
           <div className="login-container">
             {defaultAvatar}
             <h1 className="auth-title">Choose a new password</h1>

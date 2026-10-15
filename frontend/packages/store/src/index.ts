@@ -1,8 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { setupListeners } from "@reduxjs/toolkit/query";
 import { api } from "./services";
 
-export const store = configureStore({
+export const createAppStore = () => configureStore({
   reducer: {
     [api.reducerPath]: api.reducer,
   },
@@ -10,10 +9,9 @@ export const store = configureStore({
     getDefaultMiddleware().concat(api.middleware),
 });
 
-setupListeners(store.dispatch);
-
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+export type AppStore = ReturnType<typeof createAppStore>;
+export type RootState = ReturnType<AppStore["getState"]>;
+export type AppDispatch = AppStore["dispatch"];
 
 export * from "./services";
 export * from "./constants";

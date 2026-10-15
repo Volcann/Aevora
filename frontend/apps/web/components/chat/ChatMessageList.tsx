@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Code2, Lightbulb, PenLine, AudioLines, AlertTriangle, Check, Copy, ArrowDown, Loader2 } from "lucide-react";
+import { Code2, Lightbulb, PenLine, AudioLines, AlertTriangle, Check, ArrowDown, Loader2 } from "lucide-react";
 import type { MessageItem } from "../../lib/api";
 import type { SendVoicePrompt } from "../orb/core/voice-session";
 import { OrbCanvas } from "../orb/OrbCanvas";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { ChatHistory } from "./ChatHistory";
 import styles from "./Chat.module.css";
 interface ChatMessageListProps {
   messages: MessageItem[];
@@ -17,34 +18,6 @@ interface ChatMessageListProps {
   onSelectPrompt: (prompt: string) => void;
   onVoicePrompt: SendVoicePrompt;
   onOpenSiriModal?: () => void;
-}
-function CopyMessage({ content }: {
-  content: string;
-}) {
-  const [status, setStatus] = useState("");
-  useEffect(() => {
-    if (!status)
-      return; const timer = setTimeout(() => setStatus(""), 2000); return () => clearTimeout(timer);
-  }, [status]);
-  return <div className={styles.messageTools}>
-    <button
-      className={styles.iconButton}
-      aria-label="Copy response"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(content);
-          setStatus("Copied");
-        }
-        catch {
-          setStatus("Copy unavailable");
-        }
-      }}>
-      {status === "Copied" ? <Check size={13} /> : <Copy size={13} />}
-    </button>
-    <span role="status">
-      {status}
-    </span>
-  </div>;
 }
 const starters = [
   { Icon: Lightbulb, title: "Think it through", sub: "Turn a rough idea into a plan", prompt: "Help me think through an idea. Ask me what I have in mind, then help me make a practical plan." },
@@ -93,31 +66,18 @@ export function ChatMessageList({ messages, isStreaming, streamingMessage, activ
       onScroll={(event) => { const el = event.currentTarget; follow.current = el.scrollHeight - el.scrollTop - el.clientHeight < 90; setShowJump(!follow.current); }}>
       <div className={styles.conversation}>
 
-        {messages.map((message) => <article
-          key={message.id}
-          className={styles.message}
-          data-role={message.role === "user" ? "user" : "assistant"}
-          aria-label={message.role === "user" ? "You" : "Aevora"}>
-
-          {message.role === "user" ? <div className={styles.userBubble}>
-            {message.content}
-          </div> : <><div className={styles.assistantAvatar} aria-hidden="true">a</div><div className={styles.messageBody}>
-            <div className={styles.assistantName}>Aevora</div>
-            {/^(⚠ Error:|Error communicating)/.test(message.content) ? <div className={styles.error}>
-              <AlertTriangle size={16} />
-              <span>
-                {message.content}
-              </span>
-            </div> : <MarkdownRenderer content={message.content} />}
-            <CopyMessage content={message.content} />
-          </div></>}
-
-        </article>)}
+        <ChatHistory messages={messages} />
 
         {isStreaming && <article className={styles.message} aria-label="Aevora is replying">
           <div className={styles.assistantAvatar} aria-hidden="true">a</div>
           <div className={styles.messageBody}>
-            <div className={styles.assistantName}>Aevora</div>
+            <div className={styles.assistantName}>
+              <span>Aevora</span>
+              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-400/20 inline-flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.25)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                ✨ Sparking stream
+              </span>
+            </div>
 
             {activeTool && <div className={styles.toolStatus} data-status={activeTool.status} role="status">
               {activeTool.status === "error" ? <AlertTriangle size={12} /> : activeTool.status === "done" ? <Check size={12} /> : <Loader2 size={12} />}

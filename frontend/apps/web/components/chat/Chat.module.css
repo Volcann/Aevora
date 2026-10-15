@@ -39,9 +39,42 @@
 .toolStatus{display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:10px;margin-bottom:12px;color:var(--text-muted);}.toolStatus code{overflow:hidden;text-overflow:ellipsis;}.toolStatus[data-status=error]{color:#e99ca9;}
 .jumpButton{position:absolute;bottom:174px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;background:var(--surface-solid);color:var(--text);border:1px solid var(--border);border-radius:25px;padding:9px 14px;font-size:11px;box-shadow:0 4px 20px #0004;cursor:pointer;}
 .composerWrap{flex-shrink:0;padding:12px 36px 16px;background:linear-gradient(0deg,var(--bg) 80%,transparent);}.composerInner{max-width:780px;margin:0 auto;position:relative;}.composer{padding:15px 16px 10px;background:var(--input-bg);border:1px solid var(--border);border-radius:19px;box-shadow:0 5px 30px #00000010;transition:border-color .2s;}.composer:focus-within{border-color:#ad95d967;}.textarea{display:block;resize:none;width:100%;min-height:45px;max-height:160px;outline:none!important;border:0;background:none;font:inherit;font-size:13px;line-height:1.7;color:var(--text);padding:0 2px 10px;}.textarea::placeholder{color:var(--text-muted);opacity:.8;}.composerBar{display:flex;align-items:center;gap:5px;}.composerHint{font-size:10px;color:var(--text-muted);margin-left:6px;flex:1;}.boost[data-active=true]{color:#c6b1ee;background:#b08cec10;}.send{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:11px;background:#c3b0ef;color:#262030;cursor:pointer;}.send:disabled{opacity:.35;cursor:not-allowed;}.voiceComposer{border:1px solid var(--border);width:34px;height:34px;margin-right:5px;}.composerFootnote{display:flex;justify-content:center;gap:8px;color:var(--text-muted);font-size:9px;margin-top:10px;opacity:.8;}.composerFootnote kbd{font:inherit;}
-.toolsPopover{position:absolute;z-index:20;bottom:calc(100% + 10px);left:0;width:min(420px,100%);max-height:290px;overflow:auto;background:var(--surface-solid);border:1px solid var(--border);border-radius:14px;padding:10px;box-shadow:0 14px 50px #0005;}.toolsPopover h3{font-size:11px;margin:5px 7px 12px;color:var(--text-muted);}.toolsPopover button{display:flex;gap:9px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:9px;background:none;color:var(--text);text-align:left;cursor:pointer;}.toolsPopover button:hover{background:var(--surface-hover);}.toolsPopover strong{display:block;font-size:11px;overflow-wrap:anywhere;}.toolsPopover small{display:block;font-size:10px;color:var(--text-muted);margin-top:5px;line-height:1.6;}.toolsPopover p{font-size:12px;color:var(--text-muted);padding:8px;}
+.toolsPopover{position:absolute;z-index:20;bottom:calc(100% + 10px);left:0;width:min(450px,100%);max-height:380px;overflow-y:auto;background:var(--surface-solid);border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:0 14px 50px #0005;}.toolsPopover h3{font-size:11px;margin:5px 7px 12px;color:var(--text-muted);}.toolsPopover button{display:flex;gap:9px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:9px;background:none;color:var(--text);text-align:left;cursor:pointer;}.toolsPopover button:hover{background:var(--surface-hover);}.toolsPopover strong{display:block;font-size:11px;overflow-wrap:anywhere;}.toolsPopover small{display:block;font-size:10px;color:var(--text-muted);margin-top:5px;line-height:1.6;}.toolsPopover p{font-size:12px;color:var(--text-muted);padding:8px;}
 .notice{display:flex;align-items:center;justify-content:center;gap:10px;padding:9px 16px;background:#db9a7d12;color:#dfa587;border-bottom:1px solid #db9a7d28;font-size:12px;}.notice button{border:0;color:inherit;background:transparent;cursor:pointer;}
 @keyframes dotPulse{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
 @media(max-width:900px){.service{display:none;}.nav{padding:0 16px;gap:12px;}.sidebar{width:230px;}.suggestions{gap:8px;}.suggestion{padding:13px;}.feed{padding:24px 20px;}.composerWrap{padding:10px 20px 13px;}.navTitle{padding-left:12px;}}
 @media(max-width:700px){.nav{height:58px;padding:0 12px;gap:7px;}.brand{font-size:14px;}.navTitle{display:none;}.navActions{gap:3px;}.navButton{width:34px;height:34px;padding:0;}.navButton span{display:none;}.sidebar{position:absolute;inset:0 auto 0 0;z-index:32;width:min(290px,85vw);box-shadow:20px 0 70px #0006;}.scrim{display:block;position:absolute;inset:0;background:#0007;backdrop-filter:blur(3px);z-index:31;border:0;}.historyDelete{opacity:1;}.welcome{padding:20px 20px 10px;}.welcomeInner>div:first-child{max-width:140px;}.eyebrow{margin-top:18px;font-size:9px;}.welcome p{margin:10px 0 19px;}.suggestions{grid-template-columns:1fr;gap:7px;}.suggestion{display:grid;grid-template-columns:20px 1fr;gap:4px 11px;padding:12px 14px;}.suggestion svg{grid-row:span 2;align-self:center;}.suggestion strong{font-size:11px;}.suggestion span{margin:0;font-size:10px;}.welcomeVoice{margin-top:10px;}.feed{padding:24px 16px;}.message{gap:9px;}.messageBody,.userBubble{font-size:13px;}.composerWrap{padding:8px 12px max(10px,env(safe-area-inset-bottom));}.composer{padding:12px 12px 9px;border-radius:16px;}.composerHint{font-size:9px;}.composerFootnote{font-size:8px;}.jumpButton{bottom:168px;}.conversation{gap:24px;}}
 @media(prefers-reduced-motion:reduce){.thinking i{animation:none}.suggestion,.composer{transition:none}.suggestion:hover{transform:none}}
+
+/* Layout-only corrections. The existing animations and orb styles are untouched. */
+.composerBar > button { flex-shrink: 0; }
+.composerBar > .modelSwitcher { flex-shrink: 1; min-width: 0; }
+.composerHint { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.composerFootnote { flex-wrap: wrap; row-gap: 4px; text-align: center; }
+.toolsPopover { max-height: min(380px, var(--tools-available-height, 50dvh)); overscroll-behavior: contain; }
+.userDetails strong { white-space: nowrap; }
+.assistantName { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.assistantName > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.toolStatus code { min-width: 0; white-space: nowrap; }
+.toolStatus > svg, .toolStatus > span { flex-shrink: 0; }
+.notice { flex-shrink: 0; overflow-wrap: anywhere; }
+.notice button { flex-shrink: 0; }
+
+/* App-only micro-interactions. The existing streaming/spark rules above are intact.
+   Never animate welcomeInner itself: it contains the protected orb. */
+@keyframes welcomeCopyIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes welcomeCardIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: no-preference) {
+  .welcomeInner > .eyebrow, .welcomeInner > h1, .welcomeInner > p {
+    animation: welcomeCopyIn 360ms ease-out both;
+  }
+  .welcomeInner > h1 { animation-delay: 45ms; }
+  .welcomeInner > p { animation-delay: 90ms; }
+  .suggestion { animation: welcomeCardIn 340ms ease-out both; }
+  .suggestion:nth-child(2) { animation-delay: 60ms; }
+  .suggestion:nth-child(3) { animation-delay: 120ms; }
+  .send { transition: opacity 140ms ease, box-shadow 180ms ease; }
+  .send:not(:disabled):hover { box-shadow: 0 0 0 3px #c3b0ef22; }
+  .messageTools > span { transition: opacity 160ms ease; }
+}
+.suggestion:focus-visible { border-color: #b6a3f7; }

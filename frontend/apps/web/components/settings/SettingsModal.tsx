@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useDialogFocus } from "../../hooks/useDialogFocus";
+import styles from "./Settings.module.css";
 import {
   Zap,
   Palette,
@@ -97,7 +99,7 @@ const PRESETS = [
   { h: 330, s: 65, l: 48, label: "Rose" },
 ];
 
-export function SettingsModal({
+export const SettingsModal = React.memo(function SettingsModal({
   isOpen,
   onClose,
   user,
@@ -121,6 +123,7 @@ export function SettingsModal({
   onOrbThemeChange,
 }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+  const dialogRef = useDialogFocus(isOpen, onClose);
 
   // Aevora Orb theme state synced across components & storage
   const [selectedOrbTheme, setSelectedOrbTheme] = useState<number>(() => {
@@ -156,18 +159,6 @@ export function SettingsModal({
       setActiveTab(initialTab);
     }
   }, [isOpen, initialTab]);
-
-  // Handle ESC key to close
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
 
   // HSL tone state
   const [hue, setHue] = useState(250);
@@ -332,7 +323,10 @@ export function SettingsModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-4xl lg:max-w-5xl h-[720px] max-h-[92vh] bg-surface-solid border border-border rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col sm:flex-row"
+        ref={dialogRef}
+        tabIndex={-1}
+        aria-labelledby="settings-panel-title"
+        className={`${styles.dialog} relative w-full max-w-4xl lg:max-w-5xl h-[720px] max-h-[92vh] bg-surface-solid border border-border rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col sm:flex-row`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -500,11 +494,11 @@ export function SettingsModal({
         </div>
 
         {/* Right Tab Content */}
-        <div className="flex-1 flex flex-col min-w-0 bg-surface-solid overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-surface-solid overflow-hidden">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
+          <div className={`${styles.header} px-6 py-4 border-b border-border flex items-center justify-between gap-3 shrink-0`}>
             <div>
-              <h2 className="text-base font-bold text-foreground">
+              <h2 id="settings-panel-title" className="text-base font-bold text-foreground">
                 {activeTab === "boost" && "AI Engine & Performance Boost"}
                 {activeTab === "appearance" && "Appearance & Customization"}
                 {activeTab === "companion" && "Codex Pet & Voice Assistant"}
@@ -526,15 +520,16 @@ export function SettingsModal({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
               title="Close Settings"
+              aria-label="Close settings"
             >
               <X size={16} />
             </button>
           </div>
 
           {/* Scrollable Content Body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+          <div className={`${styles.content} flex-1 min-h-0 overflow-y-auto p-6 space-y-6 scrollbar-thin`}>
             {/* ─── TAB 1: AI & BOOST ────────────────────────────────────────── */}
             {activeTab === "boost" && (
               <div className="space-y-5">
@@ -545,12 +540,12 @@ export function SettingsModal({
                       <Zap size={20} className={isBoostEnabled ? "animate-pulse fill-current" : ""} />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center flex-wrap gap-2">
                         <span className="text-sm font-bold text-foreground">
                           AI Performance Boost (/boost)
                         </span>
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${
                             isBoostEnabled
                               ? "bg-amber-500/20 text-amber-400 border border-amber-500/40"
                               : "bg-surface-hover text-muted-foreground border border-border"
@@ -628,7 +623,7 @@ export function SettingsModal({
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className={`${styles.connectionControls} flex items-center gap-2`}>
                     <input
                       type="text"
                       value={apiUrl}
@@ -881,12 +876,12 @@ export function SettingsModal({
                       <Bot size={20} />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center flex-wrap gap-2">
                         <span className="text-sm font-bold text-foreground">
                           Floating Codex Pet Orb
                         </span>
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${
                             isPetOrbVisible
                               ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
                               : "bg-surface-hover text-muted-foreground border border-border"
@@ -929,7 +924,7 @@ export function SettingsModal({
                             Desktop Floating Mode
                           </span>
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${
                               petMode === "desktop"
                                 ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
                                 : "bg-surface-hover text-muted-foreground border border-border"
@@ -1406,4 +1401,4 @@ export function SettingsModal({
       </div>
     </div>
   );
-}
+});

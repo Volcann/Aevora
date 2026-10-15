@@ -1,10 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 
 interface MarkdownRendererProps {
   content: string;
   isStreaming?: boolean;
+}
+
+// ─── Sparking Cursor Component ──────────────────────────────────────────
+export function SparkingCursor() {
+  return (
+    <span className="sparking-cursor" aria-hidden="true">
+      <span className="spark-caret" />
+      <span className="spark-stars">
+        <span className="spark-mote m1" />
+        <span className="spark-mote m2" />
+        <span className="spark-mote m3" />
+        <span className="spark-mote m4" />
+      </span>
+      <span className="spark-halo" />
+    </span>
+  );
 }
 
 // ─── Code Block Component with Copy Functionality ─────────────────────────
@@ -18,12 +34,16 @@ function CodeBlock({
   isStreaming?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback if clipboard API is restricted
       const textarea = document.createElement("textarea");
@@ -33,7 +53,6 @@ function CodeBlock({
       document.execCommand("copy");
       document.body.removeChild(textarea);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -78,7 +97,7 @@ function CodeBlock({
       {/* Code Text Content */}
       <pre className="p-4 overflow-x-auto text-[#e6edf3] leading-relaxed scrollbar-thin selection:bg-cyan-500/30">
         <code>{code}</code>
-        {isStreaming && <span className="stream-cursor" />}
+        {isStreaming && <SparkingCursor />}
       </pre>
     </div>
   );
@@ -109,7 +128,7 @@ function getAlignment(cell: string): "left" | "center" | "right" {
 }
 
 // ─── Main Markdown Renderer Component ─────────────────────────────────────
-export function MarkdownRenderer({ content, isStreaming = false }: MarkdownRendererProps) {
+export const MarkdownRenderer = memo(function MarkdownRenderer({ content, isStreaming = false }: MarkdownRendererProps) {
   // Inline formatting: links, bold, italic, strikethrough, inline code
   const parseInline = (
     text: string,
@@ -194,13 +213,24 @@ export function MarkdownRenderer({ content, isStreaming = false }: MarkdownRende
     }
 
     if (isEnd && showCursor) {
-      parts.push(<span key="stream-cursor" className="stream-cursor" />);
+      if (parts.length > 0) {
+        const lastPart = parts[parts.length - 1];
+        if (typeof lastPart === "string" && lastPart.length > 0) {
+          parts.pop();
+          const sparkLen = Math.min(lastPart.length, 3);
+          const prefix = lastPart.slice(0, -sparkLen);
+          const tail = lastPart.slice(-sparkLen);
+          if (prefix) parts.push(prefix);
+          if (tail) parts.push(<span key="spark-char-tail" className="spark-char">{tail}</span>);
+        }
+      }
+      parts.push(<SparkingCursor key="stream-cursor" />);
     }
 
     return parts.length > 0 ? (
       <>{parts}</>
     ) : isEnd && showCursor ? (
-      <span key="stream-cursor" className="stream-cursor" />
+      <SparkingCursor key="stream-cursor" />
     ) : (
       text
     );
@@ -470,4 +500,4 @@ export function MarkdownRenderer({ content, isStreaming = false }: MarkdownRende
   };
 
   return <div className="space-y-0.5 text-sm">{renderBlocks()}</div>;
-}
+});

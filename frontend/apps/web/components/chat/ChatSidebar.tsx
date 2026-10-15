@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { Plus, PanelLeftClose, MessageSquare, Trash2, LogOut, Search, Settings } from "lucide-react";
 import type { ChatSessionItem, UserProfile } from "../../lib/api";
 import styles from "./Chat.module.css";
@@ -13,10 +13,9 @@ interface ChatSidebarProps {
   onLogout: () => void;
   isOpen: boolean;
   onToggleOpen: () => void;
-  onOpenAuth: () => void;
   onOpenSettings?: () => void;
 }
-export function ChatSidebar({ sessions, currentSessionId, onSelectSession, onNewSession, onDeleteSession, user, onLogout, isOpen, onToggleOpen, onOpenSettings }: ChatSidebarProps) {
+export const ChatSidebar = memo(function ChatSidebar({ sessions, currentSessionId, onSelectSession, onNewSession, onDeleteSession, user, onLogout, isOpen, onToggleOpen, onOpenSettings }: ChatSidebarProps) {
   const [query, setQuery] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   useEffect(() => {
@@ -33,13 +32,16 @@ export function ChatSidebar({ sessions, currentSessionId, onSelectSession, onNew
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, onToggleOpen, confirmDeleteId]);
+  const filtered = useMemo(() => {
+    const search = query.trim().toLowerCase();
+    return search ? sessions.filter((session) => (session.title || "Untitled chat").toLowerCase().includes(search)) : sessions;
+  }, [sessions, query]);
   if (!isOpen)
     return null;
   const closeOnMobile = () => {
     if (window.matchMedia("(max-width:700px)").matches)
       onToggleOpen();
   };
-  const filtered = sessions.filter((session) => (session.title || "Untitled chat").toLowerCase().includes(query.trim().toLowerCase()));
   return <>
     <button
       className={styles.scrim}
@@ -118,4 +120,4 @@ export function ChatSidebar({ sessions, currentSessionId, onSelectSession, onNew
 
     </aside>
   </>;
-}
+});

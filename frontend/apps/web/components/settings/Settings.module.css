@@ -1,0 +1,40 @@
+/* Geometry only: retain all existing colors, transitions and animations. */
+.dialog {
+  max-height: min(92vh, calc(100dvh - 24px));
+}
+
+.header > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.connectionControls > input {
+  min-width: 0;
+}
+
+.connectionControls > button {
+  flex-shrink: 0;
+}
+
+.content {
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  .connectionControls {
+    flex-wrap: wrap;
+  }
+
+  .connectionControls > input {
+    flex-basis: 100%;
+  }
+
+  .header {
+    padding: 14px 16px;
+  }
+
+  .content {
+    padding: 16px;
+  }
+}
