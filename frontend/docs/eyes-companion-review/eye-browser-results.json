@@ -1,0 +1,64 @@
+{
+  "reactVersion": "18.2.0",
+  "browserVersion": "144.0.7559.96",
+  "fixture": {
+    "compatibilityRuntime": true,
+    "typescript": "5.8.3"
+  },
+  "passed": 40,
+  "checks": [
+    "initial expression is neutral",
+    "bubbling host event affects only its own orb",
+    "transient reaction returns to neutral after its deadline",
+    "existing window mood broadcasts still reach both orbs",
+    "happy expression visibly replaces the open eyes",
+    "happy eyelids actually render after their gentle transition",
+    "movement event storms do not overwrite deliberate expression",
+    "malformed and prototype-like custom events are ignored",
+    "existing state 1 produces curious eyes",
+    "existing state 2 produces focused eyes",
+    "existing state 3 produces normal eyes",
+    "existing state 0 produces content eyes",
+    "controlled mood takes precedence over automatic reactions",
+    "250 synchronous pointer events use at most one layout read per orb",
+    "gaze tracking does not re-render React",
+    "gaze writes finite pupil transforms",
+    "rubbing produces gentle happy eyes without cartoon tricks",
+    "pressing never changes body styles",
+    "release outside restores original CSS inheritance",
+    "secondary click does not squish the orb",
+    "pointercancel restores a pressed orb without a stuck squish",
+    "keyboard activation receives eye-only feedback",
+    "hidden heart and spiral expressions do not run animations",
+    "reduced-motion mode keeps deliberate emotional feedback",
+    "reduced-motion mode stops all eye animations",
+    "background tab pauses eye work",
+    "existing desktop motion-off policy also quiets the eyes",
+    "existing desktop renderer suspension also pauses eye work",
+    "all removed trick events are inert",
+    "reduced motion centers gaze even while thinking",
+    "modal rerenders do not steal input focus or caret",
+    "Escape uses the latest close callback",
+    "unmount clears eye timers and animation frames",
+    "unmount clears eye timers and animation frames",
+    "unmount clears eye timers and animation frames",
+    "unmount clears eye timers and animation frames",
+    "unmount clears eye timers and animation frames",
+    "unmount clears eye timers and animation frames",
+    "root teardown leaves no eye callbacks",
+    "no browser exceptions, including events after teardown"
+  ],
+  "pointerMetrics": {
+    "before": {
+      "renders": 28,
+      "reads": 0,
+      "frames": 1
+    },
+    "after": {
+      "renders": 28,
+      "reads": 2,
+      "frames": 3
+    }
+  },
+  "errors": []
+}

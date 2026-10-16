@@ -1,0 +1,4 @@
+PASS: 158 original files byte-identical (frontend).
+PASS: 9 reviewed modifications and 5 new production files match their delivery hashes.
+PASS: 4 original drag/fling/send/spark fragments and all original floating-window CSS declarations/keyframes/transitions preserved.
+No API, IPC, dependency, shader, renderer, or object/tool transport implementation was changed.

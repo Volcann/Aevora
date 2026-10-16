@@ -1,0 +1,148 @@
+TAP version 13
+# Subtest: all six original moods plus four eye-only moods remain valid
+ok 1 - all six original moods plus four eye-only moods remain valid
+  ---
+  duration_ms: 0.8189
+  type: 'test'
+  ...
+# Subtest: reactions expire instead of getting stuck after a React mood update
+ok 2 - reactions expire instead of getting stuck after a React mood update
+  ---
+  duration_ms: 0.75057
+  type: 'test'
+  ...
+# Subtest: replacing an expression cancels its old timer
+ok 3 - replacing an expression cancels its old timer
+  ---
+  duration_ms: 0.186606
+  type: 'test'
+  ...
+# Subtest: a thousand movement events cannot starve recovery or allocate a thousand timers
+ok 4 - a thousand movement events cannot starve recovery or allocate a thousand timers
+  ---
+  duration_ms: 0.274375
+  type: 'test'
+  ...
+# Subtest: movement and idle gestures never override affection
+ok 5 - movement and idle gestures never override affection
+  ---
+  duration_ms: 0.239023
+  type: 'test'
+  ...
+# Subtest: explicit tricks override automatic reactions
+ok 6 - explicit tricks override automatic reactions
+  ---
+  duration_ms: 0.16282
+  type: 'test'
+  ...
+# Subtest: an explicit normal event clears an active expression
+ok 7 - an explicit normal event clears an active expression
+  ---
+  duration_ms: 0.107368
+  type: 'test'
+  ...
+# Subtest: same-mood priority upgrades do not renew the deadline
+ok 8 - same-mood priority upgrades do not renew the deadline
+  ---
+  duration_ms: 0.119517
+  type: 'test'
+  ...
+# Subtest: invalid durations cannot create immortal or zero-length reactions
+ok 9 - invalid durations cannot create immortal or zero-length reactions
+  ---
+  duration_ms: 0.334084
+  type: 'test'
+  ...
+# Subtest: unknown runtime moods are ignored
+ok 10 - unknown runtime moods are ignored
+  ---
+  duration_ms: 0.288797
+  type: 'test'
+  ...
+# Subtest: dispose cancels all deadlines and rejects future events
+ok 11 - dispose cancels all deadlines and rejects future events
+  ---
+  duration_ms: 0.192836
+  type: 'test'
+  ...
+# Subtest: three deliberate reversals make a petting gesture
+ok 12 - three deliberate reversals make a petting gesture
+  ---
+  duration_ms: 0.294245
+  type: 'test'
+  ...
+# Subtest: one-direction travel is not petting
+ok 13 - one-direction travel is not petting
+  ---
+  duration_ms: 1.057163
+  type: 'test'
+  ...
+# Subtest: pointer jitter is not affection
+ok 14 - pointer jitter is not affection
+  ---
+  duration_ms: 0.253014
+  type: 'test'
+  ...
+# Subtest: slow or stale strokes do not combine across pauses
+ok 15 - slow or stale strokes do not combine across pauses
+  ---
+  duration_ms: 0.083513
+  type: 'test'
+  ...
+# Subtest: gesture reset separates dragging from petting
+ok 16 - gesture reset separates dragging from petting
+  ---
+  duration_ms: 0.170061
+  type: 'test'
+  ...
+# Subtest: gesture histories remain bounded under sustained input
+ok 17 - gesture histories remain bounded under sustained input
+  ---
+  duration_ms: 5.913241
+  type: 'test'
+  ...
+# Subtest: invalid gesture coordinates are harmless
+ok 18 - invalid gesture coordinates are harmless
+  ---
+  duration_ms: 0.104204
+  type: 'test'
+  ...
+# Subtest: gaze retains the original horizontal, vertical and parallax bounds
+ok 19 - gaze retains the original horizontal, vertical and parallax bounds
+  ---
+  duration_ms: 5.994792
+  type: 'test'
+  ...
+# Subtest: center gaze converges symmetrically without the original rightward twitch
+ok 20 - center gaze converges symmetrically without the original rightward twitch
+  ---
+  duration_ms: 0.099767
+  type: 'test'
+  ...
+# Subtest: offscreen and invalid pointer coordinates return neutral gaze
+ok 21 - offscreen and invalid pointer coordinates return neutral gaze
+  ---
+  duration_ms: 0.125355
+  type: 'test'
+  ...
+# Subtest: listening/thinking/speaking reflect existing states, without interpreting streamed content
+ok 22 - listening/thinking/speaking reflect existing states, without interpreting streamed content
+  ---
+  duration_ms: 0.106637
+  type: 'test'
+  ...
+# Subtest: only open-eye expressions participate in natural blinking
+ok 23 - only open-eye expressions participate in natural blinking
+  ---
+  duration_ms: 0.113377
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 76.843209

@@ -1,0 +1,22 @@
+{
+  "project": "frontend",
+  "unitTests": {
+    "eyes-unit.tap": 23,
+    "voice-unit.tap": 6,
+    "streaming-unit.tap": 12,
+    "orb-unit.tap": 40,
+    "markdown-unit.tap": 18
+  },
+  "totalUnitTests": 99,
+  "browserChecks": {
+    "eye-browser-results.json": 40,
+    "companion-browser-results.json": 40
+  },
+  "totalBrowserChecks": 80,
+  "productionBuildVerified": false,
+  "liveBackendVerified": false,
+  "electronLaunchVerified": false,
+  "browserRuntime": "React 18.2.0 offline compatibility fixture; original manifests unchanged",
+  "headedWebGL": true,
+  "strictHelperTypecheck": true
+}

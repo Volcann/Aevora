@@ -1,0 +1,2 @@
+PASS: 61 real-source modules transpiled; browser fixture: /mnt/data/eyes-enhanced-src/frontend/.companion-test-build
+Eye fixture built: /mnt/data/eyes-enhanced-src/frontend/.eye-test-build

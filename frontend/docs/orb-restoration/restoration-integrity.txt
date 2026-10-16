@@ -1,3 +1,0 @@
-PASS: all 17 original orb files restored byte-for-byte; no added orb files.
-PASS: 164 original files are byte-identical.
-PASS: only the recorded app-level changes and verification metadata differ; original chat CSS preserved.

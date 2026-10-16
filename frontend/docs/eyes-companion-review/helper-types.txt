@@ -1,0 +1,1 @@
+PASS: strict typecheck of inline-markdown.ts and eye-behavior.ts (not a whole-workspace check).
