@@ -8,6 +8,7 @@ import { useOrbTheme } from "./hooks/useOrbTheme";
 import { useOrbVoice } from "./hooks/useOrbVoice";
 import { ORB_LABELS } from "./core/orb-model";
 import type { SendVoicePrompt } from "./core/voice-session";
+import { CompanionMarkdown } from "../chat/CompanionMarkdown";
 import styles from "./Orb.module.css";
 
 export interface CodexPetOrbProps {
@@ -132,58 +133,6 @@ function VisiblePet({ onOpenFullVoiceModal, onSendPrompt, onStopStreaming, onDet
     flingRef.current = requestAnimationFrame(loop);
   };
 
-  const handleTrick = (trick: "bounce" | "flip" | "pet" | "wink" | "dizzy") => {
-    const orbHost = petHandleRef.current?.querySelector("[data-renderer]");
-    if (trick === "bounce") {
-      orbHost?.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "bounce" } }));
-      if (petHandleRef.current) {
-        petHandleRef.current.style.setProperty("--ball-hop-y", "-24px");
-        petHandleRef.current.style.setProperty("--ball-squish-y", "1.16");
-        setTimeout(() => {
-          if (petHandleRef.current) {
-            petHandleRef.current.style.setProperty("--ball-hop-y", "0px");
-            petHandleRef.current.style.setProperty("--ball-squish-y", "0.86");
-            setTimeout(() => {
-              if (petHandleRef.current) {
-                petHandleRef.current.style.setProperty("--ball-hop-y", "-10px");
-                setTimeout(() => {
-                  if (petHandleRef.current) {
-                    petHandleRef.current.style.setProperty("--ball-hop-y", "0px");
-                    petHandleRef.current.style.setProperty("--ball-squish-y", "1");
-                  }
-                }, 130);
-              }
-            }, 140);
-          }
-        }, 160);
-      }
-    } else if (trick === "flip") {
-      orbHost?.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "flip" } }));
-      if (petHandleRef.current) {
-        petHandleRef.current.style.setProperty("--ball-rot", "360deg");
-        petHandleRef.current.style.setProperty("--ball-hop-y", "-28px");
-        setTimeout(() => {
-          if (petHandleRef.current) {
-            petHandleRef.current.style.setProperty("--ball-rot", "0deg");
-            petHandleRef.current.style.setProperty("--ball-hop-y", "0px");
-          }
-        }, 340);
-      }
-    } else if (trick === "pet") {
-      orbHost?.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "pet" } }));
-    } else if (trick === "wink") {
-      orbHost?.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "wink" } }));
-    } else if (trick === "dizzy") {
-      orbHost?.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "dizzy" } }));
-      if (petHandleRef.current) {
-        petHandleRef.current.style.setProperty("--ball-rot", "720deg");
-        setTimeout(() => {
-          if (petHandleRef.current) petHandleRef.current.style.setProperty("--ball-rot", "0deg");
-        }, 400);
-      }
-    }
-  };
-
   const startDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0 || !position) return;
     if (flingRef.current) {
@@ -280,7 +229,9 @@ function VisiblePet({ onOpenFullVoiceModal, onSendPrompt, onStopStreaming, onDet
           </header>
           <p className={styles.petStatus} role="status">{snapshot.requesting ? "Waiting for microphone permission" : ORB_LABELS[state]}</p>
           {activeTool && <p className={styles.toolStatus}>{activeTool.status === "start" ? "Using" : "Tool:"} {activeTool.name}</p>}
-          <p className={styles.petMessage}>{snapshot.error || snapshot.response || snapshot.transcript || streamingMessage || "Ask a question, or tap the microphone to talk."}</p>
+          <div className={styles.petMessage} style={{ whiteSpace: "normal" }}>
+            <CompanionMarkdown content={snapshot.error || snapshot.response || snapshot.transcript || streamingMessage || "Ask a question, or tap the microphone to talk."} isStreaming={!snapshot.error && (snapshot.streaming || !!isStreaming)} />
+          </div>
           {snapshot.error && <span className="sr-only" role="alert">{snapshot.error}</span>}
           {detachError && <p className={styles.error} role="alert">{detachError}</p>}
           <form className={styles.petForm} onSubmit={(event) => { event.preventDefault(); send(); }}>
@@ -296,13 +247,7 @@ function VisiblePet({ onOpenFullVoiceModal, onSendPrompt, onStopStreaming, onDet
             {onOpenFullVoiceModal && <button type="button" className={styles.control} onClick={() => { session.stop(); setExpanded(false); onOpenFullVoiceModal(); }} aria-label="Open full voice mode"><Maximize2 size={16} aria-hidden="true" /></button>}
             <button type="button" className={styles.control} onClick={() => { void detach(); }} aria-label="Detach companion to desktop"><ExternalLink size={16} aria-hidden="true" /></button>
           </div>
-          <div className={styles.trickBar} role="toolbar" aria-label="Playful ball tricks">
-            <button type="button" className={styles.trickButton} onClick={() => handleTrick("bounce")} title="Bounce the ball">🏀 Bounce</button>
-            <button type="button" className={styles.trickButton} onClick={() => handleTrick("flip")} title="Do a backflip">🤸 Flip</button>
-            <button type="button" className={styles.trickButton} onClick={() => handleTrick("pet")} title="Pet the ball">💖 Love</button>
-            <button type="button" className={styles.trickButton} onClick={() => handleTrick("wink")} title="Wink">😉 Wink</button>
-            <button type="button" className={styles.trickButton} onClick={() => handleTrick("dizzy")} title="Spin dizzy">🌀 Dizzy</button>
-          </div>
+
         </section>
       )}
       <div
@@ -312,8 +257,7 @@ function VisiblePet({ onOpenFullVoiceModal, onSendPrompt, onStopStreaming, onDet
         onPointerMove={moveDrag}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
-        onDoubleClick={() => handleTrick("flip")}
-        title="Drag to fling · Double-click for flip · Click to poke"
+        title="Drag to move · Click to open companion"
       >
         <OrbVisual size={80} state={state} theme={theme} signal={session.signal} isMoving={isDragging} label={expanded ? "Minimize voice companion" : "Open voice companion"} onActivate={() => {
           if (!suppressClick.current) setExpanded((value) => !value);
