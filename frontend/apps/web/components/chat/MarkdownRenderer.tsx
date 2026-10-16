@@ -1,10 +1,13 @@
 "use client";
 
 import React, { memo, useEffect, useState } from "react";
+import { parseInlineTokens, type InlineToken } from "../../lib/inline-markdown";
 
 interface MarkdownRendererProps {
   content: string;
   isStreaming?: boolean;
+  /** Existing spark cursor is the default. Companion surfaces keep their own cursor. */
+  showCursor?: boolean;
 }
 
 // ─── Sparking Cursor Component ──────────────────────────────────────────
@@ -28,10 +31,12 @@ function CodeBlock({
   language,
   code,
   isStreaming,
+  showCursor = true,
 }: {
   language: string;
   code: string;
   isStreaming?: boolean;
+  showCursor?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
@@ -97,7 +102,7 @@ function CodeBlock({
       {/* Code Text Content */}
       <pre className="p-4 overflow-x-auto text-[#e6edf3] leading-relaxed scrollbar-thin selection:bg-cyan-500/30">
         <code>{code}</code>
-        {isStreaming && <SparkingCursor />}
+        {isStreaming && showCursor && <SparkingCursor />}
       </pre>
     </div>
   );
@@ -128,91 +133,27 @@ function getAlignment(cell: string): "left" | "center" | "right" {
 }
 
 // ─── Main Markdown Renderer Component ─────────────────────────────────────
-export const MarkdownRenderer = memo(function MarkdownRenderer({ content, isStreaming = false }: MarkdownRendererProps) {
+export const MarkdownRenderer = memo(function MarkdownRenderer({ content, isStreaming = false, showCursor = true }: MarkdownRendererProps) {
   // Inline formatting: links, bold, italic, strikethrough, inline code
   const parseInline = (
     text: string,
     isEnd = false,
-    showCursor = false
+    streaming = false
   ): React.ReactNode => {
-    if (!text && !showCursor) return null;
+    if (!text && !(streaming && showCursor)) return null;
 
-    const tokenRegex =
-      /(\[.*?\]\(.*?\)|\*\*\*.*?\*\*\*|\*\*.*?\*\*|\*.*?\*|~~.*?~~|`.*?`)/g;
-    const parts: React.ReactNode[] = [];
-    let lastIdx = 0;
-    let match: RegExpExecArray | null;
+    const renderTokens = (tokens: InlineToken[], prefix = "inline"): React.ReactNode[] => tokens.map((token, index) => {
+      const key = `${prefix}-${index}`;
+      if (token.kind === "text") return token.text;
+      if (token.kind === "code") return <code key={key} className="px-1.5 py-0.5 rounded-md bg-surface border border-border text-[0.84em] font-mono text-cyan-300 font-medium">{token.text}</code>;
+      if (token.kind === "strong") return <strong key={key} className="font-bold text-foreground">{renderTokens(token.children, key)}</strong>;
+      if (token.kind === "em") return <em key={key} className="italic text-foreground/90">{renderTokens(token.children, key)}</em>;
+      if (token.kind === "del") return <del key={key} className="line-through text-muted-foreground">{renderTokens(token.children, key)}</del>;
+      return <a key={key} href={token.href} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition-colors font-medium">{renderTokens(token.children, key)}</a>;
+    });
+    const parts = renderTokens(parseInlineTokens(text, isEnd && streaming));
 
-    while ((match = tokenRegex.exec(text)) !== null) {
-      if (match.index > lastIdx) {
-        parts.push(text.slice(lastIdx, match.index));
-      }
-
-      const token = match[0];
-      const key = `inline-${match.index}`;
-
-      if (token.startsWith("[") && token.includes("](") && token.endsWith(")")) {
-        const linkMatch = token.match(/^\[(.*?)\]\((.*?)\)$/);
-        if (linkMatch) {
-          parts.push(
-            <a
-              key={key}
-              href={linkMatch[2]}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition-colors font-medium"
-            >
-              {linkMatch[1]}
-            </a>
-          );
-        } else {
-          parts.push(token);
-        }
-      } else if (token.startsWith("***") && token.endsWith("***")) {
-        parts.push(
-          <strong key={key} className="font-bold text-foreground">
-            <em className="italic">{token.slice(3, -3)}</em>
-          </strong>
-        );
-      } else if (token.startsWith("**") && token.endsWith("**")) {
-        parts.push(
-          <strong key={key} className="font-bold text-foreground">
-            {token.slice(2, -2)}
-          </strong>
-        );
-      } else if (token.startsWith("*") && token.endsWith("*")) {
-        parts.push(
-          <em key={key} className="italic text-foreground/90">
-            {token.slice(1, -1)}
-          </em>
-        );
-      } else if (token.startsWith("~~") && token.endsWith("~~")) {
-        parts.push(
-          <del key={key} className="line-through text-muted-foreground">
-            {token.slice(2, -2)}
-          </del>
-        );
-      } else if (token.startsWith("`") && token.endsWith("`")) {
-        parts.push(
-          <code
-            key={key}
-            className="px-1.5 py-0.5 rounded-md bg-surface border border-border text-[0.84em] font-mono text-cyan-300 font-medium"
-          >
-            {token.slice(1, -1)}
-          </code>
-        );
-      } else {
-        parts.push(token);
-      }
-
-      lastIdx = tokenRegex.lastIndex;
-    }
-
-    if (lastIdx < text.length) {
-      parts.push(text.slice(lastIdx));
-    }
-
-    if (isEnd && showCursor) {
+    if (isEnd && streaming && showCursor) {
       if (parts.length > 0) {
         const lastPart = parts[parts.length - 1];
         if (typeof lastPart === "string" && lastPart.length > 0) {
@@ -229,7 +170,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, isStre
 
     return parts.length > 0 ? (
       <>{parts}</>
-    ) : isEnd && showCursor ? (
+    ) : isEnd && streaming && showCursor ? (
       <SparkingCursor key="stream-cursor" />
     ) : (
       text
@@ -269,6 +210,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, isStre
             language={lang}
             code={codeLines.join("\n")}
             isStreaming={isActivelyStreamingCode}
+            showCursor={showCursor}
           />
         );
         continue;

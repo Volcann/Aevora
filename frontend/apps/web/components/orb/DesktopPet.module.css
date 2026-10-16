@@ -342,7 +342,8 @@
   padding: 0 4px;
   border-radius: 4px;
 }
-.turn > p {
+.turn > p,
+.turn > .turnBody {
   font-size: 11px;
   line-height: 1.55;
   white-space: pre-wrap;
@@ -363,7 +364,8 @@
 .turn[data-role="assistant"] {
   margin-right: 12px;
 }
-.turn[data-role="assistant"] > p {
+.turn[data-role="assistant"] > p,
+.turn[data-role="assistant"] > .turnBody {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.07);
   color: #eee9f8;
@@ -866,3 +868,6 @@
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
+
+/* Markdown controls its own line layout, unlike literal user text. */
+.turn > .turnBody { white-space: normal; min-width: 0; }
