@@ -1,0 +1,106 @@
+"""Real-source UI checks; offline fixtures replace React transport/API/native/storage only.
+Run with HEADED=1 under Xvfb on managed Chromium to exercise the real WebGL renderer.
+"""
+import json, os, re
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+ROOT=Path(__file__).resolve().parents[2]
+BUILD=Path(os.getenv('AEVORA_TEST_BUILD_DIR',ROOT/'.companion-test-build'))
+OUTPUT=Path(os.getenv('AEVORA_UI_REPORT_DIR',ROOT/'docs/eyes-companion-review'));OUTPUT.mkdir(parents=True,exist_ok=True)
+HTML=(BUILD/'index.html').read_text().replace('<link rel="stylesheet" href="styles.css">','<style>'+(BUILD/'styles.css').read_text()+'</style>').replace('<script src="bundle.js"></script>','')
+BUNDLE=(BUILD/'bundle.js').read_text()
+STORAGE="""()=>{const m=new Map();Object.defineProperty(window,'localStorage',{value:{getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k),clear:()=>m.clear()}});if(!crypto.randomUUID)crypto.randomUUID=()=>Math.random().toString(36).slice(2);}"""
+checks=[];errors=[]
+def check(ok, name):
+ if not ok:raise AssertionError(name)
+ checks.append(name)
+def settle(page):page.wait_for_timeout(90)
+def boot(browser,view='pet',width=360,height=560):
+ page=browser.new_page(viewport={'width':width,'height':height},device_scale_factor=1)
+ page.set_default_timeout(6000);page.on('pageerror',lambda e:errors.append(str(e)))
+ page.set_content(HTML);page.evaluate(STORAGE);page.evaluate('q=>window.__fixtureQuery=q','?view='+view)
+ page.add_script_tag(content=BUNDLE);settle(page)
+ if view=='pet':page.get_by_role('button',name='Open companion chat',exact=True).click();settle(page)
+ return page
+with sync_playwright() as p:
+ browser=p.chromium.launch(executable_path=os.getenv('CHROMIUM_PATH','/usr/bin/chromium'),headless=os.getenv('HEADED')!='1',args=['--no-sandbox','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--use-gl=angle','--use-angle=swiftshader'])
+ page=boot(browser)
+ check(page.locator('.DesktopPet_composerFootnote').count()==0,'entire composer footer is removed from DOM')
+ check(page.get_by_role('button',name=re.compile(r'Bounce|Flip|Love|Wink|Dizzy|Open in main app',re.I)).count()==0,'no manual tricks or footer Open action remains')
+ check(page.get_by_role('button',name='Open main chat',exact=True).count()==1,'independent header workspace action is retained')
+ check(page.locator('canvas').count()>=2,'original orb canvas and companion spark canvas remain mounted')
+ if os.getenv('HEADED')=='1':
+  page.wait_for_function('fixture.glDraws>2')
+  check(page.locator('[data-renderer="webgl"]').count()==1,'original WebGL interior compiles and renders')
+  before=page.evaluate('fixture.glDraws');page.wait_for_function('n=>fixture.glDraws>n',arg=before)
+  check(page.evaluate('fixture.glDraws')>before,'orb interior continues rendering frames')
+ field=page.get_by_role('textbox',name='Message to companion')
+ field.fill('Keep **my literal input** unchanged.');page.get_by_role('button',name='Send to companion',exact=True).click()
+ page.wait_for_function('fixture.requests.length===1')
+ page.evaluate("fixture.stream.onChunk('A **clear')");page.wait_for_function("document.querySelector('.CompanionMarkdown_content strong')?.textContent==='clear'")
+ check(page.locator('.CompanionMarkdown_content').inner_text()=='A clear','partially streamed bold is readable without raw markers')
+ check(page.locator('[data-role="user"] p').inner_text()=='Keep **my literal input** unchanged.','user messages remain literal, not rewritten')
+ check(page.locator('.stream-cursor').count()==1 and page.locator('.sparking-cursor').count()==0,'companion retains exactly its original streaming cursor')
+ for name in ['Select AI Model','Mention a tool (@)']:
+  page.get_by_role('button',name=name,exact=True).click();settle(page)
+  check(not page.evaluate('fixture.requests[0].signal.aborted'),f'{name} does not abort the active stream')
+  page.keyboard.press('Escape');settle(page)
+ check(page.evaluate("fixture.calls.filter(c=>c.name==='models').length===1&&fixture.calls.filter(c=>c.name==='tools').length===1"),'opening menus does not remount the session or refetch catalogs')
+ page.evaluate("fixture.stream.onChunk('*')");page.wait_for_timeout(120)
+ check(page.locator('.CompanionMarkdown_content strong').inner_text()=='clear','a split closing delimiter never flashes a stray star')
+ page.evaluate("fixture.finish('* next step.\\n\\n__Keep this readable.__')")
+ page.get_by_role('button',name='Stop companion response',exact=True).wait_for(state='detached')
+ check(page.locator('.CompanionMarkdown_content strong').all_text_contents()==['clear','Keep this readable.'],'completed streaming preserves both bold syntaxes')
+ check(page.locator('.stream-cursor').count()==0,'original cursor stops on completion')
+ # No footer comes back after content/menus/streaming updates.
+ check(page.locator('.DesktopPet_composerFootnote').count()==0,'footer remains absent after streaming and menu transitions')
+ page.get_by_role('button',name='New chat',exact=True).click();settle(page)
+ check(page.locator('[data-role="assistant"]').count()==0,'new conversation clears rendered history')
+ field.fill('Check stop');page.get_by_role('button',name='Send to companion',exact=True).click()
+ page.wait_for_function('fixture.requests.length===2');page.evaluate("fixture.stream.onChunk('**Working** on it')")
+ page.get_by_role('button',name='Stop companion response',exact=True).click();settle(page)
+ check(page.evaluate('fixture.requests[1].signal.aborted'),'Stop still cancels the original AbortSignal')
+ # Clean example for the deliverable screenshot.
+ page.get_by_role('button',name='New chat',exact=True).click();field.fill('Help me focus on the next step.')
+ page.get_by_role('button',name='Send to companion',exact=True).click();page.wait_for_function('fixture.requests.length===3')
+ page.evaluate("fixture.finish('**One step at a time.**\\n\\nChoose your **most important task**, make it smaller, and start there.\\n\\n- **Focus:** one clear goal.\\n- **Next:** a ten-minute action.')")
+ page.get_by_role('button',name='Stop companion response',exact=True).wait_for(state='detached')
+ page.mouse.move(0,0);page.wait_for_timeout(250)
+ page.screenshot(path=str(OUTPUT/'companion-no-footer.png'))
+ for width,height in [(320,440),(360,552),(390,650)]:
+  page.set_viewport_size({'width':width,'height':height});settle(page)
+  for name in ['Message to companion','Send to companion']:
+   loc=page.get_by_role('textbox' if name=='Message to companion' else 'button',name=name,exact=True);box=loc.bounding_box()
+   check(bool(box) and box['x']>=0 and box['x']+box['width']<=width+1 and box['y']+box['height']<=height+1,f'{name} fits {width}x{height}')
+  check(page.locator('.DesktopPet_panel').evaluate('n=>n.scrollWidth<=n.clientWidth+1'),f'panel has no horizontal overflow at {width}px')
+ page.close()
+ md=boot(browser,'markdown',760,650)
+ def render(text,stream=False,cursor=True):md.evaluate('v=>fixture.renderMarkdown(...v)',[text,stream,cursor]);settle(md)
+ render('A **bold** phrase and __another__.')
+ check(md.locator('strong').all_text_contents()==['bold','another'],'shared renderer displays semantic bold inline')
+ check(md.locator('strong').first.evaluate('n=>Number(getComputedStyle(n).fontWeight)>=700'),'bold has a visible 700-weight treatment')
+ render('**Use `code` and *care***')
+ check(md.locator('strong code').inner_text()=='code' and md.locator('strong em').inner_text()=='care','nested inline formatting works inside bold')
+ render('`**literal**` and \\*\\*escaped\\*\\*')
+ check(md.locator('strong').count()==0 and '**literal**' in md.locator('code').inner_text(),'code and escaped markers stay literal')
+ render('<img src=x onerror=alert(1)> [bad](javascript:alert(1)) [good](https://example.test)')
+ check(md.locator('img').count()==0 and md.locator('a').count()==1,'HTML stays escaped and unsafe links are inert')
+ render('**Streaming**',True)
+ check(md.locator('.sparking-cursor').count()==1 and md.locator('.spark-mote').count()==4,'main markdown retains the original spark-cursor markup')
+ render('```ts\nconst value = "**literal**";\n```')
+ check(md.locator('pre code').inner_text()=='const value = "**literal**";' and md.locator('strong').count()==0,'fenced code preserves literal markdown')
+ render('| **Name** | Value |\n| --- | --- |\n| **Status** | Ready |')
+ check(md.locator('table strong').all_text_contents()==['Name','Status'],'bold works in table headers and cells')
+ md.close()
+ codex=boot(browser,'codex',780,700)
+ codex.get_by_role('button',name=re.compile(r'^Open (voice )?companion$')).click();settle(codex)
+ check(codex.locator('.Orb_trickBar').count()==0,'in-app companion trick toolbar is also removed')
+ check(codex.locator('.CompanionMarkdown_content strong').inner_text()=='your next idea','in-app companion uses the same bold renderer')
+ host=codex.locator('.Orb_petHandle');before=host.get_attribute('style')
+ host.dispatch_event('dblclick');settle(codex)
+ check(host.get_attribute('style')==before,'double-click no longer schedules body flips')
+ check('flip' not in (host.get_attribute('title') or '').lower(),'removed flip shortcut is not advertised in tooltips')
+ codex.close()
+ check(not errors,'no browser exceptions in companion, streaming, markdown or in-app views')
+ report={'passed':len(checks),'checks':checks,'errors':errors,'browser':browser.version,'fixture':json.loads((BUILD/'build-metadata.json').read_text()),'headedWebGL':os.getenv('HEADED')=='1'}
+ (OUTPUT/'companion-browser-results.json').write_text(json.dumps(report,indent=2));print(json.dumps({'passed':len(checks),'errors':errors},indent=2));browser.close()
