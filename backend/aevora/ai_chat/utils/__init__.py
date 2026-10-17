@@ -13,6 +13,11 @@ from aevora.ai_chat.utils.stream import (
     _sse,
     get_history,
     get_model,
+    sync_to_async_gen,
+)
+from aevora.ai_chat.utils.tools import (
+    format_tools,
+    get_tool_list,
 )
 
 __all__ = [
@@ -22,8 +27,11 @@ __all__ = [
     "cleanup_empty_sessions",
     "extract_prompt_words",
     "extract_words",
+    "format_tools",
     "get_history",
     "get_model",
     "get_or_create_chat_session",
+    "get_tool_list",
     "is_prefix_match",
+    "sync_to_async_gen",
 ]

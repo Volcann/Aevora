@@ -24,7 +24,7 @@ class ToolListViewTestCase(APITestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch("aevora.ai_chat.api.v1.views.tools.celery_tool_client.list_tools")
+    @patch("aevora.ai_chat.utils.tools.celery_tool_client.list_tools")
     def test_list_tools_success(self, mock_list_tools):
         self.client.force_authenticate(user=self.user)
         mock_tools = [
@@ -68,7 +68,7 @@ class ToolListViewTestCase(APITestCase):
 
         mock_list_tools.assert_called_once()
 
-    @patch("aevora.ai_chat.api.v1.views.tools.celery_tool_client.list_tools")
+    @patch("aevora.ai_chat.utils.tools.celery_tool_client.list_tools")
     def test_list_tools_worker_error_returns_empty_list(self, mock_list_tools):
         self.client.force_authenticate(user=self.user)
         mock_list_tools.side_effect = TimeoutError("Celery task timed out")
@@ -96,3 +96,37 @@ class ToolListViewTestCase(APITestCase):
 
         mock_send_task.assert_called_once_with("tools.list_tools", queue="laptop.tools")
         mock_job.get.assert_called_once_with(timeout=10)
+
+
+class ToolUtilsTestCase(APITestCase):
+    def test_format_tools_normalizes_schemas(self):
+        from aevora.ai_chat.utils.tools import format_tools
+
+        raw_tools = [
+            {"name": "t1", "inputSchema": {"type": "object"}},
+            {"name": "t2", "parameters": {"type": "object"}},
+            "non-dict-tool",
+        ]
+        formatted = format_tools(raw_tools)
+        self.assertEqual(formatted[0]["parameters"], {"type": "object"})
+        self.assertEqual(formatted[0]["inputSchema"], {"type": "object"})
+        self.assertEqual(formatted[1]["parameters"], {"type": "object"})
+        self.assertEqual(formatted[1]["inputSchema"], {"type": "object"})
+        self.assertEqual(formatted[2], "non-dict-tool")
+
+    @patch("aevora.ai_chat.utils.tools.celery_tool_client.list_tools")
+    def test_get_tool_list_fetches_and_formats(self, mock_list_tools):
+        from aevora.ai_chat.utils.tools import get_tool_list
+
+        mock_list_tools.return_value = [{"name": "test_tool", "inputSchema": {"type": "object"}}]
+        tools = get_tool_list()
+        self.assertEqual(len(tools), 1)
+        self.assertEqual(tools[0]["parameters"], {"type": "object"})
+
+    @patch("aevora.ai_chat.utils.tools.celery_tool_client.list_tools")
+    def test_get_tool_list_handles_exception(self, mock_list_tools):
+        from aevora.ai_chat.utils.tools import get_tool_list
+
+        mock_list_tools.side_effect = Exception("Celery unreachable")
+        tools = get_tool_list()
+        self.assertEqual(tools, [])
