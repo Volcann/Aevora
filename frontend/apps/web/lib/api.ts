@@ -184,6 +184,8 @@ export async function quitApp(): Promise<void> {
   }
 }
 
+let cachedModels: AIModelItem[] | null = null;
+
 export const api = {
   async health(): Promise<{ status: string }> {
     const baseUrl = getApiBaseUrl();
@@ -437,18 +439,23 @@ export const api = {
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.models || data.results || [];
-        if (list.length > 0) return list;
+        if (list.length > 0) {
+          cachedModels = list;
+          return list;
+        }
       }
     } catch (_err) {
       // Fallback to default models if offline or unauthenticated
     }
-    return [
+    const fallback = [
       { id: "1", name: "gemini-3.5-flash-lite", quota: "200.00" },
       { id: "2", name: "gemini-2.5-flash", quota: "100.00" },
       { id: "3", name: "gemini-2.5-pro", quota: "50.00" },
       { id: "4", name: "gemini-1.5-flash", quota: "100.00" },
       { id: "5", name: "gemini-1.5-pro", quota: "50.00" },
     ];
+    cachedModels = fallback;
+    return fallback;
   },
 
   async streamChat(
@@ -478,12 +485,29 @@ export const api = {
       headers["Authorization"] = `Bearer ${tokens.access}`;
     }
 
+    let modelId = options?.model;
+    if (modelId) {
+      if (!cachedModels) {
+        try {
+          await this.getModels();
+        } catch {
+          // ignore model cache fetch error
+        }
+      }
+      if (cachedModels) {
+        const match = cachedModels.find((m) => m.name === modelId || m.id === modelId);
+        if (match?.id) {
+          modelId = match.id;
+        }
+      }
+    }
+
     const queryParams = new URLSearchParams();
     if (sessionId && !sessionId.startsWith("local-")) {
       queryParams.set("session_id", sessionId);
     }
-    if (options?.model) {
-      queryParams.set("model", options.model);
+    if (modelId) {
+      queryParams.set("model", modelId);
     }
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
     const streamUrl = `${baseUrl}/api/v1/chat/stream/${query}`;
@@ -494,7 +518,7 @@ export const api = {
         headers,
         body: JSON.stringify({
           prompt,
-          model: options?.model,
+          model: modelId,
         }),
         signal,
       });

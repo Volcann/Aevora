@@ -3,18 +3,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 
 from aevora.ai_chat.choices import MessageRole
-from aevora.ai_chat.models import AIModel, ChatSession
-
-
-def get_model(serializer):
-    model = None
-    model_id = serializer.validated_data.get("model", None)
-    if model_id:
-        try:
-            model = get_object_or_404(AIModel, id=str(model_id).strip())
-        except (DjangoValidationError, ValueError):
-            raise Http404("AI Model not found")
-    return model
+from aevora.ai_chat.models import ChatSession
 
 
 def get_or_create_chat_session(user, session_id=None, prompt=""):

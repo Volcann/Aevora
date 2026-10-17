@@ -82,8 +82,12 @@ export default function StandaloneDesktopPetPage() {
             typeof window !== "undefined"
               ? localStorage.getItem("aevora-selected-model")
               : null;
-          const exists = list.some((m) => m.name === saved);
-          setSelectedModel(exists && saved ? saved : list[0].name);
+          const matched = saved ? list.find((m) => m.id === saved || m.name === saved) : null;
+          const initialModel = matched || list[0];
+          setSelectedModel(initialModel.id);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("aevora-selected-model", initialModel.id);
+          }
         }
       })
       .catch(() => {});
@@ -100,10 +104,10 @@ export default function StandaloneDesktopPetPage() {
     };
   }, []);
 
-  const handleSelectModel = (modelName: string) => {
-    setSelectedModel(modelName);
+  const handleSelectModel = (modelId: string) => {
+    setSelectedModel(modelId);
     if (typeof window !== "undefined") {
-      localStorage.setItem("aevora-selected-model", modelName);
+      localStorage.setItem("aevora-selected-model", modelId);
     }
   };
 
@@ -115,6 +119,11 @@ export default function StandaloneDesktopPetPage() {
     setShowMenu(false);
   };
 
+  const activeModel = models.find(
+    (m) => m.id === selectedModel || m.name === selectedModel
+  );
+  const displayModelName = activeModel?.name || selectedModel || "gemini-3.5-flash-lite";
+
   const send = useCallback<SendPrompt>(
     async (prompt, options) => {
       if (!getSavedTokens()?.access) {
@@ -122,6 +131,7 @@ export default function StandaloneDesktopPetPage() {
       }
       let failure: Error | null = null;
       let response = "";
+      const modelIdToSend = activeModel?.id || selectedModel || (models[0]?.id ?? undefined);
       broadcastPetMessage({ type: "PET_PROMPT_SENT", payload: { prompt } });
       await api.streamChat(
         sessionId.current,
@@ -150,11 +160,11 @@ export default function StandaloneDesktopPetPage() {
           },
         },
         options?.signal,
-        { voiceMode: false, model: selectedModel || undefined }
+        { voiceMode: false, model: modelIdToSend }
       );
       if (failure) throw failure;
     },
-    [selectedModel]
+    [models, selectedModel, activeModel]
   );
 
   const { session, snapshot } = useTextChat({ onPrompt: send });
@@ -414,8 +424,8 @@ export default function StandaloneDesktopPetPage() {
                 <div key={turn.id} className={styles.turn} data-role={turn.role}>
                   <div className={styles.turnHeader}>
                     <span>{turn.role === "user" ? "You" : "Aevora"}</span>
-                    {turn.role === "assistant" && selectedModel && (
-                      <span className={styles.modelTag}>{selectedModel}</span>
+                    {turn.role === "assistant" && displayModelName && (
+                      <span className={styles.modelTag}>{displayModelName}</span>
                     )}
                     {isStreamingAssistant && (
                       <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-400/20 inline-flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.25)]">
@@ -472,16 +482,17 @@ export default function StandaloneDesktopPetPage() {
                     {models.length ? (
                       models.map((m) => {
                         const isSelected =
+                          selectedModel === m.id ||
                           selectedModel === m.name ||
-                          (!selectedModel && m.name === "gemini-3.5-flash-lite");
+                          (!selectedModel && (m.name === "gemini-3.5-flash-lite" || m === models[0]));
                         const quotaVal = m.quota ?? "0.00";
                         return (
                           <button
-                            key={m.name}
+                            key={m.id || m.name}
                             type="button"
                             onClick={(e) => {
                               sparksRef.current?.burstAtElement(e.currentTarget);
-                              handleSelectModel(m.name);
+                              handleSelectModel(m.id || m.name);
                               setShowMenu(false);
                             }}
                             className={`${styles.listItem} ${
@@ -612,7 +623,7 @@ export default function StandaloneDesktopPetPage() {
                   >
                     <Cpu size={12} className="text-violet-400" />
                     <span className={styles.modelPillText}>
-                      {selectedModel || "gemini-3.5-flash-lite"}
+                      {displayModelName}
                     </span>
                     <ChevronDown size={11} className="text-zinc-400" />
                   </button>

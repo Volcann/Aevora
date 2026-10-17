@@ -268,7 +268,12 @@ export default function HomePage() {
         setModels(list);
         if (list.length) {
           const saved = localStorage.getItem("aevora-selected-model");
-          setSelectedModel(saved && list.some((model) => model.name === saved) ? saved : list[0]!.name);
+          const matched = saved ? list.find((model) => model.id === saved || model.name === saved) : null;
+          const initialModel = matched || list[0]!;
+          setSelectedModel(initialModel.id);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("aevora-selected-model", initialModel.id);
+          }
         }
       }).catch(() => undefined),
     ]);
@@ -351,10 +356,10 @@ export default function HomePage() {
   }, [handleStopStreaming]);
 
   // Select an AI model
-  const handleSelectModel = useCallback((modelName: string) => {
-    setSelectedModel(modelName);
+  const handleSelectModel = useCallback((modelId: string) => {
+    setSelectedModel(modelId);
     if (typeof window !== "undefined") {
-      localStorage.setItem("aevora-selected-model", modelName);
+      localStorage.setItem("aevora-selected-model", modelId);
     }
   }, []);
 
@@ -414,6 +419,10 @@ export default function HomePage() {
     setMessages((previous) => [...previous, { id: `u-${crypto.randomUUID()}`, role: "user", content: prompt }]);
     setIsStreaming(true);
 
+    const activeModel = models.find((m) => m.id === selectedModel || m.name === selectedModel);
+    const modelIdToSend = activeModel?.id || selectedModel || (models[0]?.id ?? undefined);
+    const modelNameToDisplay = activeModel?.name || selectedModel || undefined;
+
     const presentation = new StreamingText({
       boosted: isBoostEnabled,
       onText: (text) => { if (current()) setStreamingMessage(text); },
@@ -423,7 +432,7 @@ export default function HomePage() {
         if (response.trim()) {
           setMessages((previous) => [
             ...previous,
-            { id: `ai-${crypto.randomUUID()}`, role: "model", content: response, model_name: selectedModel || undefined },
+            { id: `ai-${crypto.randomUUID()}`, role: "model", content: response, model_name: modelNameToDisplay },
           ]);
         }
         setStreamingMessage("");
@@ -467,7 +476,7 @@ export default function HomePage() {
         onToolError: (name) => { if (current()) setActiveTool({ name, status: "error" }); },
         onDone: complete,
         onError: fail,
-      }, controller.signal, { voiceMode: !!options?.voiceMode, model: selectedModel || undefined });
+      }, controller.signal, { voiceMode: !!options?.voiceMode, model: modelIdToSend });
       if (current()) complete();
       // The network may finish before the typewriter. Keep cancellation and
       // the current-request guard alive until the last character is committed.

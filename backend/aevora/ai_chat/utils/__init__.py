@@ -11,10 +11,14 @@ from aevora.ai_chat.utils.selection import (
 )
 from aevora.ai_chat.utils.session import (
     cleanup_empty_sessions,
-    get_model,
     get_or_create_chat_session,
 )
-from aevora.ai_chat.utils.stream import _gemini_stream, _sse
+from aevora.ai_chat.utils.stream import (
+    _gemini_stream,
+    _sse,
+    get_history,
+    get_model,
+)
 from aevora.ai_chat.utils.tools import (
     get_all_tools_for_gemini,
     get_available_tools_list,
@@ -31,6 +35,7 @@ __all__ = [
     "extract_words",
     "get_all_tools_for_gemini",
     "get_available_tools_list",
+    "get_history",
     "get_model",
     "get_or_create_chat_session",
     "is_prefix_match",
