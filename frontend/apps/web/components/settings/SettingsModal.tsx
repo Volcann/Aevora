@@ -25,11 +25,15 @@ import {
   ArrowDownLeft,
   Play,
   Cpu,
+  Copy,
+  Key,
 } from "lucide-react";
 import {
   api,
   getApiBaseUrl,
   setApiBaseUrl,
+  getSavedTokens,
+  isJwtExpired,
   type ToolItem,
   type UserProfile,
 } from "../../lib/api";
@@ -191,6 +195,37 @@ export const SettingsModal = React.memo(function SettingsModal({
   const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
   const [batteryCharging, setBatteryCharging] = useState<boolean | null>(null);
 
+  // Refresh Token management state
+  const [currentRefreshToken, setCurrentRefreshToken] = useState<string>("");
+  const [newRefreshTokenInput, setNewRefreshTokenInput] = useState("");
+  const [showCurrentToken, setShowCurrentToken] = useState(false);
+  const [isUpdatingToken, setIsUpdatingToken] = useState(false);
+  const [isRefreshingNow, setIsRefreshingNow] = useState(false);
+  const [tokenSuccess, setTokenSuccess] = useState<string | null>(null);
+  const [tokenError, setTokenError] = useState<string | null>(null);
+  const [copiedToken, setCopiedToken] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentRefreshToken(getSavedTokens()?.refresh || "");
+      setTokenSuccess(null);
+      setTokenError(null);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleTokensUpdated = (e: Event) => {
+      const customEvent = e as CustomEvent<{ tokens?: { refresh?: string } }>;
+      if (customEvent.detail?.tokens?.refresh) {
+        setCurrentRefreshToken(customEvent.detail.tokens.refresh);
+      } else {
+        setCurrentRefreshToken(getSavedTokens()?.refresh || "");
+      }
+    };
+    window.addEventListener("aevora:tokens-updated", handleTokensUpdated);
+    return () => window.removeEventListener("aevora:tokens-updated", handleTokensUpdated);
+  }, []);
+
   // Load prompt boost from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -317,6 +352,61 @@ export const SettingsModal = React.memo(function SettingsModal({
     }
   };
 
+  const handleCopyToken = () => {
+    if (!currentRefreshToken) return;
+    navigator.clipboard?.writeText(currentRefreshToken);
+    setCopiedToken(true);
+    setTimeout(() => setCopiedToken(false), 2000);
+  };
+
+  const handleUpdateRefreshToken = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTokenError(null);
+    setTokenSuccess(null);
+
+    const tokenToApply = newRefreshTokenInput.trim();
+    if (!tokenToApply) {
+      setTokenError("Please enter a refresh token.");
+      return;
+    }
+
+    setIsUpdatingToken(true);
+    try {
+      const result = await api.updateRefreshToken(tokenToApply);
+      if (result.success) {
+        setTokenSuccess("Refresh token verified and updated successfully! Access token renewed.");
+        setCurrentRefreshToken(result.tokens?.refresh || tokenToApply);
+        setNewRefreshTokenInput("");
+      } else {
+        setTokenError(result.error || "Failed to validate refresh token with authentication server.");
+      }
+    } catch (err: any) {
+      setTokenError(err.message || "An unexpected error occurred while updating the refresh token.");
+    } finally {
+      setIsUpdatingToken(false);
+    }
+  };
+
+  const handleRefreshNow = async () => {
+    setTokenError(null);
+    setTokenSuccess(null);
+    setIsRefreshingNow(true);
+    try {
+      const newAccess = await api.refreshAccessToken();
+      if (newAccess) {
+        const latest = getSavedTokens();
+        setCurrentRefreshToken(latest?.refresh || "");
+        setTokenSuccess("Access token refreshed successfully from backend!");
+      } else {
+        setTokenError("Failed to refresh token. The refresh token may be expired or invalid. Please update it with a new one.");
+      }
+    } catch (err: any) {
+      setTokenError(err.message || "Error communicating with authentication server.");
+    } finally {
+      setIsRefreshingNow(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-[1500] bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 select-none animate-fadeIn"
@@ -403,20 +493,18 @@ export const SettingsModal = React.memo(function SettingsModal({
                 </span>
               </button>
 
-              {user && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("account")}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left whitespace-nowrap sm:whitespace-normal shrink-0 sm:shrink cursor-pointer ${
-                    activeTab === "account"
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-surface-hover hover:text-foreground"
-                  }`}
-                >
-                  <Shield size={14} className={activeTab === "account" ? "" : "text-blue-400"} />
-                  <span>Account & Security</span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setActiveTab("account")}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all text-left whitespace-nowrap sm:whitespace-normal shrink-0 sm:shrink cursor-pointer ${
+                  activeTab === "account"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+                }`}
+              >
+                <Shield size={14} className={activeTab === "account" ? "" : "text-blue-400"} />
+                <span>Account &amp; Tokens</span>
+              </button>
 
               <button
                 type="button"
@@ -503,7 +591,7 @@ export const SettingsModal = React.memo(function SettingsModal({
                 {activeTab === "appearance" && "Appearance & Customization"}
                 {activeTab === "companion" && "Codex Pet & Voice Assistant"}
                 {activeTab === "tools" && "Agent Distributed Tools (Celery Worker)"}
-                {activeTab === "account" && "Account & Password Security"}
+                {activeTab === "account" && "Account & Authentication Tokens"}
                 {activeTab === "diagnostics" && "System Diagnostics & Telemetry"}
                 {activeTab === "mcps" && "Model Context Protocol (MCP) Servers"}
               </h2>
@@ -512,7 +600,7 @@ export const SettingsModal = React.memo(function SettingsModal({
                 {activeTab === "appearance" && "Choose curated color themes and dial in your precise HSL accent tone."}
                 {activeTab === "companion" && "Manage floating Codex companion orb and speech recognition."}
                 {activeTab === "tools" && "Aevora executes tools natively via distributed Celery tasks and Redis."}
-                {activeTab === "account" && "Manage your profile details and update your login password."}
+                {activeTab === "account" && "Manage session tokens, refresh tokens, profile credentials, and security."}
                 {activeTab === "diagnostics" && "Live telemetry, network latency, and platform runtime health."}
                 {activeTab === "mcps" && "Manage local and remote MCP servers connected to your workspace."}
               </p>
@@ -1145,121 +1233,264 @@ export const SettingsModal = React.memo(function SettingsModal({
               </div>
             )}
 
-            {/* ─── TAB 5: ACCOUNT & SECURITY ────────────────────────────────── */}
-            {activeTab === "account" && user && (
+            {/* ─── TAB 5: ACCOUNT & TOKENS ────────────────────────────────── */}
+            {activeTab === "account" && (
               <div className="space-y-5">
-                {/* Profile Card */}
-                <div className="p-4 rounded-xl bg-surface/50 border border-border flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 flex items-center justify-center text-lg font-black text-white shrink-0 shadow-sm">
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-bold text-foreground truncate">{user.username}</div>
-                    <div className="text-xs text-muted-foreground truncate">{user.email}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        Account Active
-                      </span>
+                {/* Profile Card if user exists, else unauthenticated alert */}
+                {user ? (
+                  <div className="p-4 rounded-xl bg-surface/50 border border-border flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 flex items-center justify-center text-lg font-black text-white shrink-0 shadow-sm">
+                      {user.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-foreground truncate">{user.username}</div>
+                      <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          Account Active
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
+                    <AlertCircle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-xs font-bold text-amber-300 block">Session Unauthenticated or Expired</span>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                        Your session token has expired or is missing. Enter and verify your Refresh Token below to immediately restore and refresh your session across the Electron app and browser without re-logging in.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
-                {/* Change Password Form */}
-                <form onSubmit={handleChangePassword} className="p-4 rounded-xl bg-surface/50 border border-border space-y-3.5">
-                  <span className="text-xs font-bold text-foreground block">
-                    Change Password
-                  </span>
+                {/* Authentication & Refresh Token Card */}
+                <div className="p-4 rounded-xl bg-surface/50 border border-border space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                        <Key size={15} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-foreground block">
+                          Authentication &amp; Refresh Token
+                        </span>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Controls JWT token rotation with Django. Prevents 401 &quot;Token is expired&quot; errors.
+                        </p>
+                      </div>
+                    </div>
 
-                  {passwordSuccess && (
+                    <div className="flex items-center gap-1.5">
+                      {currentRefreshToken ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                          Refresh Token Configured
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                          No Refresh Token
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {tokenSuccess && (
                     <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
                       <CheckCircle2 size={14} className="shrink-0" />
-                      <span>{passwordSuccess}</span>
+                      <span>{tokenSuccess}</span>
                     </div>
                   )}
 
-                  {passwordError && (
+                  {tokenError && (
                     <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
                       <AlertCircle size={14} className="shrink-0" />
-                      <span>{passwordError}</span>
+                      <span>{tokenError}</span>
                     </div>
                   )}
 
-                  <div className="space-y-2.5">
-                    <div>
-                      <label className="text-[11px] font-medium text-muted-foreground block mb-1">
-                        Current Password
-                      </label>
-                      <div className="relative">
+                  {/* Active Refresh Token display */}
+                  <div>
+                    <label className="text-[11px] font-medium text-muted-foreground block mb-1">
+                      Current Refresh Token
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
                         <input
-                          type={showOldPassword ? "text" : "password"}
-                          value={oldPassword}
-                          onChange={(e) => setOldPassword(e.target.value)}
-                          required
-                          className="w-full px-3 py-2 text-xs rounded-lg bg-input-bg border border-border text-foreground focus:outline-hidden focus:border-primary pr-9"
-                          placeholder="Enter current password"
+                          type={showCurrentToken ? "text" : "password"}
+                          readOnly
+                          value={currentRefreshToken || "No refresh token configured"}
+                          className="w-full px-3 py-2 text-xs rounded-lg bg-input-bg border border-border text-foreground font-mono pr-20 select-all"
                         />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 text-muted-foreground">
+                          {currentRefreshToken && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setShowCurrentToken(!showCurrentToken)}
+                                className="p-1 hover:text-foreground transition-colors cursor-pointer"
+                                title={showCurrentToken ? "Hide token" : "Show token"}
+                              >
+                                {showCurrentToken ? <EyeOff size={13} /> : <Eye size={13} />}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleCopyToken}
+                                className="p-1 hover:text-foreground transition-colors cursor-pointer"
+                                title="Copy refresh token"
+                              >
+                                {copiedToken ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {currentRefreshToken && (
                         <button
                           type="button"
-                          onClick={() => setShowOldPassword(!showOldPassword)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          onClick={handleRefreshNow}
+                          disabled={isRefreshingNow}
+                          className="px-3 py-2 text-xs font-medium rounded-lg bg-surface border border-border hover:bg-surface-hover text-foreground transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shrink-0"
+                          title="Manually trigger token refresh from backend"
                         >
-                          {showOldPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+                          {isRefreshingNow ? <RefreshCw size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                          <span>Refresh Now</span>
                         </button>
-                      </div>
+                      )}
                     </div>
+                  </div>
 
+                  {/* Form to update/paste new Refresh Token */}
+                  <form onSubmit={handleUpdateRefreshToken} className="space-y-3 pt-2 border-t border-border/60">
                     <div>
-                      <label className="text-[11px] font-medium text-muted-foreground block mb-1">
-                        New Password (min 8 chars)
+                      <label className="text-[11px] font-semibold text-foreground block mb-1">
+                        Update Refresh Token (Electron &amp; Web)
                       </label>
-                      <div className="relative">
-                        <input
-                          type={showNewPassword ? "text" : "password"}
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          required
-                          minLength={8}
-                          className="w-full px-3 py-2 text-xs rounded-lg bg-input-bg border border-border text-foreground focus:outline-hidden focus:border-primary pr-9"
-                          placeholder="Enter new secure password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        >
-                          {showNewPassword ? <EyeOff size={13} /> : <Eye size={13} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[11px] font-medium text-muted-foreground block mb-1">
-                        Confirm New Password
-                      </label>
-                      <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        minLength={8}
-                        className="w-full px-3 py-2 text-xs rounded-lg bg-input-bg border border-border text-foreground focus:outline-hidden focus:border-primary"
-                        placeholder="Re-type new password"
+                      <p className="text-[10px] text-muted-foreground mb-2">
+                        Paste a new refresh token to instantly authenticate and renew your access token across the application.
+                      </p>
+                      <textarea
+                        rows={2}
+                        value={newRefreshTokenInput}
+                        onChange={(e) => setNewRefreshTokenInput(e.target.value)}
+                        placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        className="w-full px-3 py-2 text-xs rounded-lg bg-input-bg border border-border text-foreground font-mono focus:outline-hidden focus:border-primary resize-none"
                       />
                     </div>
-                  </div>
 
-                  <div className="pt-2 flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={passwordLoading}
-                      className="px-4 py-2 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-all cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
-                    >
-                      {passwordLoading && <RefreshCw size={12} className="animate-spin" />}
-                      <span>Update Password</span>
-                    </button>
-                  </div>
-                </form>
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="submit"
+                        disabled={isUpdatingToken || !newRefreshTokenInput.trim()}
+                        className="px-4 py-2 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-all cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        {isUpdatingToken && <RefreshCw size={12} className="animate-spin" />}
+                        <span>Update &amp; Verify Token</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Change Password Form (only if user profile is loaded) */}
+                {user && (
+                  <form onSubmit={handleChangePassword} className="p-4 rounded-xl bg-surface/50 border border-border space-y-3.5">
+                    <span className="text-xs font-bold text-foreground block">
+                      Change Password
+                    </span>
+
+                    {passwordSuccess && (
+                      <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
+                        <CheckCircle2 size={14} className="shrink-0" />
+                        <span>{passwordSuccess}</span>
+                      </div>
+                    )}
+
+                    {passwordError && (
+                      <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+                        <AlertCircle size={14} className="shrink-0" />
+                        <span>{passwordError}</span>
+                      </div>
+                    )}
+
+                    <div className="space-y-2.5">
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground block mb-1">
+                          Current Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showOldPassword ? "text" : "password"}
+                            value={oldPassword}
+                            onChange={(e) => setOldPassword(e.target.value)}
+                            required
+                            className="w-full px-3 py-2 text-xs rounded-lg bg-input-bg border border-border text-foreground focus:outline-hidden focus:border-primary pr-9"
+                            placeholder="Enter current password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowOldPassword(!showOldPassword)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showOldPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground block mb-1">
+                          New Password (min 8 chars)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showNewPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required
+                            minLength={8}
+                            className="w-full px-3 py-2 text-xs rounded-lg bg-input-bg border border-border text-foreground focus:outline-hidden focus:border-primary pr-9"
+                            placeholder="Enter new secure password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showNewPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground block mb-1">
+                          Confirm New Password
+                        </label>
+                        <input
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          minLength={8}
+                          className="w-full px-3 py-2 text-xs rounded-lg bg-input-bg border border-border text-foreground focus:outline-hidden focus:border-primary"
+                          placeholder="Re-type new password"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={passwordLoading}
+                        className="px-4 py-2 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-all cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        {passwordLoading && <RefreshCw size={12} className="animate-spin" />}
+                        <span>Update Password</span>
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             )}
 

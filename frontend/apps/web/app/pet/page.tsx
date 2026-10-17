@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AlertTriangle,
   ArrowUp,
   ArrowUpRight,
   AtSign,
@@ -10,6 +11,7 @@ import {
   ChevronDown,
   Cpu,
   GripHorizontal,
+  Loader2,
   MessageCircle,
   Minimize2,
   Pin,
@@ -39,6 +41,7 @@ import {
   type CompanionSparksHandle,
 } from "../../components/orb/CompanionSparks";
 import { CompanionMarkdown } from "../../components/chat/CompanionMarkdown";
+import { ToolLogAccordion, LiveLogsPanel } from "../../components/chat/ToolLogAccordion";
 import styles from "../../components/orb/DesktopPet.module.css";
 
 export default function StandaloneDesktopPetPage() {
@@ -146,6 +149,25 @@ export default function StandaloneDesktopPetPage() {
             options?.onChunk?.(chunk);
             broadcastPetMessage({ type: "PET_STREAM_CHUNK", payload: chunk });
           },
+          onToolStart: (tool) => {
+            if (options?.signal?.aborted) return;
+            options?.onToolStart?.(tool);
+            broadcastPetMessage({ type: "ACTIVE_TOOL", payload: { name: tool, status: "start" } });
+          },
+          onToolLog: (log, tool) => {
+            if (options?.signal?.aborted) return;
+            options?.onToolLog?.(log, tool);
+          },
+          onToolDone: (tool, output) => {
+            if (options?.signal?.aborted) return;
+            options?.onToolDone?.(tool, output);
+            broadcastPetMessage({ type: "ACTIVE_TOOL", payload: { name: tool, status: "done" } });
+          },
+          onToolError: (tool) => {
+            if (options?.signal?.aborted) return;
+            options?.onToolError?.(tool);
+            broadcastPetMessage({ type: "ACTIVE_TOOL", payload: { name: tool, status: "error" } });
+          },
           onDone: () => {
             if (!options?.signal?.aborted) {
               broadcastPetMessage({
@@ -244,7 +266,7 @@ export default function StandaloneDesktopPetPage() {
     if (nearBottom.current && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [snapshot.turns]);
+  }, [snapshot.turns, snapshot.streamingLogs, snapshot.activeTool]);
 
   const runWindowAction = (action: () => Promise<void>) => {
     setWindowError(null);
@@ -266,9 +288,11 @@ export default function StandaloneDesktopPetPage() {
 
   const status = snapshot.error
     ? "Needs your attention"
-    : snapshot.streaming
-      ? "Thinking it through…"
-      : "Here for you";
+    : snapshot.activeTool
+      ? `${snapshot.activeTool.name} — ${snapshot.activeTool.status === "start" ? "running…" : snapshot.activeTool.status === "done" ? "finished" : "error"}`
+      : snapshot.streaming
+        ? "Thinking it through…"
+        : "Here for you";
 
   return (
     <main
@@ -435,8 +459,55 @@ export default function StandaloneDesktopPetPage() {
                   </div>
                   {turn.role === "assistant" ? (
                     <div className={styles.turnBody}>
-                      <CompanionMarkdown content={turn.text} isStreaming={isStreamingAssistant} />
-                      {isStreamingAssistant && <span className="stream-cursor" />}
+                      {/* Active tool status if this turn is currently streaming */}
+                      {isStreamingAssistant && snapshot.activeTool && (
+                        <div className={styles.toolStatus} data-status={snapshot.activeTool.status} role="status">
+                          {snapshot.activeTool.status === "error" ? (
+                            <AlertTriangle size={11} />
+                          ) : snapshot.activeTool.status === "done" ? (
+                            <Check size={11} />
+                          ) : (
+                            <Loader2 size={11} className="animate-spin" />
+                          )}
+                          <code>{snapshot.activeTool.name}</code>
+                          <span>
+                            {snapshot.activeTool.status === "start"
+                              ? "Running"
+                              : snapshot.activeTool.status === "done"
+                                ? "Completed"
+                                : "Failed"}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Live AI logs while streaming — visible until text arrives */}
+                      {isStreamingAssistant && ((snapshot.streamingLogs && snapshot.streamingLogs.length > 0) || snapshot.activeTool) && !turn.text && (
+                        <LiveLogsPanel logs={snapshot.streamingLogs || []} activeTool={snapshot.activeTool || null} />
+                      )}
+
+                      {/* Accordion of completed tool logs for finished messages */}
+                      {turn.logs && turn.logs.length > 0 && (
+                        <ToolLogAccordion
+                          title={`AI logs (${turn.logs.length} ${turn.logs.length === 1 ? "entry" : "entries"})`}
+                          logs={turn.logs.map((l) => l.text).join("\n\n")}
+                        />
+                      )}
+
+                      {turn.text ? (
+                        <CompanionMarkdown content={turn.text} isStreaming={isStreamingAssistant} />
+                      ) : (
+                        isStreamingAssistant && (
+                          <div className={styles.thinking} role="status">
+                            <span className={styles.thinkingDots} aria-hidden="true">
+                              <i />
+                              <i />
+                              <i />
+                            </span>
+                            <span>Thinking…</span>
+                          </div>
+                        )
+                      )}
+                      {isStreamingAssistant && turn.text && <span className="stream-cursor" />}
                     </div>
                   ) : (
                     <p>{turn.text}</p>
@@ -444,6 +515,55 @@ export default function StandaloneDesktopPetPage() {
                 </div>
               );
             })}
+
+            {/* Live assistant turn while streaming before any text chunks have created an assistant turn */}
+            {snapshot.streaming && !snapshot.turns.some((t) => t.role === "assistant" && t.id.startsWith("reply-")) && (
+              <div className={styles.turn} data-role="assistant">
+                <div className={styles.turnHeader}>
+                  <span>Aevora</span>
+                  {displayModelName && (
+                    <span className={styles.modelTag}>{displayModelName}</span>
+                  )}
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-400/20 inline-flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.25)]">
+                    ✨ Sparking
+                  </span>
+                </div>
+                <div className={styles.turnBody}>
+                  {snapshot.activeTool && (
+                    <div className={styles.toolStatus} data-status={snapshot.activeTool.status} role="status">
+                      {snapshot.activeTool.status === "error" ? (
+                        <AlertTriangle size={11} />
+                      ) : snapshot.activeTool.status === "done" ? (
+                        <Check size={11} />
+                      ) : (
+                        <Loader2 size={11} className="animate-spin" />
+                      )}
+                      <code>{snapshot.activeTool.name}</code>
+                      <span>
+                        {snapshot.activeTool.status === "start"
+                          ? "Running"
+                          : snapshot.activeTool.status === "done"
+                            ? "Completed"
+                            : "Failed"}
+                      </span>
+                    </div>
+                  )}
+
+                  {((snapshot.streamingLogs && snapshot.streamingLogs.length > 0) || snapshot.activeTool) && (
+                    <LiveLogsPanel logs={snapshot.streamingLogs || []} activeTool={snapshot.activeTool || null} />
+                  )}
+
+                  <div className={styles.thinking} role="status">
+                    <span className={styles.thinkingDots} aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                    <span>Thinking…</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {(snapshot.error || windowError) && (
               <p role="alert" className={styles.error}>

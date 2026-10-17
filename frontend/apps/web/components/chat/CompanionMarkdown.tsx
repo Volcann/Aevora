@@ -9,7 +9,7 @@ import styles from "./CompanionMarkdown.module.css";
  */
 export const CompanionMarkdown = memo(function CompanionMarkdown({
   content, isStreaming = false,
-}: { content: string; isStreaming?: boolean }) {
+}: { content?: string | null; isStreaming?: boolean }) {
   return (
     <div className={styles.content}>
       <MarkdownRenderer content={content} isStreaming={isStreaming} showCursor={false} />

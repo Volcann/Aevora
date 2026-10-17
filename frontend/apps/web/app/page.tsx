@@ -35,6 +35,7 @@ import { ChatMessageList } from "../components/chat/ChatMessageList";
 import { ChatInput } from "../components/chat/ChatInput";
 import chatStyles from "../components/chat/Chat.module.css";
 import type { VoicePromptOptions } from "../components/orb/core/voice-session";
+import { getDesktopRuntime } from "../lib/desktop-runtime";
 
 // Keep the settings chunk off the initial route. Once opened, retain its state
 // while closed (including unsaved connection settings and selected tabs).
@@ -52,6 +53,7 @@ export default function HomePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
+  const [streamingLogs, setStreamingLogs] = useState<string[]>([]);
   const [activeTool, setActiveTool] = useState<{
     name: string;
     status: "start" | "done" | "error";
@@ -117,6 +119,15 @@ export default function HomePage() {
     setSettingsInitialTab(tab);
     setIsSettingsModalOpen(true);
   }, []);
+
+  // Listen for desktop open-token-settings menu event
+  useEffect(() => {
+    const desktop = getDesktopRuntime();
+    if (!desktop?.onOpenTokenSettings) return;
+    return desktop.onOpenTokenSettings(() => {
+      handleOpenSettings("account");
+    });
+  }, [handleOpenSettings]);
 
   // Load saved pet visibility, pet mode, and boost preferences
   useEffect(() => {
@@ -296,7 +307,9 @@ export default function HomePage() {
           setCurrentView("reset");
           return;
         }
-        if (getSavedTokens()?.access) {
+        await api.syncTokensFromDesktop();
+        const saved = getSavedTokens();
+        if (saved?.access || saved?.refresh) {
           const profile = await api.getMe();
           if (!current()) return;
           setUser(profile);
@@ -329,6 +342,43 @@ export default function HomePage() {
     await loadWorkspace(request);
   }, [loadWorkspace]);
 
+  // Listen for token updates (from settings, auth view, or desktop IPC)
+  useEffect(() => {
+    const handleTokensUpdated = async (event?: Event) => {
+      const customEvent = event as CustomEvent<{ user?: UserProfile }> | undefined;
+      const incomingUser = customEvent?.detail?.user;
+      if (incomingUser) {
+        setUser(incomingUser);
+        setCurrentView("chat");
+        const request = ++authLoadRef.current;
+        await loadWorkspace(request);
+        return;
+      }
+      try {
+        const profile = await api.getMe();
+        setUser(profile);
+        setCurrentView("chat");
+        const request = ++authLoadRef.current;
+        await loadWorkspace(request);
+      } catch {
+        // Token might still be invalid or expired
+      }
+    };
+
+    window.addEventListener("aevora:tokens-updated", handleTokensUpdated);
+    const desktop = getDesktopRuntime();
+    const unsub = desktop?.onTokensUpdated
+      ? desktop.onTokensUpdated(() => {
+          void handleTokensUpdated();
+        })
+      : undefined;
+
+    return () => {
+      window.removeEventListener("aevora:tokens-updated", handleTokensUpdated);
+      unsub?.();
+    };
+  }, [loadWorkspace]);
+
   // Cancel presentation and transport together; stale callbacks cannot revive a turn.
   const handleStopStreaming = useCallback(() => {
     const active = abortControllerRef.current;
@@ -338,6 +388,7 @@ export default function HomePage() {
     streamPresentationRef.current = null;
     setIsStreaming(false);
     setStreamingMessage("");
+    setStreamingLogs([]);
     setActiveTool(null);
   }, []);
 
@@ -418,6 +469,10 @@ export default function HomePage() {
     options?.signal?.addEventListener("abort", externalAbort, { once: true });
     setMessages((previous) => [...previous, { id: `u-${crypto.randomUUID()}`, role: "user", content: prompt }]);
     setIsStreaming(true);
+    setStreamingLogs([]);
+
+    // Accumulate logs locally so we can attach them to the finished message
+    const liveLogsRef: string[] = [];
 
     const activeModel = models.find((m) => m.id === selectedModel || m.name === selectedModel);
     const modelIdToSend = activeModel?.id || selectedModel || (models[0]?.id ?? undefined);
@@ -430,12 +485,14 @@ export default function HomePage() {
         if (!current()) return;
         settled = true;
         if (response.trim()) {
+          const collectedLogs = liveLogsRef.map((text, i) => ({ id: `log-${i}`, text }));
           setMessages((previous) => [
             ...previous,
-            { id: `ai-${crypto.randomUUID()}`, role: "model", content: response, model_name: modelNameToDisplay },
+            { id: `ai-${crypto.randomUUID()}`, role: "model", content: response, model_name: modelNameToDisplay, logs: collectedLogs.length > 0 ? collectedLogs : undefined },
           ]);
         }
         setStreamingMessage("");
+        setStreamingLogs([]);
         setIsStreaming(false);
         setActiveTool(null);
         void loadSessions();
@@ -455,6 +512,7 @@ export default function HomePage() {
         { id: `error-${crypto.randomUUID()}`, role: "model", content: `Error communicating with AI model: ${error.message}` },
       ]);
       setStreamingMessage("");
+      setStreamingLogs([]);
       setIsStreaming(false);
       setActiveTool(null);
     };
@@ -472,6 +530,11 @@ export default function HomePage() {
           options?.onChunk?.(chunk);
         },
         onToolStart: (name) => { if (current()) setActiveTool({ name, status: "start" }); },
+        onToolLog: (log) => {
+          if (!current()) return;
+          liveLogsRef.push(log);
+          setStreamingLogs((prev) => [...prev, log]);
+        },
         onToolDone: (name) => { if (current()) setActiveTool({ name, status: "done" }); },
         onToolError: (name) => { if (current()) setActiveTool({ name, status: "error" }); },
         onDone: complete,
@@ -593,6 +656,7 @@ export default function HomePage() {
               messages={messages}
               isStreaming={isStreaming}
               streamingMessage={streamingMessage}
+              streamingLogs={streamingLogs}
               activeTool={activeTool}
               onSelectPrompt={handleSend}
               onVoicePrompt={handleVoicePrompt}

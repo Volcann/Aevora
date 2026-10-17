@@ -78,3 +78,87 @@
   .messageTools > span { transition: opacity 160ms ease; }
 }
 .suggestion:focus-visible { border-color: #b6a3f7; }
+
+/* Collapsible Antigravity-style Tool Logs UI */
+.toolLogBox {
+  margin: 8px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(18, 20, 26, 0.7);
+  overflow: hidden;
+  font-size: 11px;
+  transition: border-color 0.15s ease;
+}
+
+.toolLogBox:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.toolLogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: #38bdf8;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  text-align: left;
+}
+
+.toolLogHeader:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.toolLogTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.toolLogChevron {
+  display: inline-flex;
+  align-items: center;
+  color: #94a3b8;
+  margin-left: 2px;
+}
+
+.toolLogCopyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.toolLogCopyBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+.toolLogContent {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: #090a0f;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.toolLogContent pre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+

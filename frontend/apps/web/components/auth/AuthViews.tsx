@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Eye, EyeOff, Check, X, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Check, X, ArrowLeft, Key, RefreshCw } from "lucide-react";
 import { api, type UserProfile } from "../../lib/api";
 import type { ViewType } from "../nav/TopNavSwitcher";
 
@@ -26,6 +26,13 @@ export function AuthViews({
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+
+  // Refresh token login state
+  const [useTokenMode, setUseTokenMode] = useState(false);
+  const [refreshTokenInput, setRefreshTokenInput] = useState("");
+  const [tokenLoading, setTokenLoading] = useState(false);
+  const [tokenError, setTokenError] = useState<string | null>(null);
+  const [tokenSuccess, setTokenSuccess] = useState<string | null>(null);
 
   // Register form state
   const [regUsername, setRegUsername] = useState("");
@@ -99,6 +106,42 @@ export function AuthViews({
       setLoginError(err.message || "Invalid email, username, or password.");
     } finally {
       setLoginLoading(false);
+    }
+  };
+
+  const handleTokenSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = refreshTokenInput.trim();
+    if (!token) {
+      setTokenError("Please enter your refresh token.");
+      return;
+    }
+
+    setTokenLoading(true);
+    setTokenError(null);
+    setTokenSuccess(null);
+    try {
+      const res = await api.updateRefreshToken(token);
+      if (res.success && res.user) {
+        setTokenSuccess("Authentication successful! Loading...");
+        setTimeout(() => {
+          onAuthSuccess(res.user!);
+          onSwitchView("chat");
+        }, 300);
+      } else if (res.success) {
+        const profile = await api.getMe();
+        setTokenSuccess("Authentication successful! Loading...");
+        setTimeout(() => {
+          onAuthSuccess(profile);
+          onSwitchView("chat");
+        }, 300);
+      } else {
+        setTokenError(res.error || "Invalid or expired refresh token.");
+      }
+    } catch (err: any) {
+      setTokenError(err.message || "Failed to authenticate with refresh token.");
+    } finally {
+      setTokenLoading(false);
     }
   };
 
@@ -211,64 +254,149 @@ export function AuthViews({
             <h1 className="auth-title">Sign in to Aevora</h1>
 
             <div className="login-card">
-              {loginError && (
-                <div className="auth-alert error" style={{ display: "block" }}>
-                  {loginError}
-                </div>
-              )}
+              {useTokenMode ? (
+                <form onSubmit={handleTokenSubmit} className="flex flex-col gap-3.5">
+                  {tokenError && (
+                    <div className="auth-alert error" style={{ display: "block" }}>
+                      {tokenError}
+                    </div>
+                  )}
+                  {tokenSuccess && (
+                    <div className="auth-alert success flex items-center gap-1.5" style={{ display: "flex" }}>
+                      <Check size={14} className="text-emerald-400 shrink-0" strokeWidth={2.5} />
+                      <span>{tokenSuccess}</span>
+                    </div>
+                  )}
 
-              <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3.5">
-                <div className="form-group">
-                  <label htmlFor="id_username">Username or Email</label>
-                  <input
-                    type="text"
-                    id="id_username"
-                    placeholder="Enter your username or email"
-                    value={loginIdentifier}
-                    onChange={(e) => setLoginIdentifier(e.target.value)}
-                    required
-                    autoFocus
-                  />
-                </div>
-
-                <div className="form-group">
-                  <div className="password-header">
-                    <label htmlFor="id_password">Password</label>
-                    <a onClick={() => onSwitchView("forgot")}>Forgot password?</a>
-                  </div>
-                  <div className="password-input-wrap">
-                    <input
-                      type={showLoginPassword ? "text" : "password"}
-                      id="id_password"
-                      placeholder="••••••••"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
+                  <div className="form-group">
+                    <div className="flex items-center justify-between mb-1">
+                      <label htmlFor="id_refresh_token">Refresh Token</label>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>JWT token</span>
+                    </div>
+                    <textarea
+                      id="id_refresh_token"
+                      placeholder="Paste your Aevora refresh token (ey...)"
+                      value={refreshTokenInput}
+                      onChange={(e) => setRefreshTokenInput(e.target.value)}
+                      rows={4}
+                      style={{
+                        width: "100%",
+                        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                        fontSize: "12px",
+                        lineHeight: "1.4",
+                        padding: "8px 10px",
+                        resize: "vertical",
+                        borderRadius: "6px",
+                      }}
                       required
+                      autoFocus
                     />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={tokenLoading}
+                    className="btn-primary-mockup flex items-center justify-center gap-2"
+                    style={{ marginTop: "6px" }}
+                  >
+                    {tokenLoading ? (
+                      <>
+                        <RefreshCw size={14} className="animate-spin" />
+                        <span>Verifying & Signing in...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Key size={14} />
+                        <span>Sign in with Token</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div style={{ borderTop: "1px solid var(--border-color, #30363d)", marginTop: "6px", paddingTop: "8px" }}>
                     <button
                       type="button"
-                      className="password-toggle-btn"
-                      onClick={() => setShowLoginPassword(!showLoginPassword)}
-                      title={showLoginPassword ? "Hide password" : "Show password"}
+                      onClick={() => { setUseTokenMode(false); setTokenError(null); }}
+                      className="text-xs text-center text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1 w-full py-1"
+                      style={{ background: "transparent", border: "none", cursor: "pointer" }}
                     >
-                      {showLoginPassword ? (
-                        <EyeOff size={14} className="text-muted-foreground" />
-                      ) : (
-                        <Eye size={14} className="text-muted-foreground" />
-                      )}
+                      ← Return to Username & Password
                     </button>
                   </div>
-                </div>
+                </form>
+              ) : (
+                <>
+                  {loginError && (
+                    <div className="auth-alert error" style={{ display: "block" }}>
+                      {loginError}
+                    </div>
+                  )}
 
-                <button
-                  type="submit"
-                  disabled={loginLoading}
-                  className="btn-primary-mockup"
-                  style={{ marginTop: "6px" }}
-                >
-                  {loginLoading ? "Signing in..." : "Sign in"}
-                </button>
-              </form>
+                  <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3.5">
+                    <div className="form-group">
+                      <label htmlFor="id_username">Username or Email</label>
+                      <input
+                        type="text"
+                        id="id_username"
+                        placeholder="Enter your username or email"
+                        value={loginIdentifier}
+                        onChange={(e) => setLoginIdentifier(e.target.value)}
+                        required
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <div className="password-header">
+                        <label htmlFor="id_password">Password</label>
+                        <a onClick={() => onSwitchView("forgot")}>Forgot password?</a>
+                      </div>
+                      <div className="password-input-wrap">
+                        <input
+                          type={showLoginPassword ? "text" : "password"}
+                          id="id_password"
+                          placeholder="••••••••"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          required
+                        />
+                        <button
+                          type="button"
+                          className="password-toggle-btn"
+                          onClick={() => setShowLoginPassword(!showLoginPassword)}
+                          title={showLoginPassword ? "Hide password" : "Show password"}
+                        >
+                          {showLoginPassword ? (
+                            <EyeOff size={14} className="text-muted-foreground" />
+                          ) : (
+                            <Eye size={14} className="text-muted-foreground" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loginLoading}
+                      className="btn-primary-mockup"
+                      style={{ marginTop: "6px" }}
+                    >
+                      {loginLoading ? "Signing in..." : "Sign in"}
+                    </button>
+
+                    <div style={{ borderTop: "1px solid var(--border-color, #30363d)", marginTop: "6px", paddingTop: "8px" }}>
+                      <button
+                        type="button"
+                        onClick={() => { setUseTokenMode(true); setLoginError(null); }}
+                        className="text-xs text-center text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1.5 w-full py-1"
+                        style={{ background: "transparent", border: "none", cursor: "pointer" }}
+                      >
+                        <Key size={12} />
+                        <span>Sign in with Refresh Token</span>
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )}
             </div>
 
             <div className="create-account-box">

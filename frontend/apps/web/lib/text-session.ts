@@ -4,19 +4,38 @@ import type { OrbSignal } from "../components/orb/core/orb-model";
 export interface PromptOptions {
   signal?: AbortSignal;
   onChunk?: (chunk: string) => void;
+  onToolStart?: (tool: string) => void;
+  onToolLog?: (log: string, tool?: string) => void;
+  onToolDone?: (tool: string, output?: string) => void;
+  onToolError?: (tool: string) => void;
   onDone?: () => void;
 }
 export type SendPrompt = (prompt: string, options?: PromptOptions) => Promise<void>;
-export interface TextTurn { id: string; role: "user" | "assistant"; text: string }
+export interface TextTurn {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  logs?: { id: string; text: string }[];
+}
 export interface TextSnapshot {
   state: 0 | 2;
   streaming: boolean;
   response: string;
   error: string | null;
   turns: readonly TextTurn[];
+  activeTool?: { name: string; status: "start" | "done" | "error" } | null;
+  streamingLogs?: readonly string[];
 }
 export interface TextSessionOptions { onPrompt: SendPrompt; onStopStreaming?: () => void }
-const empty = (): TextSnapshot => ({ state: 0, streaming: false, response: "", error: null, turns: [] });
+const empty = (): TextSnapshot => ({
+  state: 0,
+  streaming: false,
+  response: "",
+  error: null,
+  turns: [],
+  activeTool: null,
+  streamingLogs: [],
+});
 
 export class TextSession {
   readonly signal: { readonly current: OrbSignal } = { current: { audio: 0, word: 0 } };
@@ -47,7 +66,7 @@ export class TextSession {
     }
     active?.abort();
     if (active) this.options.onStopStreaming?.();
-    if (this.snapshot.streaming) this.publish({ streaming: false, state: 0 });
+    if (this.snapshot.streaming) this.publish({ streaming: false, state: 0, activeTool: null, streamingLogs: [] });
   };
   reset = (): void => { this.stop(); this.snapshot = empty(); this.listeners.forEach((listener) => listener()); };
   send = async (value: string): Promise<void> => {
@@ -65,8 +84,13 @@ export class TextSession {
     const current = () => this.active === controller && !controller.signal.aborted && !done;
     const hasRaf = typeof requestAnimationFrame === "function";
 
+    const liveLogs: { id: string; text: string }[] = [];
+    const currentStreamingLogs: string[] = [];
+    let currentActiveTool: { name: string; status: "start" | "done" | "error" } | null = null;
+
     this.publish({
       state: 2, streaming: true, response: "", error: null,
+      activeTool: null, streamingLogs: [],
       turns: [...this.snapshot.turns, { id: `prompt-${key}`, role: "user", text: prompt }],
     });
 
@@ -83,10 +107,22 @@ export class TextSession {
       const currentText = response;
       const turns = [...this.snapshot.turns];
       const last = turns[turns.length - 1];
-      const reply: TextTurn = { id: replyId, role: "assistant", text: currentText };
+      const reply: TextTurn = {
+        id: replyId,
+        role: "assistant",
+        text: currentText,
+        logs: liveLogs.length > 0 ? liveLogs : undefined,
+      };
       if (last?.id === replyId) turns[turns.length - 1] = reply;
-      else if (currentText) turns.push(reply);
-      this.publish({ response: currentText, turns, streaming: false, state: 0 });
+      else if (currentText || liveLogs.length > 0) turns.push(reply);
+      this.publish({
+        response: currentText,
+        turns,
+        streaming: false,
+        state: 0,
+        activeTool: null,
+        streamingLogs: [],
+      });
     };
 
     const updateDisplay = () => {
@@ -99,7 +135,12 @@ export class TextSession {
         const currentText = response.slice(0, displayedLen);
         const turns = [...this.snapshot.turns];
         const last = turns[turns.length - 1];
-        const reply: TextTurn = { id: replyId, role: "assistant", text: currentText };
+        const reply: TextTurn = {
+          id: replyId,
+          role: "assistant",
+          text: currentText,
+          logs: liveLogs.length > 0 ? liveLogs : undefined,
+        };
         if (last?.id === replyId) turns[turns.length - 1] = reply;
         else turns.push(reply);
         this.publish({ response: currentText, turns });
@@ -126,11 +167,37 @@ export class TextSession {
             displayedLen = response.length;
             const turns = [...this.snapshot.turns];
             const last = turns[turns.length - 1];
-            const reply: TextTurn = { id: replyId, role: "assistant", text: response };
+            const reply: TextTurn = {
+              id: replyId,
+              role: "assistant",
+              text: response,
+              logs: liveLogs.length > 0 ? liveLogs : undefined,
+            };
             if (last?.id === replyId) turns[turns.length - 1] = reply;
             else turns.push(reply);
             this.publish({ response, turns });
           }
+        },
+        onToolStart: (tool) => {
+          if (!current()) return;
+          currentActiveTool = { name: tool, status: "start" };
+          this.publish({ activeTool: currentActiveTool });
+        },
+        onToolLog: (log) => {
+          if (!current() || !log) return;
+          liveLogs.push({ id: `log-${liveLogs.length}`, text: log });
+          currentStreamingLogs.push(log);
+          this.publish({ streamingLogs: [...currentStreamingLogs] });
+        },
+        onToolDone: (tool) => {
+          if (!current()) return;
+          currentActiveTool = { name: tool, status: "done" };
+          this.publish({ activeTool: currentActiveTool });
+        },
+        onToolError: (tool) => {
+          if (!current()) return;
+          currentActiveTool = { name: tool, status: "error" };
+          this.publish({ activeTool: currentActiveTool });
         },
         onDone: () => {
           streamFinished = true;
@@ -151,7 +218,10 @@ export class TextSession {
       }
       done = true;
       this.publish({
-        state: 0, streaming: false,
+        state: 0,
+        streaming: false,
+        activeTool: null,
+        streamingLogs: [],
         error: error instanceof Error ? error.message : "The reply could not be completed.",
       });
     }
