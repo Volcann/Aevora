@@ -55,3 +55,22 @@ class CeleryToolClientTestCase(SimpleTestCase):
             queue="laptop.tools",
         )
         self.assertEqual(job, mock_job)
+
+    @patch("aevora.ai_chat.services.celery_tool_client.app.send_task")
+    def test_call_tool_async_with_function_call_object(self, mock_send_task):
+        mock_job = MagicMock()
+        mock_send_task.return_value = mock_job
+
+        mock_fc = MagicMock()
+        mock_fc.name = "get_weather"
+        mock_fc.args = {"city": "Tokyo"}
+
+        client = CeleryToolClient()
+        job = client.call_tool_async(mock_fc)
+
+        mock_send_task.assert_called_once_with(
+            "tools.get_weather",
+            kwargs={"city": "Tokyo"},
+            queue="laptop.tools",
+        )
+        self.assertEqual(job, mock_job)
