@@ -4,6 +4,7 @@ from aevora.ai_chat.api.v1.views import (
     AIModelListView,
     ChatSessionViewSet,
     ChatStreamView,
+    ToolListView,
 )
 
 app_name = "ai_chat"
@@ -21,6 +22,7 @@ urlpatterns = [
     ),
     path("stream/", ChatStreamView.as_view(), name="stream"),
     path("models/", AIModelListView.as_view(), name="models_list"),
+    path("tools/", ToolListView.as_view(), name="tools"),
     path(
         "<str:session_id>/delete/",
         ChatSessionViewSet.as_view({"get": "retrieve", "delete": "destroy"}),
