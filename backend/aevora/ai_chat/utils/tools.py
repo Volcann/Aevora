@@ -1,6 +1,10 @@
 import logging
 
+import google.generativeai as genai
+from django.core.cache import cache
+
 from aevora.ai_chat.services.celery_tool_client import celery_tool_client
+from aevora.ai_chat.utils.schema import schema_to_gemini
 
 logger = logging.getLogger(__name__)
 
@@ -31,3 +35,22 @@ def get_tool_list(tools: list | None = None) -> list:
             tools = []
 
     return format_tools(tools)
+
+
+def get_gemini_tools() -> list:
+    if (cached := cache.get("gemini_tools_cache")) is not None:
+        return cached
+
+    fds = [
+        genai.protos.FunctionDeclaration(
+            name=tool.get("name"),
+            description=tool.get("description", ""),
+            parameters=schema_to_gemini(tool.get("inputSchema", {})),
+        )
+        for tool in get_tool_list()
+        if isinstance(tool, dict)
+    ]
+    gemini_tools = [genai.protos.Tool(function_declarations=fds)] if fds else []
+    if gemini_tools:
+        cache.set("gemini_tools_cache", gemini_tools, 60)
+    return gemini_tools

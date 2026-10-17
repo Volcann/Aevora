@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -98,7 +99,7 @@ class ToolListViewTestCase(APITestCase):
         mock_job.get.assert_called_once_with(timeout=10)
 
 
-class ToolUtilsTestCase(APITestCase):
+class ToolUtilsTestCase(SimpleTestCase):
     def test_format_tools_normalizes_schemas(self):
         from aevora.ai_chat.utils.tools import format_tools
 
@@ -129,4 +130,81 @@ class ToolUtilsTestCase(APITestCase):
 
         mock_list_tools.side_effect = Exception("Celery unreachable")
         tools = get_tool_list()
+        self.assertEqual(tools, [])
+
+    def test_schema_to_gemini_invalid_or_non_object(self):
+        from aevora.ai_chat.utils.schema import schema_to_gemini
+
+        self.assertIsNone(schema_to_gemini({}))
+        self.assertIsNone(schema_to_gemini({"type": "string"}))
+
+    def test_schema_to_gemini_valid_object(self):
+        import google.generativeai as genai
+
+        from aevora.ai_chat.utils.schema import schema_to_gemini
+
+        raw_schema = {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "User name"},
+                "age": {"type": "integer"},
+                "scores": {"type": "array"},
+                "active": {"type": "boolean"},
+            },
+            "required": ["name"],
+        }
+        converted = schema_to_gemini(raw_schema)
+        self.assertEqual(converted.type, genai.protos.Type.OBJECT)
+        self.assertEqual(converted.properties["name"].type, genai.protos.Type.STRING)
+        self.assertEqual(converted.properties["name"].description, "User name")
+        self.assertEqual(converted.properties["age"].type, genai.protos.Type.INTEGER)
+        self.assertEqual(converted.properties["scores"].type, genai.protos.Type.ARRAY)
+        self.assertEqual(converted.properties["active"].type, genai.protos.Type.BOOLEAN)
+        self.assertEqual(list(converted.required), ["name"])
+
+    @patch("aevora.ai_chat.utils.tools.cache")
+    def test_get_gemini_tools_cache_hit(self, mock_cache):
+        from aevora.ai_chat.utils.tools import get_gemini_tools
+
+        sentinel = [object()]
+        mock_cache.get.return_value = sentinel
+
+        result = get_gemini_tools()
+        self.assertEqual(result, sentinel)
+        mock_cache.get.assert_called_once_with("gemini_tools_cache")
+
+    @patch("aevora.ai_chat.utils.tools.celery_tool_client.list_tools")
+    @patch("aevora.ai_chat.utils.tools.cache")
+    def test_get_gemini_tools_cache_miss_builds_and_caches(self, mock_cache, mock_list_tools):
+        from aevora.ai_chat.utils.tools import get_gemini_tools
+
+        mock_cache.get.return_value = None
+        mock_list_tools.return_value = [
+            {
+                "name": "calc",
+                "description": "Calculate expression",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"expr": {"type": "string"}},
+                    "required": ["expr"],
+                },
+            }
+        ]
+
+        tools = get_gemini_tools()
+        self.assertEqual(len(tools), 1)
+        self.assertEqual(len(tools[0].function_declarations), 1)
+        self.assertEqual(tools[0].function_declarations[0].name, "calc")
+        self.assertEqual(tools[0].function_declarations[0].description, "Calculate expression")
+        mock_cache.set.assert_called_once_with("gemini_tools_cache", tools, 60)
+
+    @patch("aevora.ai_chat.utils.tools.celery_tool_client.list_tools")
+    @patch("aevora.ai_chat.utils.tools.cache")
+    def test_get_gemini_tools_handles_exception(self, mock_cache, mock_list_tools):
+        from aevora.ai_chat.utils.tools import get_gemini_tools
+
+        mock_cache.get.return_value = None
+        mock_list_tools.side_effect = Exception("Celery failed")
+
+        tools = get_gemini_tools()
         self.assertEqual(tools, [])
