@@ -4,7 +4,13 @@ from rest_framework.views import APIView
 
 from aevora.ai_chat.api.v1.docs.stream import chat_stream_schema
 from aevora.ai_chat.api.v1.serializers.prompt import ChatStreamPromptSerializer
-from aevora.ai_chat.utils import _gemini_stream, _sse, get_model, get_or_create_chat_session
+from aevora.ai_chat.utils import (
+    _gemini_stream,
+    _sse,
+    get_model,
+    get_or_create_chat_session,
+    sync_to_async_gen,
+)
 
 
 class ChatStreamView(APIView):
@@ -27,12 +33,18 @@ class ChatStreamView(APIView):
         )
 
         return StreamingHttpResponse(
-            _gemini_stream(
-                session,
-                prompt,
-                is_new=is_new,
-                model=model,
+            sync_to_async_gen(
+                _gemini_stream(
+                    session,
+                    prompt,
+                    is_new=is_new,
+                    model=model,
+                )
             ),
             content_type="text/event-stream",
-            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+            headers={
+                "Cache-Control": "no-cache, no-transform",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
         )
