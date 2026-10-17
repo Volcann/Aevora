@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from aevora.ai_chat.choices import MessageRole
-from aevora.ai_chat.models import ChatSession, Message
+from aevora.ai_chat.models import AIModel, ChatSession, Message
 
 User = get_user_model()
 
@@ -117,3 +117,64 @@ class ChatSessionApiTestCase(APITestCase):
         invalid_url = f"{reverse('ai_chat:stream')}?session_id=not-a-valid-uuid"
         response = self.client.post(invalid_url, {"prompt": "Hello"})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @patch("aevora.ai_chat.api.v1.views.stream._gemini_stream")
+    def test_stream_with_valid_model_id_passes_aimodel_object(self, mock_stream):
+        mock_stream.return_value = iter([])
+        self.client.force_authenticate(user=self.user)
+        ai_model = AIModel.objects.create(name="gemini-test-custom")
+        url = reverse("ai_chat:stream")
+        response = self.client.post(
+            url,
+            {"prompt": "Hello test model", "model": str(ai_model.id)},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_stream.assert_called_once()
+        self.assertEqual(mock_stream.call_args.kwargs.get("model"), ai_model)
+
+    def test_stream_returns_404_for_nonexistent_or_invalid_model_id(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse("ai_chat:stream")
+
+        # Non-existent UUID
+        response = self.client.post(
+            url,
+            {"prompt": "Hello", "model": "00000000-0000-0000-0000-000000000000"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Invalid UUID format
+        response = self.client.post(
+            url,
+            {"prompt": "Hello", "model": "invalid-uuid-format"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @patch("google.generativeai.GenerativeModel")
+    @patch("google.generativeai.configure")
+    def test_gemini_stream_saves_message_with_model_object(self, mock_configure, mock_genai_model):
+        from unittest.mock import MagicMock
+
+        from aevora.ai_chat.utils.stream import _gemini_stream
+
+        mock_instance = mock_genai_model.return_value
+        mock_chat = mock_instance.start_chat.return_value
+        mock_response = MagicMock()
+        mock_response.__iter__.return_value = []
+        mock_response.candidates = []
+        mock_chat.send_message.return_value = mock_response
+
+        stream_session = ChatSession.objects.create(user=self.user, title="Stream Model Test")
+        ai_model = AIModel.objects.create(name="gemini-stream-unit-test")
+        events = list(_gemini_stream(stream_session, "Test prompt", model=ai_model))
+        self.assertTrue(len(events) > 0)
+
+        user_message = Message.objects.get(
+            session=stream_session, role=MessageRole.USER
+        )
+        self.assertEqual(user_message.model, ai_model)
+
+        model_message = Message.objects.get(
+            session=stream_session, role=MessageRole.MODEL
+        )
+        self.assertEqual(model_message.model, ai_model)

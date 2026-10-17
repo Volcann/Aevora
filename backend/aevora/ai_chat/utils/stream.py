@@ -16,7 +16,7 @@ def _gemini_stream(
     session,
     prompt,
     is_new=False,  # noqa: FBT002
-    model_identifier=None,
+    model=None,
 ):
     try:
         if is_new:
@@ -46,16 +46,18 @@ def _gemini_stream(
         gemini_tools, tool_router = select_tools_for_prompt(prompt)
 
         selected_aimodel = None
-        if model_identifier:
+        if isinstance(model, AIModel):
+            selected_aimodel = model
+        elif model:
             selected_aimodel = (
-                AIModel.objects.filter(name=str(model_identifier).strip()).first()
-                or AIModel.objects.filter(id=str(model_identifier).strip()).first()
+                AIModel.objects.filter(id=str(model).strip()).first()
+                or AIModel.objects.filter(name=str(model).strip()).first()
             )
 
         if selected_aimodel:
             primary_model = selected_aimodel.name
-        elif model_identifier and str(model_identifier).strip():
-            primary_model = str(model_identifier).strip()
+        elif model and isinstance(model, str) and model.strip():
+            primary_model = model.strip()
         else:
             first_model = AIModel.objects.first()
             primary_model = (
@@ -67,17 +69,17 @@ def _gemini_stream(
         model_kwargs = {"tools": gemini_tools}
 
         try:
-            model = genai.GenerativeModel(
+            genai_model = genai.GenerativeModel(
                 model_name=primary_model,
                 **model_kwargs,
             )
-            chat = model.start_chat(history=history)
+            chat = genai_model.start_chat(history=history)
         except Exception:  # noqa: BLE001
-            model = genai.GenerativeModel(
+            genai_model = genai.GenerativeModel(
                 model_name="gemini-3.5-flash-lite",
                 **model_kwargs,
             )
-            chat = model.start_chat(history=history)
+            chat = genai_model.start_chat(history=history)
 
         full_text = []
         user_input = prompt
