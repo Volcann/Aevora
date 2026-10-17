@@ -1,9 +1,6 @@
 {
   "apps/web/app/globals.css": "c9c29d6d53a8d759cb24eb662d94f658c518557b7d05496d5cd7b36a5476d513",
-  "apps/web/app/pet/page.tsx": "fa5c6501182834781ee1cb48dd4bd75afc6c4eddb3e53de6b7bcb81aaedc7c61",
-  "apps/web/components/orb/CodexPetOrb.tsx": "f7cdf87b0a46254c8821b7f238b8c7543dcbd3278ed7008f5f4547c543feb997",
   "apps/web/components/orb/CompanionSparks.tsx": "81acbfc455b03aaf5d58835f5972581614451fcb598c7db42cb454db0ce21e07",
-  "apps/web/components/orb/DesktopPet.module.css": "1a002accb7b042c22562a0049dce7323614ecc14830bafc8693846364aeb2af0",
   "apps/web/components/orb/Orb.module.css": "bce18afbe6232a44aa53d36afc55bf11e906e6060590fefbeee9fab5c6cf02aa",
   "apps/web/components/orb/OrbCanvas.tsx": "2e61b268812864231246db88f03042bde07a53814cbb4b8b80c00a07f18db7de",
   "apps/web/components/orb/OrbVisual.tsx": "999852d0a1341b06a5effd8fa042b278181f1733157a4d41bce351ea5aaec036",

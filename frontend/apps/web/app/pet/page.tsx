@@ -38,6 +38,7 @@ import {
   CompanionSparks,
   type CompanionSparksHandle,
 } from "../../components/orb/CompanionSparks";
+import { CompanionMarkdown } from "../../components/chat/CompanionMarkdown";
 import styles from "../../components/orb/DesktopPet.module.css";
 
 export default function StandaloneDesktopPetPage() {
@@ -57,6 +58,8 @@ export default function StandaloneDesktopPetPage() {
     return null;
   });
   const [showMenu, setShowMenu] = useState(false);
+  const showMenuRef = useRef(false);
+  useEffect(() => { showMenuRef.current = showMenu; }, [showMenu]);
   const [activeTab, setActiveTab] = useState<"models" | "tools">("models");
 
   const sessionId = useRef<string | null>(null);
@@ -182,7 +185,7 @@ export default function StandaloneDesktopPetPage() {
     });
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (showMenu) {
+        if (showMenuRef.current) {
           setShowMenu(false);
         } else {
           setExpanded(false);
@@ -207,7 +210,7 @@ export default function StandaloneDesktopPetPage() {
       document.documentElement.classList.remove("pet-desktop-window");
       document.body.classList.remove("pet-desktop-window");
     };
-  }, [session, showMenu]);
+  }, [session]);
 
   useEffect(() => {
     let mounted = true;
@@ -420,10 +423,14 @@ export default function StandaloneDesktopPetPage() {
                       </span>
                     )}
                   </div>
-                  <p>
-                    {turn.text}
-                    {isStreamingAssistant && <span className="stream-cursor" />}
-                  </p>
+                  {turn.role === "assistant" ? (
+                    <div className={styles.turnBody}>
+                      <CompanionMarkdown content={turn.text} isStreaming={isStreamingAssistant} />
+                      {isStreamingAssistant && <span className="stream-cursor" />}
+                    </div>
+                  ) : (
+                    <p>{turn.text}</p>
+                  )}
                 </div>
               );
             })}
@@ -635,51 +642,7 @@ export default function StandaloneDesktopPetPage() {
               </div>
             </form>
 
-            <div className={styles.composerFootnote}>
-              <span>Press Enter to send</span>
-              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                <button
-                  type="button"
-                  className={styles.footnoteLink}
-                  onClick={() => window.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "bounce" } }))}
-                  title="Bounce ball"
-                >
-                  <span>🏀 Bounce</span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.footnoteLink}
-                  onClick={() => window.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "flip" } }))}
-                  title="Do a backflip"
-                >
-                  <span>🤸 Flip</span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.footnoteLink}
-                  onClick={() => window.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "pet" } }))}
-                  title="Pet ball"
-                >
-                  <span>💖 Love</span>
-                </button>
-                <button
-                  type="button"
-                  className={styles.footnoteLink}
-                  onClick={() => window.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "wink" } }))}
-                  title="Wink"
-                >
-                  <span>😉 Wink</span>
-                </button>
-              </div>
-              <button
-                type="button"
-                className={styles.footnoteLink}
-                onClick={() => runWindowAction(focusMainWindow)}
-              >
-                <span>Open in main app</span>
-                <ArrowUpRight size={11} />
-              </button>
-            </div>
+
           </div>
         </section>
       )}
@@ -725,7 +688,6 @@ export default function StandaloneDesktopPetPage() {
           signal={session.signal}
           label={expanded ? "Minimize companion chat" : "Open companion chat"}
           onActivate={() => setExpanded(!expanded)}
-          onDoubleClick={() => window.dispatchEvent(new CustomEvent("orb:trick", { detail: { trick: "flip" } }))}
         />
         {!expanded && (
           <button

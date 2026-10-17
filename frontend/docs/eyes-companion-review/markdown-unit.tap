@@ -1,0 +1,118 @@
+TAP version 13
+# Subtest: asterisk and underscore bold use semantic strong tokens
+ok 1 - asterisk and underscore bold use semantic strong tokens
+  ---
+  duration_ms: 1.930254
+  type: 'test'
+  ...
+# Subtest: bold remains inline with adjacent prose and punctuation
+ok 2 - bold remains inline with adjacent prose and punctuation
+  ---
+  duration_ms: 0.224703
+  type: 'test'
+  ...
+# Subtest: triple emphasis nests italic inside bold
+ok 3 - triple emphasis nests italic inside bold
+  ---
+  duration_ms: 0.163181
+  type: 'test'
+  ...
+# Subtest: italic and code can appear inside bold
+ok 4 - italic and code can appear inside bold
+  ---
+  duration_ms: 0.159556
+  type: 'test'
+  ...
+# Subtest: code spans preserve literal emphasis markers
+ok 5 - code spans preserve literal emphasis markers
+  ---
+  duration_ms: 0.10154
+  type: 'test'
+  ...
+# Subtest: backslash escapes render literal markers
+ok 6 - backslash escapes render literal markers
+  ---
+  duration_ms: 0.132446
+  type: 'test'
+  ...
+# Subtest: ordinary identifiers and multiplication are not emphasis
+ok 7 - ordinary identifiers and multiplication are not emphasis
+  ---
+  duration_ms: 0.199265
+  type: 'test'
+  ...
+# Subtest: unmatched markers in completed replies remain literal
+ok 8 - unmatched markers in completed replies remain literal
+  ---
+  duration_ms: 0.124314
+  type: 'test'
+  ...
+# Subtest: streamed opening marker never flashes as empty italic
+ok 9 - streamed opening marker never flashes as empty italic
+  ---
+  duration_ms: 0.269308
+  type: 'test'
+  ...
+# Subtest: partial streaming bold is readable before the closing marker arrives
+ok 10 - partial streaming bold is readable before the closing marker arrives
+  ---
+  duration_ms: 0.296338
+  type: 'test'
+  ...
+# Subtest: closing delimiter split across frames is not shown to the reader
+ok 11 - closing delimiter split across frames is not shown to the reader
+  ---
+  duration_ms: 0.215738
+  type: 'test'
+  ...
+# Subtest: char-by-char streaming preserves all words and final formatting
+ok 12 - char-by-char streaming preserves all words and final formatting
+  ---
+  duration_ms: 0.303379
+  type: 'test'
+  ...
+# Subtest: link labels can contain bold with balanced URL parentheses
+ok 13 - link labels can contain bold with balanced URL parentheses
+  ---
+  duration_ms: 0.184193
+  type: 'test'
+  ...
+# Subtest: script/data/vbscript/file links cannot become actionable links
+ok 14 - script/data/vbscript/file links cannot become actionable links
+  ---
+  duration_ms: 0.147198
+  type: 'test'
+  ...
+# Subtest: HTTPS, mail and relative workspace links stay usable
+ok 15 - HTTPS, mail and relative workspace links stay usable
+  ---
+  duration_ms: 0.124575
+  type: 'test'
+  ...
+# Subtest: HTML is kept as text, never converted to markup tokens
+ok 16 - HTML is kept as text, never converted to markup tokens
+  ---
+  duration_ms: 0.795757
+  type: 'test'
+  ...
+# Subtest: input is never modified by presentation parsing
+ok 17 - input is never modified by presentation parsing
+  ---
+  duration_ms: 0.088651
+  type: 'test'
+  ...
+# Subtest: long output remains bounded and preserves text
+ok 18 - long output remains bounded and preserves text
+  ---
+  duration_ms: 6.935974
+  type: 'test'
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 70.985089

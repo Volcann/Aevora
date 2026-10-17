@@ -1,0 +1,20 @@
+/* Typography only; no companion/window/spark animation selectors. */
+.content { min-width: 0; max-width: 100%; font-size: 11.5px; line-height: 1.65; color: inherit; overflow-wrap: anywhere; white-space: normal; }
+.content div, .content p, .content blockquote, .content td, .content th { font-size: inherit; line-height: inherit; }
+.content p, .content blockquote, .content td, .content th { color: inherit; }
+.content p { margin: 0.35em 0; }
+.content strong { font-weight: 700; color: inherit; }
+.content em { color: inherit; }
+.content h2, .content h3, .content h4, .content h5 { color: inherit; line-height: 1.4; margin: 0.85em 0 0.35em; letter-spacing: normal; }
+.content h2 { font-size: 1.24em; }
+.content h3 { font-size: 1.16em; }
+.content h4, .content h5 { font-size: 1.08em; }
+.content pre { max-width: 100%; overflow-x: auto; white-space: pre; font-size: 10px; padding: 10px; }
+.content code { font-size: 0.95em; }
+.content pre code { font-size: inherit; }
+.content table { width: 100%; font-size: 10.5px; }
+.content th, .content td { padding: 6px 8px; }
+.content a { color: #b8d8ff; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.content a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 2px; }
+.content > div > :first-child { margin-top: 0; }
+.content > div > :last-child { margin-bottom: 0; }
