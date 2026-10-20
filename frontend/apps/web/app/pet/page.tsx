@@ -18,6 +18,7 @@ import {
   PinOff,
   Plus,
   Square,
+  Sparkles,
   X,
 } from "lucide-react";
 import { api, getSavedTokens, type AIModelItem, type ToolItem } from "../../lib/api";
@@ -32,7 +33,10 @@ import {
   setDesktopPetPinned,
   subscribeDesktopPetVisibility,
 } from "../../lib/desktopPet";
-import { OrbVisual } from "../../components/orb/OrbVisual";
+import { PlayfulOrb } from "../../components/orb/playful/OrbPlayLayer";
+import { OrbPlayControls } from "../../components/orb/playful/OrbPlayControls";
+import { useNativePlayground } from "../../components/orb/playful/useNativePlayground";
+import playStyles from "../../components/orb/playful/OrbPlayControls.module.css";
 import { useOrbTheme } from "../../components/orb/hooks/useOrbTheme";
 import { useTextChat } from "../../hooks/useTextChat";
 import type { SendPrompt } from "../../lib/text-session";
@@ -46,6 +50,7 @@ import styles from "../../components/orb/DesktopPet.module.css";
 
 export default function StandaloneDesktopPetPage() {
   const [expanded, setExpanded] = useState(false);
+  const [showPlayground, setShowPlayground] = useState(false);
   const [native, setNative] = useState(false);
   const [pinned, setPinned] = useState(true);
   const [draft, setDraft] = useState("");
@@ -190,6 +195,7 @@ export default function StandaloneDesktopPetPage() {
   );
 
   const { session, snapshot } = useTextChat({ onPrompt: send });
+  useNativePlayground(native, expanded);
 
   useEffect(() => {
     const desktop = isElectronApp();
@@ -320,6 +326,7 @@ export default function StandaloneDesktopPetPage() {
             </div>
 
             <div className={styles.headerActions}>
+              <button type="button" className={styles.icon} aria-label="Open orb playground" title="Orb playground" aria-pressed={showPlayground} onClick={() => setShowPlayground(!showPlayground)}><Sparkles size={14} /></button>
               <button
                 type="button"
                 className={styles.newChatBtn}
@@ -376,6 +383,10 @@ export default function StandaloneDesktopPetPage() {
               </button>
             </div>
           </header>
+
+          {showPlayground && <div className={playStyles.drawer}>
+            <OrbPlayControls native={native} onClose={() => setShowPlayground(false)} />
+          </div>}
 
           {/* Clean Status Bar: No duplicate model badge */}
           <div className={styles.widgetStatus} role="status">
@@ -812,7 +823,9 @@ export default function StandaloneDesktopPetPage() {
             <X size={13} />
           </button>
         </div>
-        <OrbVisual
+        <PlayfulOrb
+          streaming={snapshot.streaming}
+          response={snapshot.response}
           size={expanded ? 76 : 106}
           state={snapshot.state}
           theme={theme}

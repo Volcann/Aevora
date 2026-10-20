@@ -4,6 +4,9 @@ import { Code2, Lightbulb, PenLine, AudioLines, AlertTriangle, Check, ArrowDown,
 import type { MessageItem } from "../../lib/api";
 import type { SendVoicePrompt } from "../orb/core/voice-session";
 import { OrbCanvas } from "../orb/OrbCanvas";
+import { OrbPlayLayer, PlayfulOrb } from "../orb/playful/OrbPlayLayer";
+import { useOrbTheme } from "../orb/hooks/useOrbTheme";
+import playStyles from "../orb/playful/PlayfulOrb.module.css";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ChatHistory } from "./ChatHistory";
 import { LiveLogsPanel } from "./ToolLogAccordion";
@@ -30,6 +33,7 @@ const starters = [
 ];
 
 export function ChatMessageList({ messages, isStreaming, streamingMessage, streamingLogs = [], activeTool, onSelectPrompt, onVoicePrompt, onOpenSiriModal }: ChatMessageListProps) {
+  const { theme: orbTheme } = useOrbTheme();
   const scroll = useRef<HTMLDivElement>(null);
   const follow = useRef(true);
   const [showJump, setShowJump] = useState(false);
@@ -41,7 +45,7 @@ export function ChatMessageList({ messages, isStreaming, streamingMessage, strea
     return <section className={styles.welcome} aria-label="Start a conversation">
       <div className={styles.welcomeInner}>
 
-        <OrbCanvas size={165} showControls={false} onClick={onOpenSiriModal} onVoicePrompt={onVoicePrompt} />
+        <OrbPlayLayer size={165}><OrbCanvas size={165} showControls={false} onClick={onOpenSiriModal} onVoicePrompt={onVoicePrompt} /></OrbPlayLayer>
 
         <div className={styles.eyebrow}>A little clarity, a little company</div>
         <h1>What's on your mind<span>?</span></h1>
@@ -74,14 +78,11 @@ export function ChatMessageList({ messages, isStreaming, streamingMessage, strea
         <ChatHistory messages={messages} />
 
         {isStreaming && <article className={styles.message} aria-label="Aevora is replying">
-          <div className={styles.assistantAvatar} aria-hidden="true">a</div>
+          <div className={playStyles.replyAvatar} aria-hidden="true"><PlayfulOrb size={48} theme={orbTheme} state={2} streaming response={streamingMessage} interactive={false} label="Aevora is responding" /></div>
           <div className={styles.messageBody}>
             <div className={styles.assistantName}>
               <span>Aevora</span>
-              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-400/20 inline-flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.25)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                ✨ Sparking stream
-              </span>
+              <span className={playStyles.streamBadge}><i aria-hidden="true" />{streamingMessage ? "Responding" : "Thinking"}</span>
             </div>
 
             {activeTool && <div className={styles.toolStatus} data-status={activeTool.status} role="status">
@@ -94,8 +95,8 @@ export function ChatMessageList({ messages, isStreaming, streamingMessage, strea
               </span>
             </div>}
 
-            {/* Live AI logs — visible while streaming, auto-collapses when message arrives */}
-            {(streamingLogs.length > 0 || activeTool) && !streamingMessage && (
+            {/* Keep real tool output accessible even after response text begins. */}
+            {(streamingLogs.length > 0 || activeTool) && (
               <LiveLogsPanel logs={streamingLogs} activeTool={activeTool} />
             )}
 

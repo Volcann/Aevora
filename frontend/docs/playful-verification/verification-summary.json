@@ -1,0 +1,40 @@
+{
+  "modelTests": {
+    "passed": 18,
+    "failed": 0
+  },
+  "browserScenarioGroups": {
+    "passed": 11,
+    "failed": 0
+  },
+  "pureModelStrictTypecheck": "passed",
+  "unchangedOriginalFiles": 194,
+  "originalCssPrefix": "unchanged",
+  "productionBuild": "not run: registry DNS EAI_AGAIN",
+  "fullWorkspaceTypecheck": "not run: project dependencies unavailable",
+  "realNativeLaunch": "not run",
+  "backendChanges": false,
+  "nativeImplementationChanges": false,
+  "declaredDependencyChanges": false,
+  "browserRuntime": {
+    "sourceRoot": "/mnt/data/work/Aevora-frontend",
+    "modules": 84,
+    "typescript": "5.8.3",
+    "compatibilityRuntime": true,
+    "react": "18.2.0",
+    "source": "MIT-licensed React/ReactDOM/Scheduler embedded in installed JupyterLab distribution",
+    "icons": "test doubles preserving dimensions; not production Lucide artwork",
+    "tailwind": "4.1.10"
+  },
+  "preexistingOldManifestMismatches": [
+    "apps/web/components/orb/OrbVisual.tsx",
+    "apps/web/components/orb/OrbVoiceExperience.tsx",
+    "apps/web/components/orb/core/orb-renderer.ts",
+    "apps/web/lib/desktop-runtime.ts",
+    "apps/web/lib/text-session.ts"
+  ],
+  "originalOrbTests": {
+    "passed": 40,
+    "failed": 0
+  }
+}

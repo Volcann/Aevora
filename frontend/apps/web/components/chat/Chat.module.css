@@ -162,3 +162,9 @@
   word-break: break-all;
 }
 
+
+/* Playful UI addition: only messages containing tool output take the available
+   row width. Original message and orb rules above are unchanged. */
+.messageBody:has([data-terminal-status]) {
+  flex: 1;
+}

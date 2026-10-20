@@ -9,7 +9,7 @@
 _Connect a tool once. Let the team use it from the browser or desktop._
 
 <p align="center">
-  <img src="frontend/docs/verification/chat-desktop.png" alt="Aevora AI Chat & Tool Automation Interface" width="100%" />
+  <img src="frontend/docs/playful-verification/terminal-live.png" alt="Aevora AI Chat & Live Tool Execution Terminal Interface" width="100%" />
 </p>
 
 Aevora combines a Django API, a Next.js frontend, and Gemini-powered chat. The backend discovers tools from a separate Celery worker, selects relevant tools for a prompt, dispatches tool calls through Redis, and streams response events to the client. The tool worker lives in the companion [utils repository](https://github.com/Volcann/utils); it is not started by Aevora's Docker Compose stack.
@@ -81,15 +81,15 @@ If the companion worker is unavailable, chat can still run without tools; the to
 
 ## User Experience
 
-Aevora provides a full web interface alongside a standalone desktop client featuring interactive 3D WebGL visualizations and floating companion modes:
+Aevora provides a full web interface alongside a standalone desktop client featuring interactive 3D WebGL visualizations, real-time tool execution terminals, and floating companion modes:
 
-| AI Chat & Tool Automation | Interactive 3D Voice Experience |
+| AI Chat & Live Terminal Tool Output | Companion Orb Playground & Controls |
 | :---: | :---: |
-| ![Aevora AI Chat & Tools](frontend/docs/verification/chat-desktop.png) | ![Aevora 3D Voice Mode](frontend/docs/verification/voice-call-desktop.png) |
+| ![Aevora AI Chat & Live Terminal](frontend/docs/playful-verification/terminal-live.png) | ![Aevora Orb Playground](frontend/docs/playful-verification/playground-controls.png) |
 
-| Desktop Companion (Expanded) | Companion Orb (Compact) | Mobile Responsive Chat | Mobile Voice Experience |
+| Interactive 3D Voice Experience | Desktop Companion (Expanded) | Companion Orb (Compact) | Mobile Responsive Chat |
 | :---: | :---: | :---: | :---: |
-| <img src="frontend/docs/verification/companion-expanded.png" alt="Desktop Companion Expanded" width="220" /> | <img src="frontend/docs/verification/companion-compact.png" alt="Companion Compact Orb" width="140" /> | <img src="frontend/docs/verification/chat-mobile.png" alt="Mobile Chat" width="180" /> | <img src="frontend/docs/verification/voice-call-mobile.png" alt="Mobile Voice Experience" width="180" /> |
+| <img src="frontend/docs/verification/voice-call-desktop.png" alt="Aevora 3D Voice Mode" width="220" /> | <img src="frontend/docs/verification/companion-expanded.png" alt="Desktop Companion Expanded" width="220" /> | <img src="frontend/docs/verification/companion-compact.png" alt="Companion Compact Orb" width="140" /> | <img src="frontend/docs/playful-verification/responsive-390x844.png" alt="Mobile Chat" width="180" /> |
 
 ---
 

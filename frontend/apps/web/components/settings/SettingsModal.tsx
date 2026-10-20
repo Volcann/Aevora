@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useDialogFocus } from "../../hooks/useDialogFocus";
 import styles from "./Settings.module.css";
+import { OrbPlayControls } from "../orb/playful/OrbPlayControls";
 import {
   Zap,
   Palette,
@@ -957,6 +958,7 @@ export const SettingsModal = React.memo(function SettingsModal({
             {/* ─── TAB 3: COMPANION & VOICE ─────────────────────────────────── */}
             {activeTab === "companion" && (
               <div className="space-y-5">
+                <OrbPlayControls />
                 {/* Codex Pet Orb Toggle */}
                 <div className="p-4 rounded-xl bg-surface/50 border border-border flex items-center justify-between gap-4">
                   <div className="flex items-start gap-3.5">

@@ -1,0 +1,4 @@
+PASS: 194 original files byte-identical to Aevora-frontend-source-2026-10-20.zip.
+PASS: original chat stylesheet prefix, dependencies, lockfiles and existing package scripts preserved.
+PASS: original orb renderer, shaders, palettes, eyes, API/auth/session modules and native implementation unchanged.
+Intentional UI edits: apps/web/components/orb/CodexPetOrb.tsx, apps/web/components/chat/ChatMessageList.tsx, apps/web/components/chat/ToolLogAccordion.tsx, apps/web/components/settings/SettingsModal.tsx, apps/web/app/pet/page.tsx, apps/web/components/chat/Chat.module.css
