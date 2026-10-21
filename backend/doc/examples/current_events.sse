@@ -1,0 +1,18 @@
+data: {"type": "session_created", "session_id": "example-session-001", "title": "Get weather for Karachi"}
+
+data: {"type": "tool_start", "tool": "get_weather"}
+
+data: {"type": "tool_log", "log_id": "example-log-001", "tool": "get_weather", "step": "Fetching weather for 'Karachi' from wttr.in...", "log": "Fetching weather for 'Karachi' from wttr.in...", "status": "running", "output": null}
+
+data: {"type": "tool_log", "log_id": "example-log-002", "tool": "get_weather", "step": "Fetching weather for 'Karachi' from Open-Meteo...", "log": "Fetching weather for 'Karachi' from Open-Meteo...", "status": "running", "output": null}
+
+data: {"type": "tool_log", "log_id": "example-log-003", "tool": "get_weather", "step": "Fetching weather for 'Karachi' from 7Timer...", "log": "Fetching weather for 'Karachi' from 7Timer...", "status": "running", "output": null}
+
+data: {"type": "tool_log", "log_id": "example-log-004", "tool": "get_weather", "step": "Done!", "log": "Done!", "status": "completed", "output": "[Illustrative placeholder: the laptop weather task returns a formatted report string here. No live weather data was retrieved.]"}
+
+data: {"type": "tool_done", "tool": "get_weather", "output": "[Illustrative placeholder: the laptop weather task returns a formatted report string here. No live weather data was retrieved.]"}
+
+data: {"type": "chunk", "text": "[Illustrative placeholder for the model answer after receiving the tool result.]"}
+
+data: {"type": "done", "message_id": "example-message-001"}
+

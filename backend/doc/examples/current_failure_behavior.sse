@@ -1,0 +1,6 @@
+data: {"type": "tool_start", "tool": "get_weather"}
+
+data: {"type": "tool_log", "log_id": "example-failed-log-001", "tool": "get_weather", "step": "Done!", "log": "Done!", "status": "completed", "output": {"error": "Illustrative task exception"}}
+
+data: {"type": "tool_done", "tool": "get_weather", "output": {"error": "Illustrative task exception"}}
+

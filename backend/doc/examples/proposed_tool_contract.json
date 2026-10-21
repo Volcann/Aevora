@@ -1,0 +1,34 @@
+{
+  "_example_note": "Proposed server-owned contract. Do not trust routing or permissions supplied by a model.",
+  "schema_version": 1,
+  "tool": "agent.review",
+  "execution_adapter": "antigravity_cli",
+  "input": {
+    "workspace_id": "example-workspace",
+    "diff_artifact_id": "example-diff"
+  },
+  "execution": {
+    "device_id": "example-authorized-device",
+    "queue": "device.example-authorized-device.tools",
+    "deadline_seconds": 300,
+    "idempotency_key": "example-run-review-v1"
+  },
+  "permissions": {
+    "workspace_access": "read_only",
+    "network": "approved_destinations_only",
+    "may_modify_files": false,
+    "may_publish_comments": false
+  },
+  "result_contract": {
+    "status": "succeeded | failed | cancelled | timed_out",
+    "summary": "Compact text for the coordinator",
+    "artifact_refs": [],
+    "error": null
+  },
+  "validation_required": [
+    "authorize tool and device for the authenticated user",
+    "validate input schema and approved workspace",
+    "enforce OS/runner permissions outside the prompt",
+    "validate terminal outcome and artifact paths"
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "package": "Aevora tool execution documentation",
+  "review_date": "2026-10-18",
+  "word_document_page_counts": {
+    "01_Foundations_and_Migration.docx": 8,
+    "02_Stream_Code_Walkthrough.docx": 10,
+    "03_Reliability_Subprocesses_and_Agents.docx": 9
+  },
+  "total_word_document_pages": 27,
+  "evidence_scope": "Uploaded source review plus 12 isolated checks; no live deployment or agent integration test.",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2328,
+      "sha256": "af323fbc6cceef8dcc490981c869bf61af7ff0958ffa9c0ea9fed07faf09f001"
+    },
+    {
+      "path": "diagrams/01_Previous_MCP_Architecture.mmd",
+      "bytes": 508,
+      "sha256": "ffa3e5d9e0c9fa2eceef859247764eb4300fd12ab347d42192da6094e2c952aa"
+    },
+    {
+      "path": "diagrams/02_Current_Celery_Architecture.mmd",
+      "bytes": 1323,
+      "sha256": "13623abb35eba3c12c2d8a336d081e98391035c2e237350054858caf5a778521"
+    },
+    {
+      "path": "diagrams/03_Real_Time_Sequence.mmd",
+      "bytes": 1990,
+      "sha256": "f381159afa4856d9fa1659af7fad13d13f16526e27c479d160487170cdb6dcfd"
+    },
+    {
+      "path": "diagrams/04_Proposed_Cooperating_Agents.mmd",
+      "bytes": 998,
+      "sha256": "5cf695491e1324eb241d8b33bb26e50f75037e907255a649c690acca6ea0b71e"
+    },
+    {
+      "path": "diagrams/README.md",
+      "bytes": 848,
+      "sha256": "ebf1e46aa7f470653e47e73a78ea44ab4c8ea8b45daf8677f31094668e106354"
+    },
+    {
+      "path": "documents/01_Foundations_and_Migration.docx",
+      "bytes": 46784,
+      "sha256": "62e3664818c363ff0a3f9a9d796c4c441a106d2579228b3e8ece0169e56bab0f"
+    },
+    {
+      "path": "documents/02_Stream_Code_Walkthrough.docx",
+      "bytes": 49963,
+      "sha256": "f2da9af097acf8bad4acc925afc06f738545c3159b3961b35a1d0fb7eadeb28b"
+    },
+    {
+      "path": "documents/03_Reliability_Subprocesses_and_Agents.docx",
+      "bytes": 48827,
+      "sha256": "14c5870dd248839a610d96f7c5e2864cfd00feb5ff07fbb9be46ddbb990336b1"
+    },
+    {
+      "path": "examples/README.md",
+      "bytes": 1674,
+      "sha256": "06925b766bcfb5fe289de15ed0cc052dc4ef361b80c82e2c3161f1243fe0bf2b"
+    },
+    {
+      "path": "examples/current_events.sse",
+      "bytes": 1509,
+      "sha256": "2fffeeb783020e1fdbc6fe7628661c335254d0542fcd0fc7340ba5539dadc106"
+    },
+    {
+      "path": "examples/current_failure_behavior.sse",
+      "bytes": 352,
+      "sha256": "ec82631a5b9c407924cc6530bb3e3ea5273b5ea70a6db7df789df55de800eaef"
+    },
+    {
+      "path": "examples/proposed_job_event.json",
+      "bytes": 627,
+      "sha256": "83f20c36220c4f259595614d084273970b0064f1335828840e94c05ddc106822"
+    },
+    {
+      "path": "examples/proposed_tool_contract.json",
+      "bytes": 1106,
+      "sha256": "01f9723b3048c753c9f4b198285345663de59bc88d32b510735895d84ac7b154"
+    },
+    {
+      "path": "markdown/01_Foundations_and_Migration.md",
+      "bytes": 15001,
+      "sha256": "2f157c839123c7a2595470c90d409e52e2380cc910d6fb8fda7bdc2c9f73a5cc"
+    },
+    {
+      "path": "markdown/02_Stream_Code_Walkthrough.md",
+      "bytes": 19082,
+      "sha256": "7455d1ddb79856c0d601d72fe566818c4211bc6c753bbc79afb0c2cbdffc46a6"
+    },
+    {
+      "path": "markdown/03_Reliability_Subprocesses_and_Agents.md",
+      "bytes": 18737,
+      "sha256": "bbfb91af56dd2e50355db325fac10dfea077d6063adcb2590ad98ef4fe405c1d"
+    },
+    {
+      "path": "reference/SOURCES.md",
+      "bytes": 6486,
+      "sha256": "63646f258c7f1100ed1b7e33f2b8ee20cfcb9ea865d8acbe49613240a1351b79"
+    },
+    {
+      "path": "reference/VALIDATION.md",
+      "bytes": 3147,
+      "sha256": "d98519f5f3ffd4803ff6c935b0d1c9f60fb4c3e783e3922325ffd4d830164ea7"
+    },
+    {
+      "path": "reference/validation_results.json",
+      "bytes": 2506,
+      "sha256": "86eb476c6f1ec0b1112d7997d50d3f9f303323ed011d592610ddff81c61a34ef"
+    }
+  ]
+}
