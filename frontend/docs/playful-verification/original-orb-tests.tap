@@ -1,0 +1,252 @@
+TAP version 13
+# (node:4976) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: visual input validation clamps invalid audio, states and themes
+ok 1 - visual input validation clamps invalid audio, states and themes
+  ---
+  duration_ms: 2.411772
+  type: 'test'
+  ...
+# Subtest: damping is independent of frame rate
+ok 2 - damping is independent of frame rate
+  ---
+  duration_ms: 0.521443
+  type: 'test'
+  ...
+# Subtest: theme persistence sanitizes malformed values and dispatches without storage
+ok 3 - theme persistence sanitizes malformed values and dispatches without storage
+  ---
+  duration_ms: 0.669987
+  type: 'test'
+  ...
+# Subtest: the supplied RGB default and one-time theme migration remain unchanged
+ok 4 - the supplied RGB default and one-time theme migration remain unchanged
+  ---
+  duration_ms: 0.218859
+  type: 'test'
+  ...
+# Subtest: cancel and beginStream never emit natural completion
+ok 5 - cancel and beginStream never emit natural completion
+  ---
+  duration_ms: 0.967755
+  type: 'test'
+  ...
+# Subtest: disposing a silent orb does not cancel another orb's playback
+ok 6 - disposing a silent orb does not cancel another orb's playback
+  ---
+  duration_ms: 0.220782
+  type: 'test'
+  ...
+# Subtest: late canceled utterances cannot complete or start another turn
+ok 7 - late canceled utterances cannot complete or start another turn
+  ---
+  duration_ms: 1.285032
+  type: 'test'
+  ...
+# Subtest: voice subscriptions do not overwrite browser event properties
+ok 8 - voice subscriptions do not overwrite browser event properties
+  ---
+  duration_ms: 0.188273
+  type: 'test'
+  ...
+# Subtest: spoken replies include every sentence, without the old two-sentence cutoff
+ok 9 - spoken replies include every sentence, without the old two-sentence cutoff
+  ---
+  duration_ms: 0.753703
+  type: 'test'
+  ...
+# Subtest: speech playback errors are reported without restarting microphone
+ok 10 - speech playback errors are reported without restarting microphone
+  ---
+  duration_ms: 0.885511
+  type: 'test'
+  ...
+# Subtest: closing during microphone permission releases the eventual media stream
+ok 11 - closing during microphone permission releases the eventual media stream
+  ---
+  duration_ms: 0.633873
+  type: 'test'
+  ...
+# Subtest: stopping microphone releases all tracks and the captured transcript
+ok 12 - stopping microphone releases all tracks and the captured transcript
+  ---
+  duration_ms: 0.865181
+  type: 'test'
+  ...
+# Subtest: auto-send preserves trailing interim words and sends only once
+ok 13 - auto-send preserves trailing interim words and sends only once
+  ---
+  duration_ms: 1.746936
+  type: 'test'
+  ...
+# Subtest: network recognition errors stop microphone and remain visible
+ok 14 - network recognition errors stop microphone and remain visible
+  ---
+  duration_ms: 0.371899
+  type: 'test'
+  ...
+# Subtest: unsupported speech recognition fails with a useful message
+ok 15 - unsupported speech recognition fails with a useful message
+  ---
+  duration_ms: 0.889678
+  type: 'test'
+  ...
+# Subtest: mounting a voice session does not request microphone access
+ok 16 - mounting a voice session does not request microphone access
+  ---
+  duration_ms: 1.138461
+  type: 'test'
+  ...
+# Subtest: microphone permission rejection becomes a visible error
+ok 17 - microphone permission rejection becomes a visible error
+  ---
+  duration_ms: 1.546265
+  type: 'test'
+  ...
+# Subtest: rapid repeated starts do not acquire multiple microphones
+ok 18 - rapid repeated starts do not acquire multiple microphones
+  ---
+  duration_ms: 0.387763
+  type: 'test'
+  ...
+# Subtest: stream chunks do not claim the orb is speaking before actual playback
+ok 19 - stream chunks do not claim the orb is speaking before actual playback
+  ---
+  duration_ms: 0.970459
+  type: 'test'
+  ...
+# Subtest: stopping cancels requests and ignores every late stream callback
+ok 20 - stopping cancels requests and ignores every late stream callback
+  ---
+  duration_ms: 0.582866
+  type: 'test'
+  ...
+# Subtest: a rejected prompt returns to idle with an actionable error
+ok 21 - a rejected prompt returns to idle with an actionable error
+  ---
+  duration_ms: 0.595425
+  type: 'test'
+  ...
+# Subtest: promise-based prompts finish even when onDone is omitted
+ok 22 - promise-based prompts finish even when onDone is omitted
+  ---
+  duration_ms: 0.384909
+  type: 'test'
+  ...
+# Subtest: callback-based void prompts stay active until onDone
+ok 23 - callback-based void prompts stay active until onDone
+  ---
+  duration_ms: 0.795465
+  type: 'test'
+  ...
+# Subtest: empty successful responses do not leave a thinking orb
+ok 24 - empty successful responses do not leave a thinking orb
+  ---
+  duration_ms: 0.667393
+  type: 'test'
+  ...
+# Subtest: continuous mode restarts once after natural speech, never after Stop
+ok 25 - continuous mode restarts once after natural speech, never after Stop
+  ---
+  duration_ms: 0.846993
+  type: 'test'
+  ...
+# Subtest: Stop clears a scheduled continuous restart
+ok 26 - Stop clears a scheduled continuous restart
+  ---
+  duration_ms: 0.470928
+  type: 'test'
+  ...
+# Subtest: updating parent callbacks cannot restart or cancel active speech
+ok 27 - updating parent callbacks cannot restart or cancel active speech
+  ---
+  duration_ms: 0.603617
+  type: 'test'
+  ...
+# Subtest: muted replies remain readable and return to idle without playback
+ok 28 - muted replies remain readable and return to idle without playback
+  ---
+  duration_ms: 0.436796
+  type: 'test'
+  ...
+# Subtest: detach invalidates callbacks and releases microphone tracks
+ok 29 - detach invalidates callbacks and releases microphone tracks
+  ---
+  duration_ms: 0.776637
+  type: 'test'
+  ...
+# Subtest: a call starts only after user action and records connection time
+ok 30 - a call starts only after user action and records connection time
+  ---
+  duration_ms: 0.745701
+  type: 'test'
+  ...
+# Subtest: microphone mute releases capture without sending partial speech
+ok 31 - microphone mute releases capture without sending partial speech
+  ---
+  duration_ms: 0.564859
+  type: 'test'
+  ...
+# Subtest: unmuting an active call reacquires capture exactly once
+ok 32 - unmuting an active call reacquires capture exactly once
+  ---
+  duration_ms: 0.565911
+  type: 'test'
+  ...
+# Subtest: speaker mute does not mute the microphone
+ok 33 - speaker mute does not mute the microphone
+  ---
+  duration_ms: 0.412891
+  type: 'test'
+  ...
+# Subtest: hanging up clears call state and pending resume
+ok 34 - hanging up clears call state and pending resume
+  ---
+  duration_ms: 0.68544
+  type: 'test'
+  ...
+# Subtest: native hidden-window fail-safe releases microphone and ends call
+ok 35 - native hidden-window fail-safe releases microphone and ends call
+  ---
+  duration_ms: 0.373761
+  type: 'test'
+  ...
+# Subtest: only one mounted voice session can own capture
+ok 36 - only one mounted voice session can own capture
+  ---
+  duration_ms: 0.349035
+  type: 'test'
+  ...
+# Subtest: StrictMode attach-detach-attach does not leak listeners or voice resources
+ok 37 - StrictMode attach-detach-attach does not leak listeners or voice resources
+  ---
+  duration_ms: 0.426972
+  type: 'test'
+  ...
+# Subtest: unsupported native recognition cannot leave a fake active call
+ok 38 - unsupported native recognition cannot leave a fake active call
+  ---
+  duration_ms: 0.367783
+  type: 'test'
+  ...
+# Subtest: call transcript retains user and assistant turns without raw response truncation
+ok 39 - call transcript retains user and assistant turns without raw response truncation
+  ---
+  duration_ms: 0.394143
+  type: 'test'
+  ...
+# Subtest: speech boundaries create a timed shared impulse without React audio updates
+ok 40 - speech boundaries create a timed shared impulse without React audio updates
+  ---
+  duration_ms: 0.508906
+  type: 'test'
+  ...
+1..40
+# tests 40
+# suites 0
+# pass 40
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 134.45154

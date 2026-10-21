@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AlertTriangle,
   ArrowUp,
   ArrowUpRight,
   AtSign,
@@ -10,12 +11,14 @@ import {
   ChevronDown,
   Cpu,
   GripHorizontal,
+  Loader2,
   MessageCircle,
   Minimize2,
   Pin,
   PinOff,
   Plus,
   Square,
+  Sparkles,
   X,
 } from "lucide-react";
 import { api, getSavedTokens, type AIModelItem, type ToolItem } from "../../lib/api";
@@ -30,7 +33,10 @@ import {
   setDesktopPetPinned,
   subscribeDesktopPetVisibility,
 } from "../../lib/desktopPet";
-import { OrbVisual } from "../../components/orb/OrbVisual";
+import { PlayfulOrb } from "../../components/orb/playful/OrbPlayLayer";
+import { OrbPlayControls } from "../../components/orb/playful/OrbPlayControls";
+import { useNativePlayground } from "../../components/orb/playful/useNativePlayground";
+import playStyles from "../../components/orb/playful/OrbPlayControls.module.css";
 import { useOrbTheme } from "../../components/orb/hooks/useOrbTheme";
 import { useTextChat } from "../../hooks/useTextChat";
 import type { SendPrompt } from "../../lib/text-session";
@@ -39,10 +45,12 @@ import {
   type CompanionSparksHandle,
 } from "../../components/orb/CompanionSparks";
 import { CompanionMarkdown } from "../../components/chat/CompanionMarkdown";
+import { ToolLogAccordion, LiveLogsPanel } from "../../components/chat/ToolLogAccordion";
 import styles from "../../components/orb/DesktopPet.module.css";
 
 export default function StandaloneDesktopPetPage() {
   const [expanded, setExpanded] = useState(false);
+  const [showPlayground, setShowPlayground] = useState(false);
   const [native, setNative] = useState(false);
   const [pinned, setPinned] = useState(true);
   const [draft, setDraft] = useState("");
@@ -82,8 +90,12 @@ export default function StandaloneDesktopPetPage() {
             typeof window !== "undefined"
               ? localStorage.getItem("aevora-selected-model")
               : null;
-          const exists = list.some((m) => m.name === saved);
-          setSelectedModel(exists && saved ? saved : list[0].name);
+          const matched = saved ? list.find((m) => m.id === saved || m.name === saved) : null;
+          const initialModel = matched || list[0];
+          setSelectedModel(initialModel.id);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("aevora-selected-model", initialModel.id);
+          }
         }
       })
       .catch(() => {});
@@ -100,10 +112,10 @@ export default function StandaloneDesktopPetPage() {
     };
   }, []);
 
-  const handleSelectModel = (modelName: string) => {
-    setSelectedModel(modelName);
+  const handleSelectModel = (modelId: string) => {
+    setSelectedModel(modelId);
     if (typeof window !== "undefined") {
-      localStorage.setItem("aevora-selected-model", modelName);
+      localStorage.setItem("aevora-selected-model", modelId);
     }
   };
 
@@ -115,6 +127,11 @@ export default function StandaloneDesktopPetPage() {
     setShowMenu(false);
   };
 
+  const activeModel = models.find(
+    (m) => m.id === selectedModel || m.name === selectedModel
+  );
+  const displayModelName = activeModel?.name || selectedModel || "gemini-3.5-flash-lite";
+
   const send = useCallback<SendPrompt>(
     async (prompt, options) => {
       if (!getSavedTokens()?.access) {
@@ -122,6 +139,7 @@ export default function StandaloneDesktopPetPage() {
       }
       let failure: Error | null = null;
       let response = "";
+      const modelIdToSend = activeModel?.id || selectedModel || (models[0]?.id ?? undefined);
       broadcastPetMessage({ type: "PET_PROMPT_SENT", payload: { prompt } });
       await api.streamChat(
         sessionId.current,
@@ -135,6 +153,25 @@ export default function StandaloneDesktopPetPage() {
             response += chunk;
             options?.onChunk?.(chunk);
             broadcastPetMessage({ type: "PET_STREAM_CHUNK", payload: chunk });
+          },
+          onToolStart: (tool) => {
+            if (options?.signal?.aborted) return;
+            options?.onToolStart?.(tool);
+            broadcastPetMessage({ type: "ACTIVE_TOOL", payload: { name: tool, status: "start" } });
+          },
+          onToolLog: (log, tool) => {
+            if (options?.signal?.aborted) return;
+            options?.onToolLog?.(log, tool);
+          },
+          onToolDone: (tool, output) => {
+            if (options?.signal?.aborted) return;
+            options?.onToolDone?.(tool, output);
+            broadcastPetMessage({ type: "ACTIVE_TOOL", payload: { name: tool, status: "done" } });
+          },
+          onToolError: (tool) => {
+            if (options?.signal?.aborted) return;
+            options?.onToolError?.(tool);
+            broadcastPetMessage({ type: "ACTIVE_TOOL", payload: { name: tool, status: "error" } });
           },
           onDone: () => {
             if (!options?.signal?.aborted) {
@@ -150,14 +187,15 @@ export default function StandaloneDesktopPetPage() {
           },
         },
         options?.signal,
-        { voiceMode: false, model: selectedModel || undefined }
+        { voiceMode: false, model: modelIdToSend }
       );
       if (failure) throw failure;
     },
-    [selectedModel]
+    [models, selectedModel, activeModel]
   );
 
   const { session, snapshot } = useTextChat({ onPrompt: send });
+  useNativePlayground(native, expanded);
 
   useEffect(() => {
     const desktop = isElectronApp();
@@ -234,7 +272,7 @@ export default function StandaloneDesktopPetPage() {
     if (nearBottom.current && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [snapshot.turns]);
+  }, [snapshot.turns, snapshot.streamingLogs, snapshot.activeTool]);
 
   const runWindowAction = (action: () => Promise<void>) => {
     setWindowError(null);
@@ -256,9 +294,11 @@ export default function StandaloneDesktopPetPage() {
 
   const status = snapshot.error
     ? "Needs your attention"
-    : snapshot.streaming
-      ? "Thinking it through…"
-      : "Here for you";
+    : snapshot.activeTool
+      ? `${snapshot.activeTool.name} — ${snapshot.activeTool.status === "start" ? "running…" : snapshot.activeTool.status === "done" ? "finished" : "error"}`
+      : snapshot.streaming
+        ? "Thinking it through…"
+        : "Here for you";
 
   return (
     <main
@@ -286,6 +326,7 @@ export default function StandaloneDesktopPetPage() {
             </div>
 
             <div className={styles.headerActions}>
+              <button type="button" className={styles.icon} aria-label="Open orb playground" title="Orb playground" aria-pressed={showPlayground} onClick={() => setShowPlayground(!showPlayground)}><Sparkles size={14} /></button>
               <button
                 type="button"
                 className={styles.newChatBtn}
@@ -342,6 +383,10 @@ export default function StandaloneDesktopPetPage() {
               </button>
             </div>
           </header>
+
+          {showPlayground && <div className={playStyles.drawer}>
+            <OrbPlayControls native={native} onClose={() => setShowPlayground(false)} />
+          </div>}
 
           {/* Clean Status Bar: No duplicate model badge */}
           <div className={styles.widgetStatus} role="status">
@@ -414,8 +459,8 @@ export default function StandaloneDesktopPetPage() {
                 <div key={turn.id} className={styles.turn} data-role={turn.role}>
                   <div className={styles.turnHeader}>
                     <span>{turn.role === "user" ? "You" : "Aevora"}</span>
-                    {turn.role === "assistant" && selectedModel && (
-                      <span className={styles.modelTag}>{selectedModel}</span>
+                    {turn.role === "assistant" && displayModelName && (
+                      <span className={styles.modelTag}>{displayModelName}</span>
                     )}
                     {isStreamingAssistant && (
                       <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-400/20 inline-flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.25)]">
@@ -425,8 +470,55 @@ export default function StandaloneDesktopPetPage() {
                   </div>
                   {turn.role === "assistant" ? (
                     <div className={styles.turnBody}>
-                      <CompanionMarkdown content={turn.text} isStreaming={isStreamingAssistant} />
-                      {isStreamingAssistant && <span className="stream-cursor" />}
+                      {/* Active tool status if this turn is currently streaming */}
+                      {isStreamingAssistant && snapshot.activeTool && (
+                        <div className={styles.toolStatus} data-status={snapshot.activeTool.status} role="status">
+                          {snapshot.activeTool.status === "error" ? (
+                            <AlertTriangle size={11} />
+                          ) : snapshot.activeTool.status === "done" ? (
+                            <Check size={11} />
+                          ) : (
+                            <Loader2 size={11} className="animate-spin" />
+                          )}
+                          <code>{snapshot.activeTool.name}</code>
+                          <span>
+                            {snapshot.activeTool.status === "start"
+                              ? "Running"
+                              : snapshot.activeTool.status === "done"
+                                ? "Completed"
+                                : "Failed"}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Live AI logs while streaming — visible until text arrives */}
+                      {isStreamingAssistant && ((snapshot.streamingLogs && snapshot.streamingLogs.length > 0) || snapshot.activeTool) && !turn.text && (
+                        <LiveLogsPanel logs={snapshot.streamingLogs || []} activeTool={snapshot.activeTool || null} />
+                      )}
+
+                      {/* Accordion of completed tool logs for finished messages */}
+                      {turn.logs && turn.logs.length > 0 && (
+                        <ToolLogAccordion
+                          title={`AI logs (${turn.logs.length} ${turn.logs.length === 1 ? "entry" : "entries"})`}
+                          logs={turn.logs.map((l) => l.text).join("\n\n")}
+                        />
+                      )}
+
+                      {turn.text ? (
+                        <CompanionMarkdown content={turn.text} isStreaming={isStreamingAssistant} />
+                      ) : (
+                        isStreamingAssistant && (
+                          <div className={styles.thinking} role="status">
+                            <span className={styles.thinkingDots} aria-hidden="true">
+                              <i />
+                              <i />
+                              <i />
+                            </span>
+                            <span>Thinking…</span>
+                          </div>
+                        )
+                      )}
+                      {isStreamingAssistant && turn.text && <span className="stream-cursor" />}
                     </div>
                   ) : (
                     <p>{turn.text}</p>
@@ -434,6 +526,55 @@ export default function StandaloneDesktopPetPage() {
                 </div>
               );
             })}
+
+            {/* Live assistant turn while streaming before any text chunks have created an assistant turn */}
+            {snapshot.streaming && !snapshot.turns.some((t) => t.role === "assistant" && t.id.startsWith("reply-")) && (
+              <div className={styles.turn} data-role="assistant">
+                <div className={styles.turnHeader}>
+                  <span>Aevora</span>
+                  {displayModelName && (
+                    <span className={styles.modelTag}>{displayModelName}</span>
+                  )}
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-mono text-cyan-300 bg-cyan-500/10 border border-cyan-400/20 inline-flex items-center gap-1 shadow-[0_0_8px_rgba(0,240,255,0.25)]">
+                    ✨ Sparking
+                  </span>
+                </div>
+                <div className={styles.turnBody}>
+                  {snapshot.activeTool && (
+                    <div className={styles.toolStatus} data-status={snapshot.activeTool.status} role="status">
+                      {snapshot.activeTool.status === "error" ? (
+                        <AlertTriangle size={11} />
+                      ) : snapshot.activeTool.status === "done" ? (
+                        <Check size={11} />
+                      ) : (
+                        <Loader2 size={11} className="animate-spin" />
+                      )}
+                      <code>{snapshot.activeTool.name}</code>
+                      <span>
+                        {snapshot.activeTool.status === "start"
+                          ? "Running"
+                          : snapshot.activeTool.status === "done"
+                            ? "Completed"
+                            : "Failed"}
+                      </span>
+                    </div>
+                  )}
+
+                  {((snapshot.streamingLogs && snapshot.streamingLogs.length > 0) || snapshot.activeTool) && (
+                    <LiveLogsPanel logs={snapshot.streamingLogs || []} activeTool={snapshot.activeTool || null} />
+                  )}
+
+                  <div className={styles.thinking} role="status">
+                    <span className={styles.thinkingDots} aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                    </span>
+                    <span>Thinking…</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {(snapshot.error || windowError) && (
               <p role="alert" className={styles.error}>
@@ -472,16 +613,17 @@ export default function StandaloneDesktopPetPage() {
                     {models.length ? (
                       models.map((m) => {
                         const isSelected =
+                          selectedModel === m.id ||
                           selectedModel === m.name ||
-                          (!selectedModel && m.name === "gemini-3.5-flash-lite");
+                          (!selectedModel && (m.name === "gemini-3.5-flash-lite" || m === models[0]));
                         const quotaVal = m.quota ?? "0.00";
                         return (
                           <button
-                            key={m.name}
+                            key={m.id || m.name}
                             type="button"
                             onClick={(e) => {
                               sparksRef.current?.burstAtElement(e.currentTarget);
-                              handleSelectModel(m.name);
+                              handleSelectModel(m.id || m.name);
                               setShowMenu(false);
                             }}
                             className={`${styles.listItem} ${
@@ -612,7 +754,7 @@ export default function StandaloneDesktopPetPage() {
                   >
                     <Cpu size={12} className="text-violet-400" />
                     <span className={styles.modelPillText}>
-                      {selectedModel || "gemini-3.5-flash-lite"}
+                      {displayModelName}
                     </span>
                     <ChevronDown size={11} className="text-zinc-400" />
                   </button>
@@ -681,7 +823,9 @@ export default function StandaloneDesktopPetPage() {
             <X size={13} />
           </button>
         </div>
-        <OrbVisual
+        <PlayfulOrb
+          streaming={snapshot.streaming}
+          response={snapshot.response}
           size={expanded ? 76 : 106}
           state={snapshot.state}
           theme={theme}

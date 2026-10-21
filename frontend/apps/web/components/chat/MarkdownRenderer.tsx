@@ -4,7 +4,7 @@ import React, { memo, useEffect, useState } from "react";
 import { parseInlineTokens, type InlineToken } from "../../lib/inline-markdown";
 
 interface MarkdownRendererProps {
-  content: string;
+  content?: string | null;
   isStreaming?: boolean;
   /** Existing spark cursor is the default. Companion surfaces keep their own cursor. */
   showCursor?: boolean;
@@ -134,6 +134,17 @@ function getAlignment(cell: string): "left" | "center" | "right" {
 
 // ─── Main Markdown Renderer Component ─────────────────────────────────────
 export const MarkdownRenderer = memo(function MarkdownRenderer({ content, isStreaming = false, showCursor = true }: MarkdownRendererProps) {
+  if (!content) {
+    if (isStreaming && showCursor) {
+      return (
+        <div className="space-y-0.5 text-sm">
+          <SparkingCursor key="stream-cursor" />
+        </div>
+      );
+    }
+    return null;
+  }
+
   // Inline formatting: links, bold, italic, strikethrough, inline code
   const parseInline = (
     text: string,
@@ -178,7 +189,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, isStre
   };
 
   const renderBlocks = () => {
-    const rawLines = content.split("\n");
+    const rawLines = (content ?? "").split("\n");
     const elements: React.ReactNode[] = [];
     let i = 0;
 

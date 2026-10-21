@@ -5,6 +5,7 @@ import { ORB_THEMES } from "../../lib/orbTheme";
 import { OrbVisual } from "./OrbVisual";
 import { useOrbVoice } from "./hooks/useOrbVoice";
 import { useOrbTheme } from "./hooks/useOrbTheme";
+import { useOrbMotion } from "./hooks/useOrbMotion";
 import { ORB_LABELS } from "./core/orb-model";
 import type { SendVoicePrompt } from "./core/voice-session";
 import styles from "./Orb.module.css";
@@ -41,6 +42,7 @@ function CallClock({ startedAt }: {
 export function OrbVoiceExperience({ size = 320, onPrompt, onStopStreaming, onStateChange, orbTheme, onOrbThemeChange, showControls = true, activeTool, onEndCall, }: OrbVoiceExperienceProps) {
   const { session, snapshot } = useOrbVoice({ onPrompt, onStopStreaming });
   const { theme, selectTheme } = useOrbTheme(orbTheme, onOrbThemeChange);
+  const { pref: motionPref, setPref: setMotionPref } = useOrbMotion();
   const [captions, setCaptions] = useState(true);
   const [settings, setSettings] = useState(false);
   const [draft, setDraft] = useState("");
@@ -92,6 +94,21 @@ export function OrbVoiceExperience({ size = 320, onPrompt, onStopStreaming, onSt
         {snapshot.voices.map((voice) => <option key={`${voice.name}-${voice.lang}`} value={voice.name}>{voice.name} · {voice.lang}</option>)}
 
       </select></label>
+
+      <label htmlFor={`${id}-motion`} style={{ alignItems: "center" }}>
+        Animate orb
+        <button
+          id={`${id}-motion`}
+          type="button"
+          role="switch"
+          aria-checked={motionPref === "on"}
+          className={styles.control}
+          style={{ minWidth: 52, fontSize: 11, fontWeight: 600, gap: 5 }}
+          onClick={() => setMotionPref(motionPref === "on" ? "auto" : "on")}
+          title={motionPref === "on" ? "Override active — ignoring OS reduced-motion" : "Following OS reduced-motion preference"}>
+          {motionPref === "on" ? "✦ On" : "Off"}
+        </button>
+      </label>
 
       <div className={styles.themes} role="group" aria-label="Original orb color themes">
 

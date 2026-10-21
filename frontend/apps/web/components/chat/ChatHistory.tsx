@@ -4,9 +4,10 @@ import { memo, useEffect, useState } from "react";
 import { AlertTriangle, Check, Copy } from "lucide-react";
 import type { MessageItem } from "../../lib/api";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { ToolLogAccordion } from "./ToolLogAccordion";
 import styles from "./Chat.module.css";
 
-function CopyMessage({ content }: { content: string }) {
+function CopyMessage({ content }: { content?: string | null }) {
   const [status, setStatus] = useState("");
 
   useEffect(() => {
@@ -14,6 +15,8 @@ function CopyMessage({ content }: { content: string }) {
     const timer = setTimeout(() => setStatus(""), 2000);
     return () => clearTimeout(timer);
   }, [status]);
+
+  if (!content) return null;
 
   return (
     <div className={styles.messageTools}>
@@ -49,7 +52,7 @@ const ChatMessage = memo(function ChatMessage({ message }: { message: MessageIte
       aria-label={message.role === "user" ? "You" : "Aevora"}
     >
       {message.role === "user" ? (
-        <div className={styles.userBubble}>{message.content}</div>
+        <div className={styles.userBubble}>{message.content ?? ""}</div>
       ) : (
         <>
           <div className={styles.assistantAvatar} aria-hidden="true">a</div>
@@ -62,15 +65,23 @@ const ChatMessage = memo(function ChatMessage({ message }: { message: MessageIte
                 </span>
               )}
             </div>
-            {/^(⚠ Error:|Error communicating)/.test(message.content) ? (
-              <div className={styles.error}>
-                <AlertTriangle size={16} />
-                <span>{message.content}</span>
-              </div>
-            ) : (
-              <MarkdownRenderer content={message.content} />
+            {message.logs && message.logs.length > 0 && (
+              <ToolLogAccordion
+                title={`AI logs (${message.logs.length} ${message.logs.length === 1 ? "entry" : "entries"})`}
+                logs={message.logs.map((l) => l.text).join("\n\n")}
+              />
             )}
-            <CopyMessage content={message.content} />
+            {message.content ? (
+              /^(⚠ Error:|Error communicating)/.test(message.content) ? (
+                <div className={styles.error}>
+                  <AlertTriangle size={16} />
+                  <span>{message.content}</span>
+                </div>
+              ) : (
+                <MarkdownRenderer content={message.content} />
+              )
+            ) : null}
+            {message.content && <CopyMessage content={message.content} />}
           </div>
         </>
       )}

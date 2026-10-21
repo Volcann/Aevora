@@ -1,0 +1,118 @@
+TAP version 13
+# Subtest: default idle mode and color treatment preserve the original appearance
+ok 1 - default idle mode and color treatment preserve the original appearance
+  ---
+  duration_ms: 0.809547
+  type: 'test'
+  ...
+# Subtest: invalid or corrupt preference values are normalized
+ok 2 - invalid or corrupt preference values are normalized
+  ---
+  duration_ms: 0.878481
+  type: 'test'
+  ...
+# Subtest: every mode / morph / treatment round-trips without changing palettes
+ok 3 - every mode / morph / treatment round-trips without changing palettes
+  ---
+  duration_ms: 0.600853
+  type: 'test'
+  ...
+# Subtest: preference normalization drops unknown object fields
+ok 4 - preference normalization drops unknown object fields
+  ---
+  duration_ms: 0.113731
+  type: 'test'
+  ...
+# Subtest: bounds contain the entire 80px orb at supported small viewport sizes
+ok 5 - bounds contain the entire 80px orb at supported small viewport sizes
+  ---
+  duration_ms: 0.421253
+  type: 'test'
+  ...
+# Subtest: invalid saved coordinates fall back safely
+ok 6 - invalid saved coordinates fall back safely
+  ---
+  duration_ms: 0.123756
+  type: 'test'
+  ...
+# Subtest: fling bounces at edges and loses energy
+ok 7 - fling bounces at edges and loses energy
+  ---
+  duration_ms: 0.834505
+  type: 'test'
+  ...
+# Subtest: fling friction is frame-rate independent away from walls
+ok 8 - fling friction is frame-rate independent away from walls
+  ---
+  duration_ms: 0.338168
+  type: 'test'
+  ...
+# Subtest: fling clamps a long frame so hidden-tab resume cannot launch the orb
+ok 9 - fling clamps a long frame so hidden-tab resume cannot launch the orb
+  ---
+  duration_ms: 0.269335
+  type: 'test'
+  ...
+# Subtest: empty terminal output has no invented line or command
+ok 10 - empty terminal output has no invented line or command
+  ---
+  duration_ms: 0.406952
+  type: 'test'
+  ...
+# Subtest: terminal keeps literal hostile markup as text
+ok 11 - terminal keeps literal hostile markup as text
+  ---
+  duration_ms: 1.363179
+  type: 'test'
+  ...
+# Subtest: basic ANSI colors and reset survive as structured safe segments
+ok 12 - basic ANSI colors and reset survive as structured safe segments
+  ---
+  duration_ms: 0.211919
+  type: 'test'
+  ...
+# Subtest: OSC hyperlinks and cursor controls are discarded, not executed
+ok 13 - OSC hyperlinks and cursor controls are discarded, not executed
+  ---
+  duration_ms: 0.107132
+  type: 'test'
+  ...
+# Subtest: unsupported truecolor parameters cannot become bold/basic colors
+ok 14 - unsupported truecolor parameters cannot become bold/basic colors
+  ---
+  duration_ms: 0.110546
+  type: 'test'
+  ...
+# Subtest: terminal normalizes CRLF and retains tabs, Unicode and empty lines
+ok 15 - terminal normalizes CRLF and retains tabs, Unicode and empty lines
+  ---
+  duration_ms: 0.519531
+  type: 'test'
+  ...
+# Subtest: line categories are visual hints, not invented tool status
+ok 16 - line categories are visual hints, not invented tool status
+  ---
+  duration_ms: 0.131918
+  type: 'test'
+  ...
+# Subtest: visible log rows are bounded but source text is not mutated
+ok 17 - visible log rows are bounded but source text is not mutated
+  ---
+  duration_ms: 3.838501
+  type: 'test'
+  ...
+# Subtest: a very long single output line is bounded for rendering
+ok 18 - a very long single output line is bounded for rendering
+  ---
+  duration_ms: 4.797824
+  type: 'test'
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 78.88656

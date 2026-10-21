@@ -1,0 +1,60 @@
+{
+  "browser": "144.0.7559.96",
+  "fixture": {
+    "sourceRoot": "/mnt/data/work/Aevora-frontend",
+    "modules": 84,
+    "typescript": "5.8.3",
+    "compatibilityRuntime": true,
+    "react": "18.2.0",
+    "source": "MIT-licensed React/ReactDOM/Scheduler embedded in installed JupyterLab distribution",
+    "icons": "test doubles preserving dimensions; not production Lucide artwork",
+    "tailwind": "4.1.10"
+  },
+  "scope": "Real application UI; API/native/storage test doubles; inline Chromium fixture, not a production Next/Electron build.",
+  "results": [
+    {
+      "test": "default_and_controls",
+      "passed": true
+    },
+    {
+      "test": "drag_and_keyboard",
+      "passed": true
+    },
+    {
+      "test": "roaming_and_follow",
+      "passed": true
+    },
+    {
+      "test": "reduced_and_native_pause",
+      "passed": true
+    },
+    {
+      "test": "streaming_shapes",
+      "passed": true
+    },
+    {
+      "test": "terminal_live",
+      "passed": true
+    },
+    {
+      "test": "terminal_follow_and_limits",
+      "passed": true
+    },
+    {
+      "test": "responsive",
+      "passed": true
+    },
+    {
+      "test": "storage_sync",
+      "passed": true
+    },
+    {
+      "test": "native_companion",
+      "passed": true
+    },
+    {
+      "test": "settings_preview_and_tricks",
+      "passed": true
+    }
+  ]
+}

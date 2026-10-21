@@ -5,6 +5,8 @@ export interface OrbRenderOptions {
   state: OrbState;
   theme: number;
   signal?: { readonly current: OrbSignal };
+  /** When true, animate even if the OS has prefers-reduced-motion:reduce set. */
+  forceMotion?: boolean;
 }
 export interface OrbRenderer {
   update: (options: OrbRenderOptions) => void;
@@ -133,6 +135,8 @@ export function createOrbRenderer(
     if (disposed || lost || !gl || !program || !visible || document.hidden) return;
     const dt = lastTime ? clamp((now - lastTime) / 1000, 0, 0.05) : 1 / 60;
     lastTime = now;
+    // forceMotion lets the user override prefers-reduced-motion from the UI.
+    reduced = media.matches && !options.forceMotion;
     const targetAudio = options.state === 1 ? audioEnvelope(options.signal?.current.audio ?? 0) : 0;
     const impulse = options.state === 3 ? clamp((options.signal?.current.word ?? 0) * Math.exp(-Math.max(0, Date.now() - (options.signal?.current.wordAt ?? 0)) / 150)) : 0;
 
@@ -259,7 +263,7 @@ export function createOrbRenderer(
   };
   const pause = () => { cancelAnimationFrame(frame); frame = 0; lastTime = 0; };
   const onVisibility = () => { if (document.hidden) pause(); else schedule(); };
-  const onMotion = () => { reduced = media.matches; pause(); schedule(); };
+  const onMotion = () => { reduced = media.matches && !options.forceMotion; pause(); schedule(); };
   const onLost = (event: Event) => {
     event.preventDefault();
     lost = true;

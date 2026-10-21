@@ -1,0 +1,47 @@
+.panel { --terminal-border: #ffffff10; background: #0b0e14; color: #cbd3df; border: 1px solid #303746; border-radius: 11px; overflow: hidden; margin: 10px 0 14px; min-width: 0; max-width: 100%; box-shadow: 0 8px 24px #0002, inset 0 1px 0 #ffffff03; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; container-type: inline-size; }
+.header { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 0 12px; min-height: 38px; background: linear-gradient(180deg,#1a1f2a,#141922); border-bottom: 1px solid var(--terminal-border); }
+.windowDots { display: flex; gap: 5px; flex-shrink: 0; }
+.windowDots i { width: 7px; height: 7px; border-radius: 50%; background: #e88485; box-shadow: inset 0 0 0 1px #ffffff12; }
+.windowDots i:nth-child(2) { background: #d7b773; }
+.windowDots i:nth-child(3) { background: #7abb9a; }
+.disclosure { display: flex; align-items: center; gap: 7px; border: 0; background: transparent; color: #b7c1d1; font: inherit; font-size: 11px; padding: 10px 0; cursor: pointer; min-width: 0; flex: 1; text-align: left; }
+.disclosure > svg { flex-shrink: 0; color: #7e8ca4; }
+.title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.status { display: inline-flex; align-items: center; gap: 5px; color: #8c9aad; font-size: 9px; white-space: nowrap; flex-shrink: 0; }
+.status i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.status[data-state="running"], .status[data-state="live"] { color: #85c7dd; }
+.status[data-state="running"] i, .status[data-state="live"] i { animation: livePulse 1.8s ease-in-out infinite; }
+.status[data-state="done"] { color: #8ec9aa; }.status[data-state="error"] { color: #f2a0a8; }
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 10px; background: #0f131c; border-bottom: 1px solid #ffffff06; }
+.readOnly { font-size: 8px; letter-spacing: .8px; color: #7f8ba0; }
+.readOnly > span { padding: 0 3px; color: #667186; }
+.actions { display: flex; align-items: center; gap: 3px; }
+.actions button, .searchBar button { display: grid; place-items: center; width: 27px; height: 27px; padding: 0; background: transparent; color: #8795aa; border: 1px solid transparent; border-radius: 5px; cursor: pointer; }
+.actions button:hover, .searchBar button:hover { background: #ffffff0a; color: #d8e3f2; }
+.actions button[aria-pressed="true"] { color: #b4c7e1; background: #a6c9ff0b; border-color: #a6c9ff13; }
+.actions button:disabled { opacity: .35; cursor: not-allowed; }
+.searchBar { display: flex; align-items: center; gap: 8px; padding: 5px 10px; background: #111621; border-bottom: 1px solid #ffffff0b; color: #8fa0bb; }
+.searchBar input { width: 100%; flex: 1; min-width: 0; border: 0; background: transparent; padding: 5px 0; color: #d4dce9; font: inherit; font-size: 11px; }
+.searchBar > span { white-space: nowrap; font-size: 9px; }
+.viewport { max-height: 300px; min-height: 54px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #354056 transparent; padding: 12px 0; outline-offset: -3px; }
+.lines { min-width: 100%; width: max-content; }
+.viewport[data-wrap="true"] .lines { width: 100%; }
+.line { display: flex; align-items: baseline; min-height: 21px; font-size: 11px; line-height: 1.8; }
+.lineNumber { flex: 0 0 43px; padding: 0 10px 0 8px; text-align: right; color: #647187; user-select: none; font-size: 9px; font-variant-numeric: tabular-nums; }
+.line > code { display: block; flex: 1; min-width: 0; font: inherit; white-space: pre; padding: 0 14px 0 10px; border-left: 1px solid #ffffff08; tab-size: 4; }
+.viewport[data-wrap="true"] code { white-space: pre-wrap; overflow-wrap: anywhere; }
+.line[data-kind="command"] code { color: #bacaf4; }.line[data-kind="error"] code { color: #f1a2ae; }.line[data-kind="warning"] code { color: #e4c28b; }.line[data-kind="success"] code { color: #a0d5b7; }.line[data-kind="info"] code { color: #95c7dd; }
+.line [data-tone="muted"] { color: #8794a9; }.line [data-tone="red"] { color: #f1a2ae; }.line [data-tone="green"] { color: #a0d5b7; }.line [data-tone="yellow"] { color: #e4c28b; }.line [data-tone="blue"] { color: #a4bff4; }.line [data-tone="magenta"] { color: #d5b3f0; }.line [data-tone="cyan"] { color: #95d4e0; }.line [data-tone="white"] { color: #ebeff5; }.line [data-bold="true"] { font-weight: 700; }
+.line mark { color: #fff1ce; background: #9e7a354f; border-radius: 2px; }
+.empty { display: flex; align-items: center; gap: 10px; margin: 0; padding: 7px 14px; color: #9aa7ba; font-size: 11px; line-height: 1.7; }
+.empty > span, .liveLine > span { color: #879cc3; }
+.liveLine { display: flex; align-items: center; gap: 10px; height: 23px; padding-left: 54px; font-size: 12px; }
+.cursor { width: 6px; height: 12px; display: inline-block; background: #9db0cb; animation: caretBlink 1.15s steps(2,end) infinite; }
+.footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; background: #10141d; border-top: 1px solid #ffffff09; font-size: 9px; color: #93a0b5; }
+.footer button { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; font: inherit; color: #b4c7e1; background: transparent; cursor: pointer; }
+.limitNote { margin: 0; padding: 8px 12px; font-size: 10px; color: #d4bd98; background: #b9984710; line-height: 1.6; }
+.copyNotice:empty { display: none; }.copyNotice:not(:empty) { display: block; padding: 8px 12px; color: #c4d4eb; font-size: 10px; border-top: 1px solid #ffffff0c; }
+.panel button:focus-visible, .panel input:focus-visible, .viewport:focus-visible { outline: 2px solid #a9c4eb; outline-offset: -2px; }
+@keyframes caretBlink { 50% { opacity: .15; } } @keyframes livePulse { 50% { opacity: .45; } }
+@container (max-width:360px) { .header { gap: 7px; padding-inline: 9px; }.windowDots { display: none; }.status { font-size: 8px; }.readOnly { font-size: 7px; letter-spacing: .25px; }.toolbar { gap: 3px; padding-inline: 7px; }.actions { gap: 0; }.actions button { width: 25px; }.lineNumber { flex-basis: 30px; padding-inline: 4px 7px; }.line > code { padding-left: 8px; font-size: 10px; }.liveLine { padding-left: 39px; }.footer { padding-inline: 9px; font-size: 8px; }.viewport { max-height: 220px; } }
+@media (prefers-reduced-motion:reduce) { .cursor, .status i { animation: none!important; } }

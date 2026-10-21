@@ -1,74 +1,56 @@
+import logging
+
 import google.generativeai as genai
 from django.core.cache import cache
 
-from aevora.ai_chat.services.mcp_manager import CeleryToolClient
-from aevora.ai_chat.utils.regex import extract_words
-from aevora.ai_chat.utils.schema import _mcp_schema_to_gemini
+from aevora.ai_chat.services.celery_tool_client import celery_tool_client
+from aevora.ai_chat.utils.schema import schema_to_gemini
+
+logger = logging.getLogger(__name__)
 
 
-def get_available_tools_list(cache_seconds: int = 300) -> list[dict]:
-    cached = cache.get("mcp_tools_ui_cache")
-    if cached:
+def format_tools(tools: list) -> list:
+    formatted_tools = []
+    for tool in tools:
+        if isinstance(tool, dict):
+            tool_data = dict(tool)
+            if "parameters" not in tool_data and "inputSchema" in tool_data:
+                tool_data["parameters"] = tool_data["inputSchema"]
+            elif "inputSchema" not in tool_data and "parameters" in tool_data:
+                tool_data["inputSchema"] = tool_data["parameters"]
+            formatted_tools.append(tool_data)
+        else:
+            formatted_tools.append(tool)
+    return formatted_tools
+
+
+def get_tool_list(tools: list | None = None) -> list:
+    if tools is None:
+        try:
+            tools = celery_tool_client.list_tools()
+            if not isinstance(tools, list):
+                tools = []
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Failed to fetch tools from Celery worker: %s", exc)
+            tools = []
+
+    return format_tools(tools)
+
+
+def get_gemini_tools() -> list:
+    if (cached := cache.get("gemini_tools_cache")) is not None:
         return cached
 
-    ui_tools = []
-    client = CeleryToolClient()
-    try:
-        tools = client.list_tools()
-        for tool in tools:
-            input_schema = tool.get("inputSchema", {})
-            ui_tools.append(
-                {
-                    "name": tool["name"],
-                    "description": tool.get("description", ""),
-                    "parameters": {
-                        "properties": input_schema.get("properties", {}),
-                        "required": input_schema.get("required", []),
-                    },
-                }
-            )
-    except Exception as exc:  # noqa: BLE001
-        print(f"[Celery] Could not fetch tool list from worker: {exc}")
-
-    if ui_tools:
-        cache.set("mcp_tools_ui_cache", ui_tools, cache_seconds)
-    return ui_tools
-
-
-def get_all_tools_for_gemini(cache_seconds: int = 300) -> tuple[list, dict, dict]:
-    cached = cache.get("mcp_tools_cache")
-    if cached and cached[0]:
-        return cached
-
-    gemini_tools = []
-    tool_router = {}
-    keyword_index = {}
-
-    client = CeleryToolClient()
-    try:
-        tools = client.list_tools()
-        for tool in tools:
-            gemini_tools.append(
-                genai.protos.Tool(
-                    function_declarations=[
-                        genai.protos.FunctionDeclaration(
-                            name=tool["name"],
-                            description=tool.get("description", ""),
-                            parameters=_mcp_schema_to_gemini(tool.get("inputSchema", {})),
-                        )
-                    ]
-                )
-            )
-            tool_router[tool["name"]] = "celery"
-            raw = tool["name"] + " " + tool.get("description", "")
-            keyword_index[tool["name"]] = extract_words(raw)
-    except Exception as exc:  # noqa: BLE001
-        print(f"[Celery] Could not fetch tool list from worker: {exc}")
-
-    if gemini_tools:
-        cache.set(
-            "mcp_tools_cache",
-            (gemini_tools, tool_router, keyword_index),
-            cache_seconds,
+    fds = [
+        genai.protos.FunctionDeclaration(
+            name=tool.get("name"),
+            description=tool.get("description", ""),
+            parameters=schema_to_gemini(tool.get("inputSchema", {})),
         )
-    return gemini_tools, tool_router, keyword_index
+        for tool in get_tool_list()
+        if isinstance(tool, dict)
+    ]
+    gemini_tools = [genai.protos.Tool(function_declarations=fds)] if fds else []
+    if gemini_tools:
+        cache.set("gemini_tools_cache", gemini_tools, 60)
+    return gemini_tools

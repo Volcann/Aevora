@@ -1,0 +1,65 @@
+{
+  "scope": "Selected source definitions with in-memory mocks and two static symbol/handler checks; not full project, Celery, Redis, Docker, browser, weather service, or Antigravity integration tests. No external service called.",
+  "checks": [
+    {
+      "check": "Discovery dispatch",
+      "result": "PASS",
+      "observation": "Discovery dispatches tools.list_tools to laptop.tools; result wait timeout is 10 seconds."
+    },
+    {
+      "check": "Tool dispatch",
+      "result": "PASS",
+      "observation": "Model-facing get_weather maps to Celery task tools.get_weather with keyword arguments."
+    },
+    {
+      "check": "Dependency injection mismatch",
+      "result": "PASS",
+      "observation": "Injected self._app is not used by dispatch; module-global app is used."
+    },
+    {
+      "check": "Watcher duplicate suppression",
+      "result": "PASS",
+      "observation": "Two equal observed progress messages produce one running event, then one completed event."
+    },
+    {
+      "check": "Failure-labelled-as-completion behavior",
+      "result": "PASS",
+      "observation": "A failed get() is converted to an error object but emitted with status=completed."
+    },
+    {
+      "check": "Redis event shape",
+      "result": "PASS",
+      "observation": "Event JSON round-trips through stubbed RPUSH/BLPOP; list TTL is 120; empty pop returns None."
+    },
+    {
+      "check": "Incremental async bridge",
+      "result": "PASS",
+      "observation": "First item reaches the async consumer before the synchronous producer is permitted to finish."
+    },
+    {
+      "check": "Bridge exception propagation",
+      "result": "PASS",
+      "observation": "A synthetic producer exception is raised in the async consumer."
+    },
+    {
+      "check": "Schema symbol consistency (static)",
+      "result": "PASS",
+      "observation": "schema.py defines schema_to_gemini only; tools.py and utils/__init__.py request the missing underscored name."
+    },
+    {
+      "check": "Active catalogue",
+      "result": "PASS",
+      "observation": "The current executable catalogue advertises only get_weather."
+    },
+    {
+      "check": "Bundled frontend contract (static)",
+      "result": "PASS",
+      "observation": "Collected static chat.js has start/done/error handlers but no tool_log handler; deployed frontend may differ."
+    },
+    {
+      "check": "SSE framing",
+      "result": "PASS",
+      "observation": "SSE frames use one data: JSON line and a blank-line delimiter."
+    }
+  ]
+}

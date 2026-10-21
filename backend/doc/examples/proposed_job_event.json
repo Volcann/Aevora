@@ -1,0 +1,22 @@
+{
+  "_example_note": "Proposed contract, not emitted by the uploaded application. Identifiers and timestamp are illustrative.",
+  "schema_version": 1,
+  "event_id": "example-event-0007",
+  "sequence": 7,
+  "timestamp": "2026-10-18T12:00:00+05:00",
+  "type": "job.progress",
+  "run_id": "example-run-001",
+  "job_id": "example-job-002",
+  "parent_job_id": "example-job-001",
+  "tool": "agent.review",
+  "device_id": "example-authorized-device",
+  "status": "running",
+  "message": "Reading the approved diff",
+  "progress": {
+    "completed": 2,
+    "total": 5,
+    "unit": "steps"
+  },
+  "artifact_refs": [],
+  "error": null
+}

@@ -1,0 +1,15 @@
+flowchart LR
+    %% Reconstructed from the user's account; historical implementation not supplied.
+    subgraph Docker["Docker backend — previous path"]
+        Chat["Chat and model tool selection"]
+    end
+    subgraph Host["User's laptop"]
+        Manager["Network-facing MCP manager / SSE endpoint"]
+        Server["Local MCP servers"]
+        Apps["Local tools and applications"]
+        Manager -->|"stdin / stdout"| Server
+        Server --> Apps
+    end
+    Chat <-->|"MCP over HTTP / SSE"| Manager
+    subgraph Host["User's laptop"]
+
