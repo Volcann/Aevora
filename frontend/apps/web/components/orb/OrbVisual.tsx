@@ -6,6 +6,7 @@ import { createOrbRenderer, type OrbRenderer } from "./core/orb-renderer";
 import { clamp, type OrbSignal, type OrbState } from "./core/orb-model";
 import { OrbEyes } from "./OrbEyes";
 import styles from "./Orb.module.css";
+import { useOrbMotion, computeReduced } from "./hooks/useOrbMotion";
 
 export interface OrbVisualProps {
   size?: number;
@@ -32,18 +33,25 @@ export const OrbVisual = memo(function OrbVisual({
   const barsRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<OrbRenderer | null>(null);
   const safeTheme = normalizeOrbTheme(theme);
+  const { pref } = useOrbMotion();
+  const forceMotion = pref === "on";
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const host = hostRef.current;
     if (!canvas || !host) return;
-    const renderer = createOrbRenderer(canvas, host, { state: 0, theme: 1 }, barsRef.current);
+    const renderer = createOrbRenderer(canvas, host, { state: 0, theme: 1, forceMotion }, barsRef.current);
     rendererRef.current = renderer;
     return () => { renderer.dispose(); rendererRef.current = null; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showWaveform]);
+
   useEffect(() => {
-    rendererRef.current?.update({ state, theme: safeTheme, signal });
-  }, [state, safeTheme, signal, showWaveform]);
+    rendererRef.current?.update({ state, theme: safeTheme, signal, forceMotion });
+  }, [state, safeTheme, signal, showWaveform, forceMotion]);
+
+  // Reflect motion pref on the host element for CSS rules.
+  const motionData = computeReduced(pref) ? "off" : "on";
 
   const palette = ORB_THEMES[safeTheme];
   const visual = (
@@ -64,6 +72,7 @@ export const OrbVisual = memo(function OrbVisual({
       data-renderer="fallback"
       data-orb-state={state}
       data-orb-theme={safeTheme}
+      data-motion={motionData}
       style={{
         "--orb-size": `${clamp(size, 48, 600)}px`,
         "--orb-accent": palette.primaryColor,

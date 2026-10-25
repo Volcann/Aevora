@@ -1,3 +1,5 @@
+import { getDesktopRuntime } from "./desktop-runtime";
+
 export interface UserProfile {
   id: string;
   username: string;
@@ -21,16 +23,24 @@ export interface AIModelItem {
   id: string;
   name: string;
   quota?: string | number;
+  qouta?: string | number;
+  created_at?: string;
+}
+
+export interface AILogItem {
+  id: string;
+  text: string;
   created_at?: string;
 }
 
 export interface MessageItem {
   id: string;
   role: "user" | "model";
-  content: string;
+  content: string | null;
   created_at?: string;
   model?: AIModelItem | string | null;
   model_name?: string | null;
+  logs?: AILogItem[];
 }
 
 export interface ChatSessionDetail extends ChatSessionItem {
@@ -67,6 +77,48 @@ export function setApiBaseUrl(url: string) {
   }
 }
 
+export function isJwtExpired(token: string, bufferSeconds = 30): boolean {
+  if (!token) return true;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+    const base64Url = parts[1];
+    if (!base64Url) return false;
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const payload = JSON.parse(jsonPayload);
+    if (typeof payload.exp !== "number") return false;
+    return Date.now() >= (payload.exp - bufferSeconds) * 1000;
+  } catch {
+    return false;
+  }
+}
+
+export function getJwtPayload(token: string): Record<string, unknown> | null {
+  if (!token) return null;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export function getSavedTokens(): AuthTokens | null {
   if (typeof window === "undefined") return null;
   const access = localStorage.getItem(ACCESS_TOKEN_KEY);
@@ -85,6 +137,10 @@ export function saveTokens(tokens: AuthTokens) {
   if (tokens.refresh) {
     document.cookie = `refresh_token=${tokens.refresh}; path=/; max-age=604800; SameSite=Lax`;
   }
+  const desktop = getDesktopRuntime();
+  if (desktop?.setTokens) {
+    void desktop.setTokens({ access: tokens.access, refresh: tokens.refresh }).catch(() => {});
+  }
 }
 
 export function clearTokens() {
@@ -94,6 +150,10 @@ export function clearTokens() {
   localStorage.removeItem(USER_KEY);
   document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  const desktop = getDesktopRuntime();
+  if (desktop?.setTokens) {
+    void desktop.setTokens({ access: "", refresh: "" }).catch(() => {});
+  }
 }
 
 export function getSavedUser(): UserProfile | null {
@@ -111,10 +171,156 @@ export function saveUser(user: UserProfile) {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
+let refreshPromise: Promise<string | null> | null = null;
+
+export async function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    const baseUrl = getApiBaseUrl();
+    const tokens = getSavedTokens();
+    if (!tokens?.refresh) {
+      return null;
+    }
+
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/accounts/token/refresh/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh: tokens.refresh }),
+      });
+
+      if (!res.ok) {
+        return null;
+      }
+
+      const data = await res.json();
+      if (data.access) {
+        const newTokens: AuthTokens = {
+          access: data.access,
+          refresh: data.refresh || tokens.refresh,
+        };
+        saveTokens(newTokens);
+        return data.access;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+export async function updateRefreshToken(
+  newRefreshToken: string
+): Promise<{ success: boolean; user?: UserProfile; tokens?: AuthTokens; error?: string }> {
+  const trimmed = newRefreshToken.trim();
+  if (!trimmed) {
+    return { success: false, error: "Please enter a valid refresh token." };
+  }
+
+  const baseUrl = getApiBaseUrl();
+  try {
+    const res = await fetch(`${baseUrl}/api/v1/accounts/token/refresh/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh: trimmed }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg =
+        err.detail ||
+        err.message ||
+        err.non_field_errors?.[0] ||
+        err.messages?.[0]?.message ||
+        `Server rejected token (HTTP ${res.status})`;
+      return { success: false, error: msg };
+    }
+
+    const data = await res.json();
+    if (!data.access) {
+      return { success: false, error: "No access token received from authentication server." };
+    }
+
+    const tokens: AuthTokens = {
+      access: data.access,
+      refresh: data.refresh || trimmed,
+    };
+    saveTokens(tokens);
+
+    const desktop = getDesktopRuntime();
+    if (desktop?.updateRefreshToken) {
+      void desktop.updateRefreshToken(tokens.refresh).catch(() => {});
+    }
+
+    let profile: UserProfile | undefined;
+    try {
+      const meRes = await fetch(`${baseUrl}/api/v1/accounts/me/`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.access}`,
+        },
+      });
+      if (meRes.ok) {
+        profile = await meRes.json();
+        if (profile) {
+          saveUser(profile);
+        }
+      }
+    } catch {}
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("aevora:tokens-updated", {
+          detail: { tokens, user: profile },
+        })
+      );
+    }
+
+    return { success: true, user: profile, tokens };
+  } catch (e: any) {
+    return { success: false, error: e?.message || "Failed to reach authentication server." };
+  }
+}
+
+export async function syncTokensFromDesktop(): Promise<AuthTokens | null> {
+  if (typeof window === "undefined") return null;
+  const desktop = getDesktopRuntime();
+  if (!desktop?.getTokens) return null;
+  try {
+    const desktopTokens = await desktop.getTokens();
+    if (desktopTokens?.access || desktopTokens?.refresh) {
+      const current = getSavedTokens();
+      if (!current?.access || !current?.refresh) {
+        const tokens: AuthTokens = {
+          access: current?.access || desktopTokens.access || "",
+          refresh: current?.refresh || desktopTokens.refresh || "",
+        };
+        saveTokens(tokens);
+        return tokens;
+      }
+    }
+  } catch {}
+  return null;
+}
+
 async function requestWithAuth(path: string, options: RequestInit = {}): Promise<Response> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${path}`;
-  const tokens = getSavedTokens();
+  let tokens = getSavedTokens();
+
+  if (tokens?.access && isJwtExpired(tokens.access) && tokens.refresh) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      tokens = getSavedTokens();
+    }
+  }
 
   const headers = new Headers(options.headers || {});
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
@@ -128,23 +334,11 @@ async function requestWithAuth(path: string, options: RequestInit = {}): Promise
 
   // Handle token refresh on 401
   if (response.status === 401 && tokens?.refresh) {
-    try {
-      const refreshRes = await fetch(`${baseUrl}/api/v1/accounts/token/refresh/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh: tokens.refresh }),
-      });
-      if (refreshRes.ok) {
-        const data = await refreshRes.json();
-        if (data.access) {
-          saveTokens({ access: data.access, refresh: data.refresh || tokens.refresh });
-          headers.set("Authorization", `Bearer ${data.access}`);
-          response = await fetch(url, { ...options, headers });
-        }
-      } else {
-        clearTokens();
-      }
-    } catch {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      headers.set("Authorization", `Bearer ${refreshed}`);
+      response = await fetch(url, { ...options, headers });
+    } else {
       clearTokens();
     }
   }
@@ -153,36 +347,13 @@ async function requestWithAuth(path: string, options: RequestInit = {}): Promise
 }
 
 export async function quitApp(): Promise<void> {
-  if (typeof window !== "undefined") {
-    // 1. Try Tauri v2 IPC
-    const w = window as any;
-    const tauri = w.__TAURI_INTERNALS__ || w.__TAURI__;
-    if (tauri) {
-      try {
-        if (tauri.invoke) {
-          await tauri.invoke("quit_app");
-          return;
-        }
-        if (tauri.core?.invoke) {
-          await tauri.core.invoke("quit_app");
-          return;
-        }
-      } catch (e) {
-        console.warn("Tauri invoke quit_app:", e);
-      }
-    }
-
-    // 2. Web fallback: try window.close()
-    try {
-      window.close();
-    } catch {}
-
-    // 3. Fallback prompt for browser tabs not opened by script
-    if (window.confirm("Are you sure you want to quit Aevora?")) {
-      window.location.href = "about:blank";
-    }
-  }
+  if (typeof window === "undefined") return;
+  const desktop = getDesktopRuntime();
+  if (desktop) { await desktop.quit(); return; }
+  if (window.confirm("Are you sure you want to quit Aevora?")) window.close();
 }
+
+let cachedModels: AIModelItem[] | null = null;
 
 export const api = {
   async health(): Promise<{ status: string }> {
@@ -437,18 +608,23 @@ export const api = {
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.models || data.results || [];
-        if (list.length > 0) return list;
+        if (list.length > 0) {
+          cachedModels = list;
+          return list;
+        }
       }
     } catch (_err) {
       // Fallback to default models if offline or unauthenticated
     }
-    return [
+    const fallback = [
       { id: "1", name: "gemini-3.5-flash-lite", quota: "200.00" },
       { id: "2", name: "gemini-2.5-flash", quota: "100.00" },
       { id: "3", name: "gemini-2.5-pro", quota: "50.00" },
       { id: "4", name: "gemini-1.5-flash", quota: "100.00" },
       { id: "5", name: "gemini-1.5-pro", quota: "50.00" },
     ];
+    cachedModels = fallback;
+    return fallback;
   },
 
   async streamChat(
@@ -458,7 +634,8 @@ export const api = {
       onChunk: (chunk: string) => void;
       onSessionCreated?: (sessionId: string, title: string) => void;
       onToolStart?: (tool: string) => void;
-      onToolDone?: (tool: string) => void;
+      onToolLog?: (log: string, tool?: string) => void;
+      onToolDone?: (tool: string, output?: string) => void;
       onToolError?: (tool: string) => void;
       onDone?: () => void;
       onError?: (err: Error) => void;
@@ -470,34 +647,72 @@ export const api = {
     }
   ): Promise<void> {
     const baseUrl = getApiBaseUrl();
-    const tokens = getSavedTokens();
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    if (tokens?.access) {
-      headers["Authorization"] = `Bearer ${tokens.access}`;
+
+    let modelId = options?.model;
+    if (modelId) {
+      if (!cachedModels) {
+        try {
+          await this.getModels();
+        } catch {
+          // ignore model cache fetch error
+        }
+      }
+      if (cachedModels) {
+        const match = cachedModels.find((m) => m.name === modelId || m.id === modelId);
+        if (match?.id) {
+          modelId = match.id;
+        }
+      }
     }
 
     const queryParams = new URLSearchParams();
     if (sessionId && !sessionId.startsWith("local-")) {
       queryParams.set("session_id", sessionId);
     }
-    if (options?.model) {
-      queryParams.set("model", options.model);
+    if (modelId) {
+      queryParams.set("model", modelId);
     }
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
     const streamUrl = `${baseUrl}/api/v1/chat/stream/${query}`;
 
-    try {
-      const response = await fetch(streamUrl, {
+    // Proactively refresh expired token before stream connection
+    let currentTokens = getSavedTokens();
+    if (currentTokens?.access && isJwtExpired(currentTokens.access) && currentTokens.refresh) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        currentTokens = getSavedTokens();
+      }
+    }
+
+    const makeStreamRequest = async (token?: string) => {
+      const streamHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        streamHeaders["Authorization"] = `Bearer ${token}`;
+      }
+      return fetch(streamUrl, {
         method: "POST",
-        headers,
+        headers: streamHeaders,
         body: JSON.stringify({
           prompt,
-          model: options?.model,
+          voice_mode: false,
+          model: modelId,
         }),
         signal,
       });
+    };
+
+    try {
+      let response = await makeStreamRequest(currentTokens?.access);
+
+      // If 401, attempt refresh and retry stream once
+      if (response.status === 401 && getSavedTokens()?.refresh) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+          response = await makeStreamRequest(refreshed);
+        }
+      }
 
       if (!response.ok) {
         const errText = await response.text();
@@ -541,8 +756,10 @@ export const api = {
               callbacks.onChunk(event.text);
             } else if (event.type === "tool_start") {
               callbacks.onToolStart?.(event.tool);
+            } else if (event.type === "tool_log" && (event.log || event.step)) {
+              callbacks.onToolLog?.(event.log || event.step, event.tool);
             } else if (event.type === "tool_done") {
-              callbacks.onToolDone?.(event.tool);
+              callbacks.onToolDone?.(event.tool, event.output);
             } else if (event.type === "tool_error") {
               callbacks.onToolError?.(event.tool);
             } else if (event.type === "done") {
@@ -578,4 +795,13 @@ export const api = {
     const data = await response.json();
     return (data.transcript || "").trim();
   },
+
+  refreshAccessToken,
+  updateRefreshToken,
+  syncTokensFromDesktop,
+  isJwtExpired,
+  getJwtPayload,
+  getSavedTokens,
+  saveTokens,
+  clearTokens,
 };

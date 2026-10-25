@@ -169,12 +169,8 @@ class ChatSessionApiTestCase(APITestCase):
         events = list(_gemini_stream(stream_session, "Test prompt", model=ai_model))
         self.assertTrue(len(events) > 0)
 
-        user_message = Message.objects.get(
-            session=stream_session, role=MessageRole.USER
-        )
+        user_message = Message.objects.get(session=stream_session, role=MessageRole.USER)
         self.assertEqual(user_message.model, ai_model)
 
-        model_message = Message.objects.get(
-            session=stream_session, role=MessageRole.MODEL
-        )
+        model_message = Message.objects.get(session=stream_session, role=MessageRole.MODEL)
         self.assertEqual(model_message.model, ai_model)

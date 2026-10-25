@@ -1,0 +1,31 @@
+flowchart LR
+    %% Source-based intended path; import/UI blockers are documented in Guide 02.
+    subgraph Docker["Docker Compose"]
+        Model["Gemini client in Django"]
+        Producer["Producer thread: _gemini_stream"]
+        Watcher["Watcher thread: watch_job"]
+        Queue["In-process asyncio.Queue"]
+        ASGI["ASGI response iterator"]
+        DB[("Django DB: AILog + Message")]
+        subgraph Redis["One Redis instance, three distinct roles"]
+            Broker["Celery broker: laptop.tools"]
+            State["Celery result backend: latest state/result"]
+            Events["Redis LIST: stream:job_id"]
+        end
+        Model -->|"send_task"| Broker
+        Producer --> Model
+        State -->|"poll AsyncResult"| Watcher
+        Watcher -->|"save observed log"| DB
+        Watcher -->|"RPUSH; EXPIRE 120"| Events
+        Events -->|"BLPOP; idle timeout 30"| Producer
+        Producer -->|"thread-safe handoff"| Queue
+        Queue --> ASGI
+    end
+    subgraph Laptop["Laptop — Docker host in this configuration"]
+        Worker["Celery worker"]
+        Tool["Registered Python tool: get_weather"]
+        Worker --> Tool
+    end
+    Broker -->|"consume via host Redis port 6382"| Worker
+    Tool -->|"PROGRESS and final result"| State
+    ASGI -->|"SSE frames"| Browser["Browser fetch reader"]

@@ -13,9 +13,14 @@ export interface DesktopRuntime {
   petReady(): Promise<boolean>;
   quit(): Promise<void>;
   getRenderState(): Promise<boolean>;
+  getTokens?(): Promise<{ access?: string; refresh?: string } | null>;
+  setTokens?(tokens: { access?: string; refresh?: string }): Promise<boolean>;
+  updateRefreshToken?(token: string): Promise<boolean>;
   onPetVisibility(callback: (visible: boolean) => void): () => void;
   onRenderState(callback: (active: boolean) => void): () => void;
   onResume(callback: () => void): () => void;
+  onTokensUpdated?(callback: (tokens: { access?: string; refresh?: string }) => void): () => void;
+  onOpenTokenSettings?(callback: () => void): () => void;
 }
 
 declare global { interface Window { readonly aevoraDesktop?: DesktopRuntime } }

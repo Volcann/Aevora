@@ -1,0 +1,48 @@
+sequenceDiagram
+    autonumber
+    participant UI as Browser
+    participant HTTP as Django ASGI / async iterator
+    participant P as Producer thread
+    participant G as Gemini API
+    participant R as Redis broker / result backend
+    participant W as Laptop Celery worker
+    participant T as Watcher thread
+    participant DB as Django AILog
+    participant L as Redis event LIST
+    UI->>HTTP: Authenticated POST /api/v1/chat/stream/
+    HTTP->>P: Start synchronous generator through bridge
+    Note over P,W: Discovery is also a Celery job; omitted here for clarity
+    P->>G: Prompt + tool declarations
+    G-->>P: Text and/or function call
+    P-->>HTTP: tool_start through asyncio.Queue
+    HTTP-->>UI: SSE frame
+    P->>R: tools.get_weather on laptop.tools
+    R->>W: Deliver named task with kwargs
+    P->>T: Start watch_job daemon thread
+    par Laptop execution
+        W->>R: update_state(PROGRESS, msg)
+        W->>W: Run sequential provider calls
+        W->>R: Final result / terminal state
+    and Backend observation
+        loop Poll until ready (sleep 0.1 seconds)
+            T->>R: Read latest state and metadata
+            T->>DB: Save newly observed message
+            T->>L: RPUSH tool_log; EXPIRE 120
+            P->>L: BLPOP, idle wait up to 30 seconds
+            L-->>P: Next observed tool_log
+            P-->>HTTP: Hand off SSE text through asyncio.Queue
+            HTTP-->>UI: tool_log SSE frame
+        end
+    end
+    T->>R: Get final result
+    T->>DB: Save Done! log
+    T->>L: Push completed tool_log with output
+    L-->>P: Final tool_log
+    P-->>HTTP: Final tool_log then tool_done
+    HTTP-->>UI: SSE frames
+    P->>G: function_response with result
+    G-->>P: Answer text
+    P-->>HTTP: Text chunks then done
+    HTTP-->>UI: Final SSE frames
+    Note over T,L: Current failure path also labels errors completed; not a recommended contract
+    Note over HTTP,UI: Bundled chat.js lacks tool_log handling; receiving is not the same as displaying

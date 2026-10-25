@@ -36,4 +36,4 @@ if "silk.middleware.SilkyMiddleware" not in MIDDLEWARE:
 SILKY_INTERCEPT_PERCENT = 100
 SILKY_MAX_REQUEST_BODY_SIZE = -1
 SILKY_MAX_RESPONSE_BODY_SIZE = -1
-SILKY_IGNORE_PATHS = ["/admin/"]
+SILKY_IGNORE_PATHS = ["/admin/", "/api/v1/chat/stream/"]

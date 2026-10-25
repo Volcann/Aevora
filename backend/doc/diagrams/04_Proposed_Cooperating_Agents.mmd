@@ -1,0 +1,22 @@
+flowchart TD
+    %% Entire diagram is a proposed future architecture, not integrated code.
+    User["Authenticated user goal"] --> Coordinator["Bounded coordinator: plan, budget, policy"]
+    Coordinator --> Jobs[("Durable Run / Job records")]
+    Jobs --> Routing["Authorized capability + device routing"]
+    Routing --> Python["Python tool adapter"]
+    Routing --> Subprocess["Supervised subprocess adapter"]
+    Routing --> Agent["Permission-scoped Antigravity CLI / SDK adapter"]
+    Routing --> MCP["Optional MCP adapter"]
+    Python --> Events[("Append-only normalized events")]
+    Subprocess --> Events
+    Agent --> Events
+    MCP --> Events
+    Python --> Artifacts[("Versioned result artifacts")]
+    Subprocess --> Artifacts
+    Agent --> Artifacts
+    MCP --> Artifacts
+    Artifacts --> Verify["Independent verification / review"]
+    Verify --> Approval["Human approval for risky actions"]
+    Approval --> Coordinator
+    Events --> UI["Resumable job view / SSE"]
+    Jobs --> UI

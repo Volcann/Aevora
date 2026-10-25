@@ -1,0 +1,37 @@
+/* Additive shell: no selectors alter the original orb body, eyes, canvas or glow. */
+.layer { position: relative; width: var(--play-size,80px); max-width: 100%; margin-inline: auto; }
+.idleMotion, .trickMotion, .morphMotion, .impulse, .treatment { width: 100%; transform-origin: 50% 50%; }
+.filterDefs { position: absolute; pointer-events: none; }
+.layer[data-animated="true"][data-play-mode="float"] .idleMotion { animation: floatAround calc(4.5s * var(--play-speed)) ease-in-out infinite; }
+.layer[data-animated="true"][data-play-mode="bounce"] .idleMotion { animation: softBounce calc(2.1s * var(--play-speed)) ease-in-out infinite; }
+.layer[data-animated="true"][data-play-mode="orbit"] .idleMotion { animation: smallOrbit calc(6s * var(--play-speed)) linear infinite; }
+.layer[data-animated="true"][data-play-mode="sleepy"][data-streaming="idle"] .idleMotion { animation: breathe calc(6s * var(--play-speed)) ease-in-out infinite; }
+.layer[data-morph="fluid"] .morphMotion { animation: fluidShape calc(2.9s * var(--play-speed)) ease-in-out infinite; }
+.layer[data-morph="pulse"] .morphMotion { animation: roundedPulse calc(1.8s * var(--play-speed)) ease-in-out infinite; }
+.layer[data-morph="elastic"] .morphMotion { animation: elasticShape calc(1.7s * var(--play-speed)) ease-in-out infinite; }
+.layer[data-morph="ribbon"] .morphMotion { animation: ribbonShape calc(3.2s * var(--play-speed)) ease-in-out infinite; }
+.layer[data-streaming="thinking"] .morphMotion { animation-duration: calc(4s * var(--play-speed)); }
+.layer[data-trick="wiggle"] .trickMotion { animation: wiggle 1.3s ease-in-out; }
+.layer[data-trick="hop"] .trickMotion { animation: hop 1.3s ease-in-out; }
+.layer[data-trick="spin"] .trickMotion { animation: spin 1.3s cubic-bezier(.34,1.1,.7,1); }
+.layer[data-trick="celebrate"] .trickMotion { animation: hop 1.3s ease-in-out; }
+.layer[data-animated="false"] .idleMotion, .layer[data-animated="false"] .trickMotion, .layer[data-animated="false"] .morphMotion { animation: none; transform: none; filter: none!important; }
+.celebration { position: absolute; inset: 20%; pointer-events: none; }
+.celebration i { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; border-radius: 50%; background: #c4b5fd; transform: rotate(calc(var(--spark-index) * 45deg)) translateY(-12px); animation: celebrate 1.3s ease-out forwards; }
+.replyAvatar { width: 30px; height: 30px; flex: 0 0 30px; position: relative; }
+.replyAvatar > .layer { position: absolute; left: -9px; top: -8px; width: 48px; max-width: none; }
+.streamBadge { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; font-size: 10px; color: var(--text-muted,#a7a4bc); font-weight: 400; }
+.streamBadge i { width: 5px; height: 5px; border-radius: 50%; background: #b2a0ef; }
+@keyframes floatAround { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(calc(-1 * var(--play-travel))) rotate(2deg); } }
+@keyframes softBounce { 0%,100% { transform: translateY(0) scale(1.035,.97); } 45% { transform: translateY(calc(-2 * var(--play-travel))) scale(.98,1.035); } 70% { transform: translateY(0) scale(1.07,.94); } 85% { transform: translateY(calc(-.4 * var(--play-travel))) scale(1); } }
+@keyframes smallOrbit { 0%,100% { transform: translate(var(--play-travel),0) rotate(2deg); } 25% { transform: translate(0,calc(-1 * var(--play-travel))) rotate(0); } 50% { transform: translate(calc(-1 * var(--play-travel)),0) rotate(-2deg); } 75% { transform: translate(0,var(--play-travel)) rotate(0); } }
+@keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.025,.985); } }
+@keyframes fluidShape { 0%,100% { transform: scale(1,1) rotate(0); } 22% { transform: scale(1.14,.91) rotate(-7deg); } 48% { transform: scale(.91,1.12) rotate(5deg); } 73% { transform: scale(1.09,.94) rotate(-3deg); } }
+@keyframes roundedPulse { 0%,100% { transform: scale(.98); } 50% { transform: scale(1.08); } }
+@keyframes elasticShape { 0%,100% { transform: scale(1); } 22% { transform: scale(1.22,.82) rotate(-5deg); } 48% { transform: scale(.84,1.17) rotate(5deg); } 72% { transform: scale(1.09,.95); } }
+@keyframes ribbonShape { 0%,100% { transform: scale(1); } 30% { transform: scale(1.32,.68) rotate(-10deg); } 65% { transform: scale(1.2,.8) rotate(10deg); } 83% { transform: scale(.95,1.07); } }
+@keyframes wiggle { 0%,100% { transform: rotate(0); } 18%,52% { transform: rotate(-12deg); } 35%,68% { transform: rotate(12deg); } 84% { transform: rotate(-5deg); } }
+@keyframes hop { 0%,100% { transform: translateY(0) scale(1); } 15% { transform: scale(1.14,.86); } 40% { transform: translateY(-24px) scale(.95,1.08); } 65% { transform: translateY(0) scale(1.15,.87); } 82% { transform: translateY(-5px) scale(1); } }
+@keyframes spin { 0% { transform: rotate(0) scale(1); } 45% { transform: rotate(190deg) scale(.91); } 100% { transform: rotate(360deg) scale(1); } }
+@keyframes celebrate { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; transform: rotate(calc(var(--spark-index) * 45deg)) translateY(calc(var(--play-size) * -.65)) scale(.3); } }
+@media (prefers-reduced-motion: reduce) { .layer[data-reduced="true"] * { animation: none!important; transition: none!important; } }

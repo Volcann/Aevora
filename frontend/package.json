@@ -18,7 +18,11 @@
     "verify:ui": "node scripts/verify-ui-integrity.mjs",
     "test:optimization": "node scripts/verify-ui-integrity.mjs && node scripts/test-optimization.mjs",
     "test:ui:fixture": "node scripts/build-optimization-fixture.mjs",
-    "test:ui": "node scripts/build-optimization-fixture.mjs && python tests/optimization/browser_smoke.py"
+    "test:ui": "node scripts/build-optimization-fixture.mjs && python tests/optimization/browser_smoke.py",
+    "test:playful": "node scripts/test-playful.mjs",
+    "test:playful:fixture": "node scripts/build-playful-fixture.mjs",
+    "test:playful:browser": "python tests/playful/browser_smoke.py",
+    "verify:playful": "node scripts/verify-playful.mjs"
   },
   "devDependencies": {
     "prettier": "^3.6.0",

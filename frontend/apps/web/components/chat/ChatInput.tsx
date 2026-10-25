@@ -11,7 +11,7 @@ interface ChatInputProps {
   tools: ToolItem[];
   models?: AIModelItem[];
   selectedModel?: string | null;
-  onSelectModel?: (modelName: string) => void;
+  onSelectModel?: (modelId: string) => void;
   isBoostEnabled?: boolean;
   onToggleBoost?: () => void;
   onStopStreaming?: () => void;
@@ -37,6 +37,9 @@ export const ChatInput = memo(function ChatInput({
   const textarea = useRef<HTMLTextAreaElement>(null);
   const root = useRef<HTMLDivElement>(null);
   const composing = useRef(false);
+
+  const activeModel = models.find((m) => m.id === selectedModel || m.name === selectedModel);
+  const displayModelName = activeModel?.name || selectedModel || "gemini-3.5-flash-lite";
 
   useEffect(() => {
     if (textarea.current) {
@@ -129,15 +132,16 @@ export const ChatInput = memo(function ChatInput({
                   {models.length ? (
                     models.map((m) => {
                       const isSelected =
+                        selectedModel === m.id ||
                         selectedModel === m.name ||
-                        (!selectedModel && m.name === "gemini-3.5-flash-lite");
+                        (!selectedModel && (m.name === "gemini-3.5-flash-lite" || m === models[0]));
                       const quotaVal = m.quota ?? "0.00";
                       return (
                         <button
-                          key={m.name}
+                          key={m.id || m.name}
                           type="button"
                           onClick={() => {
-                            onSelectModel?.(m.name);
+                            onSelectModel?.(m.id || m.name);
                             setShowTools(false);
                             textarea.current?.focus();
                           }}
@@ -245,7 +249,7 @@ export const ChatInput = memo(function ChatInput({
             placeholder={
               isStreaming
                 ? "Reply in progress…"
-                : `Ask ${selectedModel || "Aevora"} anything, or mention tools with @…`
+                : `Ask ${displayModelName || "Aevora"} anything, or mention tools with @…`
             }
             onChange={(event) => {
               setText(event.target.value);
@@ -294,7 +298,7 @@ export const ChatInput = memo(function ChatInput({
             >
               <Cpu size={14} className="text-cyan-400 shrink-0" />
               <span className="truncate font-medium text-[11px]">
-                {selectedModel || "gemini-3.5-flash-lite"}
+                {displayModelName}
               </span>
             </button>
 

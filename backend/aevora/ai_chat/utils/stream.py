@@ -1,15 +1,91 @@
+import asyncio
 import json
+import threading
 
 import google.generativeai as genai
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 
 from aevora.ai_chat.choices import MessageRole
 from aevora.ai_chat.models import AIModel, Message
-from aevora.ai_chat.utils.selection import select_tools_for_prompt
+from aevora.ai_chat.services import celery_tool_client
+from aevora.ai_chat.utils.tools import get_gemini_tools
+
+
+async def sync_to_async_gen(sync_iterable):
+    """
+    Bridge a synchronous generator to an ASGI-compliant async generator.
+
+    This prevents Django's ASGIHandler from consuming sync iterators into a list.
+    """
+    loop = asyncio.get_running_loop()
+    queue = asyncio.Queue()
+    sentinel = object()
+    stopped = threading.Event()
+
+    def producer():
+        try:
+            for item in sync_iterable:
+                if stopped.is_set():
+                    break
+                future = asyncio.run_coroutine_threadsafe(queue.put(item), loop)
+                future.result()
+        except Exception as exc:  # noqa: BLE001
+            if not stopped.is_set():
+                asyncio.run_coroutine_threadsafe(queue.put(exc), loop).result()
+        finally:
+            if not stopped.is_set():
+                asyncio.run_coroutine_threadsafe(queue.put(sentinel), loop).result()
+
+    threading.Thread(target=producer, daemon=True).start()
+
+    try:
+        while True:
+            val = await queue.get()
+            if val is sentinel:
+                break
+            if isinstance(val, Exception):
+                raise val
+            yield val
+    finally:
+        stopped.set()
+
+
+def get_model(serializer):
+    model = None
+    model_id = serializer.validated_data.get("model", None)
+    if model_id:
+        try:
+            model = get_object_or_404(AIModel, id=str(model_id).strip())
+        except (DjangoValidationError, ValueError):
+            raise Http404("AI Model not found")
+    return model
 
 
 def _sse(data):
     return f"data: {json.dumps(data)}\n\n"
+
+
+def get_history(session):
+    prior = list(
+        Message.objects.filter(
+            session=session,
+        ).order_by("created_at")
+    )[-5:]
+
+    history = [
+        {
+            "role": ("user" if message.role == MessageRole.USER else MessageRole.MODEL),
+            "parts": [message.content or ""],
+        }
+        for message in prior
+    ]
+    while history and history[0]["role"] != "user":
+        history.pop(0)
+
+    return history
 
 
 def _gemini_stream(
@@ -25,52 +101,14 @@ def _gemini_stream(
             )
 
         genai.configure(api_key=settings.GEMINI_API_KEY)
+        history = get_history(session)
 
-        prior = list(
-            Message.objects.filter(
-                session=session,
-                role=MessageRole.MODEL,
-            ).order_by("created_at")
-        )[-5:]
-
-        history = [
-            {
-                "role": ("user" if message.role == MessageRole.USER else MessageRole.MODEL),
-                "parts": [message.content],
-            }
-            for message in prior
-        ]
-        while history and history[0]["role"] != "user":
-            history.pop(0)
-
-        gemini_tools, tool_router = select_tools_for_prompt(prompt)
-
-        selected_aimodel = None
-        if isinstance(model, AIModel):
-            selected_aimodel = model
-        elif model:
-            selected_aimodel = (
-                AIModel.objects.filter(id=str(model).strip()).first()
-                or AIModel.objects.filter(name=str(model).strip()).first()
-            )
-
-        if selected_aimodel:
-            primary_model = selected_aimodel.name
-        elif model and isinstance(model, str) and model.strip():
-            primary_model = model.strip()
-        else:
-            first_model = AIModel.objects.first()
-            primary_model = (
-                first_model.name
-                if first_model
-                else getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite")
-            )
-
-        model_kwargs = {"tools": gemini_tools}
-
+        gemini_tools = get_gemini_tools()
+        model_kwargs = {"tools": gemini_tools} if gemini_tools else {}
+        selected_model = model.name if model else "gemini-3.5-flash-lite"
         try:
             genai_model = genai.GenerativeModel(
-                model_name=primary_model,
+                model_name=selected_model,
                 **model_kwargs,
             )
             chat = genai_model.start_chat(history=history)
@@ -81,12 +119,13 @@ def _gemini_stream(
             )
             chat = genai_model.start_chat(history=history)
 
+        Message.objects.create(session=session, role=MessageRole.USER, content=prompt, model=model)
+        ai_msg = Message.objects.create(session=session, role=MessageRole.MODEL, model=model)
+
         full_text = []
-        user_input = prompt
-
+        current_input = prompt
         while True:
-            response = chat.send_message(user_input, stream=True)
-
+            response = chat.send_message(current_input, stream=True)
             for chunk in response:
                 try:
                     if chunk.text:
@@ -95,84 +134,59 @@ def _gemini_stream(
                 except ValueError:
                     pass
 
-            function_calls = []
+            function_call = None
             try:
                 for part in response.candidates[0].content.parts:
-                    fc = getattr(part, "function_call", None)
-                    if fc and fc.name:
-                        function_calls.append(fc)
+                    if getattr(part, "function_call", None):
+                        function_call = part.function_call
+                        break
             except (IndexError, AttributeError):
                 pass
 
-            if not function_calls:
+            if not function_call:
                 break
 
-            tool_parts = []
-            for fc in function_calls:
-                yield _sse({"type": "tool_start", "tool": fc.name})
-                try:
-                    router_value = tool_router.get(fc.name)
-                    if router_value == "celery":
-                        import time
+            yield _sse({"type": "tool_start", "tool": function_call.name})
 
-                        from aevora.ai_chat.services.mcp_manager import CeleryToolClient
+            background_job = celery_tool_client.call_tool_async(function_call)
+            threading.Thread(
+                target=celery_tool_client.watch_job,
+                args=(background_job, str(ai_msg.id), function_call.name),
+                daemon=True,
+            ).start()
 
-                        client = CeleryToolClient()
-                        args = dict(fc.args) if fc.args else {}
+            tool_output = {}
+            while True:
+                log_event = celery_tool_client.pop_event(background_job.id, timeout=30)
 
-                        job = client.call_tool_async(fc.name, args)
-
-                        while not job.ready():
-                            if job.state == "PROGRESS":
-                                msg = job.info.get("msg", "Processing...")
-                                yield _sse({"type": "chunk", "text": f"\n\n*⏳ {msg}*\n"})
-                            else:
-                                yield _sse({"type": "ping"})
-                            time.sleep(1.5)
-
-                        result = job.get()
-                    else:
-                        result = None
-                    yield _sse({"type": "tool_done", "tool": fc.name})
-                    tool_parts.append(
-                        genai.protos.Part(
-                            function_response=genai.protos.FunctionResponse(
-                                name=fc.name,
-                                response={"result": result},
-                            ),
-                        ),
+                if not log_event:
+                    tool_output = {"error": "Tool execution timed out"}
+                    yield _sse(
+                        {
+                            "type": "tool_error",
+                            "tool": function_call.name,
+                            "error": "Tool execution timed out",
+                        }
                     )
-                except Exception as exc:  # noqa: BLE001
-                    yield _sse({"type": "tool_error", "tool": fc.name})
-                    tool_parts.append(
-                        genai.protos.Part(
-                            function_response=genai.protos.FunctionResponse(
-                                name=fc.name,
-                                response={"error": str(exc)},
-                            ),
-                        ),
+                    break
+
+                yield _sse(log_event)
+                if log_event.get("status") == "completed":
+                    tool_output = log_event.get("output") or {}
+                    yield _sse(
+                        {"type": "tool_done", "tool": function_call.name, "output": tool_output},
                     )
+                    break
 
-            user_input = tool_parts
+            current_input = {
+                "function_response": {
+                    "name": function_call.name,
+                    "response": {"result": tool_output},
+                }
+            }
 
-        Message.objects.create(
-            session=session,
-            role=MessageRole.USER,
-            content=prompt,
-            model=selected_aimodel,
-        )
-        Message.objects.create(
-            session=session,
-            role=MessageRole.MODEL,
-            content="".join(full_text),
-            model=selected_aimodel,
-        )
-
-        if not session.title:
-            session.title = prompt[:48] + ("…" if len(prompt) > 48 else "")
-            session.save(update_fields=["title", "updated_at"])
-
+        ai_msg.content = "".join(full_text)
+        ai_msg.save()
+        yield _sse({"type": "done", "message_id": str(ai_msg.id)})
     except Exception as exc:  # noqa: BLE001
         yield _sse({"type": "chunk", "text": f"\n\n⚠ Error: {exc}"})
-
-    yield _sse({"type": "done"})
